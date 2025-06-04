@@ -19,6 +19,6 @@ const WALL_SLIDE_MULTIPLIER = 0.1
 const WALL_SLIDE_MAX_SPEED_MULTIPLIER = 1
 
 # === DASH ===
-const DASH_DISTANCE = 24.0
-const DASH_DURATION = 0.08
+const DASH_IMPULSE = 300.0  # Force d'impulsion
+const DASH_DISTANCE = 24.0  # Distance maximale
 const DASH_COOLDOWN = 0.3
