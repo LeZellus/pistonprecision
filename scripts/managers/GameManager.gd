@@ -46,7 +46,7 @@ func change_state(new_state: GameState):
 	if current_state == new_state:
 		return
 	
-	var old_state = current_state
+	# var old_state = current_state
 	current_state = new_state
 	state_changed.emit(new_state)
 	

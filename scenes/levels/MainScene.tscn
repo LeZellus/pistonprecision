@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://bxngpqv51c6i"]
+
+[ext_resource type="PackedScene" uid="uid://c5wnmdcvqeri" path="res://scenes/objects/TileMapWorld.tscn" id="1_dgocu"]
+[ext_resource type="PackedScene" uid="uid://de1wxpab4hcrk" path="res://scenes/player/Player.tscn" id="1_jo2q4"]
+
+[node name="MainScene" type="Node2D"]
+
+[node name="TileMapLayer" parent="." instance=ExtResource("1_dgocu")]
+
+[node name="CharacterBody2D" parent="." instance=ExtResource("1_jo2q4")]
+position = Vector2(198, 231)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(240, 137)

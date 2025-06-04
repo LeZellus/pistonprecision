@@ -1,0 +1,18 @@
+[gd_resource type="SpriteFrames" load_steps=3 format=3 uid="uid://j4q15hu1yxfw"]
+
+[ext_resource type="Texture2D" uid="uid://b74ojjb1q6pmt" path="res://assets/sprites/player/PistonSpritesheet.png" id="1_m66vt"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bmhu0"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(0, 0, 16, 16)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bmhu0")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}]
