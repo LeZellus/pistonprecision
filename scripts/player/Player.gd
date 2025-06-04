@@ -16,16 +16,18 @@ class_name Player
 
 # === PISTON STATE ===
 enum PistonDirection {
-	DOWN,   # Tête en bas (rotation 0°)
-	LEFT,   # Tête à gauche (rotation 90°)
-	UP,     # Tête en haut (rotation 180°)
-	RIGHT   # Tête à droite (rotation 270°)
+	DOWN,
+	LEFT,
+	UP,
+	RIGHT
 }
 
 var piston_direction: PistonDirection = PistonDirection.DOWN
 var dash_cooldown: float = 0.0
 var is_dashing: bool = false
 var dash_timer: float = 0.0
+var dash_velocity: Vector2 = Vector2.ZERO
+var dash_distance_remaining: float = 0.0
 
 # === STATE ===
 var was_grounded: bool = false
@@ -34,7 +36,6 @@ var wall_side: int = 0
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 func _ready():
-	# Connect signals
 	InputManager.jump_buffered.connect(_on_jump_buffered)
 	InputManager.movement_changed.connect(_on_movement_changed)
 	InputManager.rotate_left_requested.connect(_on_rotate_left)
@@ -43,9 +44,10 @@ func _ready():
 
 func _physics_process(delta):
 	_update_dash_cooldown(delta)
-	_update_dash_state(delta)
 	
-	if not is_dashing:
+	if is_dashing:
+		_handle_dash_physics(delta)
+	else:
 		_handle_wall_detection()
 		_handle_gravity(delta)
 		_handle_horizontal_movement(delta)
@@ -71,26 +73,35 @@ func _rotate_piston(direction: int):
 	_update_sprite_rotation()
 
 func _update_sprite_rotation():
-	var rotation_degrees = piston_direction * 90
-	sprite.rotation_degrees = rotation_degrees
+	sprite.rotation_degrees = piston_direction * 90
 
-# === DASH SYSTEM ===
+# === DASH SYSTEM AMÉLIORÉ ===
 func _on_dash_requested():
-	if dash_cooldown <= 0.0:
+	if dash_cooldown <= 0.0 and not is_dashing:
 		_perform_dash()
-		dash_cooldown = PlayerConstants.DASH_COOLDOWN
 
 func _perform_dash():
-	var dash_vector = _get_dash_direction()
-	velocity = dash_vector * PlayerConstants.DASH_FORCE
+	var dash_direction = _get_dash_direction()
+	dash_velocity = dash_direction * PlayerConstants.DASH_FORCE
+	dash_distance_remaining = PlayerConstants.DASH_DISTANCE
+	
 	is_dashing = true
 	dash_timer = PlayerConstants.DASH_DURATION
+	dash_cooldown = PlayerConstants.DASH_COOLDOWN
+	
+	velocity = dash_velocity
 
-func _update_dash_state(delta):
-	if is_dashing:
-		dash_timer -= delta
-		if dash_timer <= 0:
-			is_dashing = false
+func _handle_dash_physics(delta):
+	dash_timer -= delta
+	var distance_this_frame = dash_velocity.length() * delta
+	dash_distance_remaining -= distance_this_frame
+	
+	if dash_timer <= 0 or dash_distance_remaining <= 0:
+		is_dashing = false
+		dash_velocity = Vector2.ZERO
+		dash_distance_remaining = 0.0
+	else:
+		velocity = dash_velocity
 
 func _get_dash_direction() -> Vector2:
 	match piston_direction:
