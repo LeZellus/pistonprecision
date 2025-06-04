@@ -14,11 +14,17 @@ var movement_input: float = 0.0
 var jump_pressed: bool = false
 var jump_held: bool = false
 var jump_released: bool = false
+var rotate_left_pressed: bool = false
+var rotate_right_pressed: bool = false
+var dash_pressed: bool = false
 
 # === SIGNALS ===
 signal jump_buffered
 signal coyote_jump_available
 signal movement_changed(direction: float)
+signal rotate_left_requested
+signal rotate_right_requested
+signal dash_requested
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -45,12 +51,29 @@ func _read_inputs():
 	jump_pressed = Input.is_action_just_pressed("jump")
 	jump_held = Input.is_action_pressed("jump")
 	jump_released = Input.is_action_just_released("jump")
+	
+	# Rotation
+	rotate_left_pressed = Input.is_action_just_pressed("rotate_left")
+	rotate_right_pressed = Input.is_action_just_pressed("rotate_right")
+	
+	# Dash
+	dash_pressed = Input.is_action_just_pressed("dash")
 
 func _process_buffers():
 	# Jump buffer
 	if jump_pressed:
 		jump_buffer_timer = JUMP_BUFFER_TIME
 		jump_buffered.emit()
+	
+	# Rotation (immédiat)
+	if rotate_left_pressed:
+		rotate_left_requested.emit()
+	if rotate_right_pressed:
+		rotate_right_requested.emit()
+	
+	# Dash (immédiat)
+	if dash_pressed:
+		dash_requested.emit()
 
 # === GROUNDING SYSTEM ===
 func set_grounded(grounded: bool):
@@ -58,7 +81,6 @@ func set_grounded(grounded: bool):
 	is_grounded = grounded
 	
 	if was_grounded and not grounded:
-		# Start coyote time
 		coyote_timer = COYOTE_TIME
 		coyote_jump_available.emit()
 

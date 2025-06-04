@@ -3,6 +3,7 @@ class_name Player
 
 # === COMPONENTS ===
 @onready var collision: CollisionShape2D = $CollisionShape2D
+@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var ground_left: RayCast2D = $GroundLeft
 @onready var ground_right: RayCast2D = $GroundRight
 @onready var ground_center: RayCast2D = $GroundCenter
@@ -13,38 +14,103 @@ class_name Player
 @onready var wall_right_center: RayCast2D = $WallRightCenter
 @onready var wall_right_bottom: RayCast2D = $WallRightBottom
 
+# === PISTON STATE ===
+enum PistonDirection {
+	DOWN,   # Tête en bas (rotation 0°)
+	LEFT,   # Tête à gauche (rotation 90°)
+	UP,     # Tête en haut (rotation 180°)
+	RIGHT   # Tête à droite (rotation 270°)
+}
+
+var piston_direction: PistonDirection = PistonDirection.DOWN
+var dash_cooldown: float = 0.0
+var is_dashing: bool = false
+var dash_timer: float = 0.0
+
 # === STATE ===
 var was_grounded: bool = false
 var is_on_wall: bool = false
-var wall_side: int = 0  # -1 = left, 1 = right, 0 = none
+var wall_side: int = 0
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 func _ready():
-	# Connect to InputManager signals
+	# Connect signals
 	InputManager.jump_buffered.connect(_on_jump_buffered)
 	InputManager.movement_changed.connect(_on_movement_changed)
-	
-	# Debug RayCast configuration
-	print("Wall RayCast config:")
-	if wall_left_center:
-		print("Left Center - Enabled: ", wall_left_center.enabled, " Mask: ", wall_left_center.collision_mask)
-	if wall_right_center:
-		print("Right Center - Enabled: ", wall_right_center.enabled, " Mask: ", wall_right_center.collision_mask)
+	InputManager.rotate_left_requested.connect(_on_rotate_left)
+	InputManager.rotate_right_requested.connect(_on_rotate_right)
+	InputManager.dash_requested.connect(_on_dash_requested)
 
 func _physics_process(delta):
-	_handle_wall_detection()
-	_handle_gravity(delta)
+	_update_dash_cooldown(delta)
+	_update_dash_state(delta)
+	
+	if not is_dashing:
+		_handle_wall_detection()
+		_handle_gravity(delta)
+		_handle_horizontal_movement(delta)
+	
 	_handle_grounding()
-	_handle_horizontal_movement(delta)
 	_handle_jump()
 	
 	move_and_slide()
 
+# === ROTATION SYSTEM ===
+func _on_rotate_left():
+	_rotate_piston(-1)
+
+func _on_rotate_right():
+	_rotate_piston(1)
+
+func _rotate_piston(direction: int):
+	var new_direction = (piston_direction + direction) % 4
+	if new_direction < 0:
+		new_direction = 3
+	
+	piston_direction = new_direction
+	_update_sprite_rotation()
+
+func _update_sprite_rotation():
+	var rotation_degrees = piston_direction * 90
+	sprite.rotation_degrees = rotation_degrees
+
+# === DASH SYSTEM ===
+func _on_dash_requested():
+	if dash_cooldown <= 0.0:
+		_perform_dash()
+		dash_cooldown = PlayerConstants.DASH_COOLDOWN
+
+func _perform_dash():
+	var dash_vector = _get_dash_direction()
+	velocity = dash_vector * PlayerConstants.DASH_FORCE
+	is_dashing = true
+	dash_timer = PlayerConstants.DASH_DURATION
+
+func _update_dash_state(delta):
+	if is_dashing:
+		dash_timer -= delta
+		if dash_timer <= 0:
+			is_dashing = false
+
+func _get_dash_direction() -> Vector2:
+	match piston_direction:
+		PistonDirection.DOWN:
+			return Vector2.UP
+		PistonDirection.LEFT:
+			return Vector2.RIGHT
+		PistonDirection.UP:
+			return Vector2.DOWN
+		PistonDirection.RIGHT:
+			return Vector2.LEFT
+		_:
+			return Vector2.UP
+
+func _update_dash_cooldown(delta):
+	if dash_cooldown > 0:
+		dash_cooldown -= delta
+
 # === WALL DETECTION ===
 func _handle_wall_detection():
-	# Debug continu des raycast
-	print("RayCast states - Left: ", wall_left_center.is_colliding(), " Right: ", wall_right_center.is_colliding())
-	
 	var left_wall = (wall_left_top and wall_left_top.is_colliding()) or \
 					(wall_left_center and wall_left_center.is_colliding()) or \
 					(wall_left_bottom and wall_left_bottom.is_colliding())
@@ -53,41 +119,29 @@ func _handle_wall_detection():
 					 (wall_right_center and wall_right_center.is_colliding()) or \
 					 (wall_right_bottom and wall_right_bottom.is_colliding())
 	
-	# Debug
-	if left_wall or right_wall:
-		print("Wall detected - Left: ", left_wall, " Right: ", right_wall, " On floor: ", is_on_floor())
-	
 	if left_wall and not is_on_floor():
 		is_on_wall = true
 		wall_side = -1
-		print("On left wall")
 	elif right_wall and not is_on_floor():
 		is_on_wall = true
 		wall_side = 1
-		print("On right wall")
 	else:
-		if is_on_wall:
-			print("Left wall")
 		is_on_wall = false
 		wall_side = 0
 
-# === GRAVITY ===
 # === GRAVITY ===
 func _handle_gravity(delta):
 	if not is_on_floor():
 		var gravity_multiplier = PlayerConstants.GRAVITY_MULTIPLIER
 		
-		# Réduction de gravité quand on glisse contre un mur
-		if is_on_wall and velocity.y > 0:  # Contre un mur ET en train de descendre
+		if is_on_wall and velocity.y > 0:
 			gravity_multiplier *= PlayerConstants.WALL_SLIDE_MULTIPLIER
 		
 		velocity.y += gravity * gravity_multiplier * delta
 		
-		# Variable jump height
 		if velocity.y < 0 and InputManager.was_jump_released():
 			velocity.y *= PlayerConstants.JUMP_CUT_MULTIPLIER
 		
-		# Max fall speed (réduite contre les murs)
 		var max_fall = PlayerConstants.MAX_FALL_SPEED
 		if is_on_wall and velocity.y > 0:
 			max_fall *= PlayerConstants.WALL_SLIDE_MAX_SPEED_MULTIPLIER
@@ -98,7 +152,6 @@ func _handle_gravity(delta):
 func _handle_grounding():
 	var grounded = is_on_floor()
 	
-	# Détection par raycast si disponibles
 	if ground_left and ground_right and ground_center:
 		grounded = ground_left.is_colliding() or ground_right.is_colliding() or ground_center.is_colliding()
 	
@@ -111,16 +164,13 @@ func _handle_horizontal_movement(delta):
 	var input_dir = InputManager.get_movement()
 	
 	if input_dir != 0:
-		# Acceleration instantanée pour réactivité Celeste
 		velocity.x = input_dir * PlayerConstants.SPEED
 	else:
-		# Friction rapide
 		var friction_force = PlayerConstants.FRICTION if is_on_floor() else PlayerConstants.AIR_RESISTANCE
 		velocity.x = move_toward(velocity.x, 0, friction_force * delta)
 
 # === JUMP ===
 func _handle_jump():
-	# Check for buffered jump or coyote jump
 	if InputManager.consume_jump_buffer():
 		if is_on_floor() or InputManager.can_coyote_jump():
 			_perform_jump()
@@ -132,14 +182,11 @@ func _perform_jump():
 
 func _perform_wall_jump():
 	velocity.y = PlayerConstants.JUMP_VELOCITY
-	# Push away from wall
 	velocity.x = -wall_side * PlayerConstants.SPEED * 1.2
 
 # === SIGNAL HANDLERS ===
 func _on_jump_buffered():
-	# Jump buffer handled in _handle_jump()
 	pass
 
 func _on_movement_changed(direction: float):
-	# Movement handled in _handle_horizontal_movement()
 	pass
