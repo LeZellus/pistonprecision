@@ -72,16 +72,27 @@ func _handle_wall_detection():
 		wall_side = 0
 
 # === GRAVITY ===
+# === GRAVITY ===
 func _handle_gravity(delta):
 	if not is_on_floor():
-		velocity.y += gravity * PlayerConstants.GRAVITY_MULTIPLIER * delta
+		var gravity_multiplier = PlayerConstants.GRAVITY_MULTIPLIER
+		
+		# Réduction de gravité quand on glisse contre un mur
+		if is_on_wall and velocity.y > 0:  # Contre un mur ET en train de descendre
+			gravity_multiplier *= PlayerConstants.WALL_SLIDE_MULTIPLIER
+		
+		velocity.y += gravity * gravity_multiplier * delta
 		
 		# Variable jump height
 		if velocity.y < 0 and InputManager.was_jump_released():
 			velocity.y *= PlayerConstants.JUMP_CUT_MULTIPLIER
 		
-		# Max fall speed
-		velocity.y = min(velocity.y, PlayerConstants.MAX_FALL_SPEED)
+		# Max fall speed (réduite contre les murs)
+		var max_fall = PlayerConstants.MAX_FALL_SPEED
+		if is_on_wall and velocity.y > 0:
+			max_fall *= PlayerConstants.WALL_SLIDE_MAX_SPEED_MULTIPLIER
+			
+		velocity.y = min(velocity.y, max_fall)
 
 # === GROUNDING ===
 func _handle_grounding():
