@@ -8,7 +8,7 @@
 [node name="TileMapLayer" parent="." instance=ExtResource("1_dgocu")]
 
 [node name="CharacterBody2D" parent="." instance=ExtResource("1_jo2q4")]
-position = Vector2(198, 231)
+position = Vector2(212, 212)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(240, 137)

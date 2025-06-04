@@ -1,18 +1,61 @@
-[gd_resource type="SpriteFrames" load_steps=3 format=3 uid="uid://j4q15hu1yxfw"]
+[gd_resource type="SpriteFrames" load_steps=7 format=3 uid="uid://j4q15hu1yxfw"]
 
 [ext_resource type="Texture2D" uid="uid://b74ojjb1q6pmt" path="res://assets/sprites/player/PistonSpritesheet.png" id="1_m66vt"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_bmhu0"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_djrw8"]
 atlas = ExtResource("1_m66vt")
-region = Rect2(0, 0, 16, 16)
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_baqhl"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_10u35"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1d3og"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(128, 0, 32, 24)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_01jdo"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(0, 32, 32, 32)
 
 [resource]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_bmhu0")
+"texture": SubResource("AtlasTexture_djrw8")
+}],
+"loop": true,
+"name": &"Fall",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_baqhl")
 }],
 "loop": true,
 "name": &"Idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_10u35")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1d3og")
+}],
+"loop": false,
+"name": &"Jump",
+"speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_01jdo")
+}],
+"loop": true,
+"name": &"Run",
 "speed": 5.0
 }]

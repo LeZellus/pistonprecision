@@ -23,15 +23,12 @@ enum PistonDirection {
 }
 
 var piston_direction: PistonDirection = PistonDirection.DOWN
-var dash_cooldown: float = 0.0
-var is_dashing: bool = false
-var dash_start_position: Vector2
-var dash_direction: Vector2
 
 # === STATE ===
 var was_grounded: bool = false
 var is_on_wall: bool = false
 var wall_side: int = 0
+var is_jumping: bool = false
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 func _ready():
@@ -39,22 +36,28 @@ func _ready():
 	InputManager.movement_changed.connect(_on_movement_changed)
 	InputManager.rotate_left_requested.connect(_on_rotate_left)
 	InputManager.rotate_right_requested.connect(_on_rotate_right)
-	InputManager.dash_requested.connect(_on_dash_requested)
 
 func _physics_process(delta):
-	_update_dash_cooldown(delta)
-	
-	if is_dashing:
-		_handle_dash_distance_limit()
-	
+	delta = min(delta, 1.0/30.0)
 	_handle_wall_detection()
 	_handle_gravity(delta)
 	_handle_horizontal_movement(delta)
 	
 	_handle_grounding()
 	_handle_jump()
+	_handle_animations()
 	
 	move_and_slide()
+
+# === ANIMATIONS ===
+func _handle_animations():
+	if not is_on_floor():
+		if is_jumping or velocity.y < -50:
+			if sprite.animation != "Jump":
+				sprite.play("Jump")
+	else:
+		is_jumping = false
+		sprite.play("Idle")
 
 # === ROTATION SYSTEM ===
 func _on_rotate_left():
@@ -73,54 +76,6 @@ func _rotate_piston(direction: int):
 
 func _update_sprite_rotation():
 	sprite.rotation_degrees = piston_direction * 90
-
-# === DASH SYSTEM AVEC DISTANCE FIXE ===
-func _on_dash_requested():
-	if dash_cooldown <= 0.0 and not is_dashing:
-		_perform_dash()
-
-func _perform_dash():
-	dash_direction = _get_dash_direction()
-	var dash_impulse = dash_direction * PlayerConstants.DASH_IMPULSE
-	
-	# Ajoute l'impulsion à la velocity actuelle
-	velocity += dash_impulse
-	
-	# Active le contrôle de distance
-	is_dashing = true
-	dash_start_position = global_position
-	dash_cooldown = PlayerConstants.DASH_COOLDOWN
-
-func _handle_dash_distance_limit():
-	var distance_traveled = dash_start_position.distance_to(global_position)
-	
-	if distance_traveled >= PlayerConstants.DASH_DISTANCE:
-		is_dashing = false
-		# Arrête seulement la composante du dash, garde le momentum perpendiculaire
-		var dash_component = velocity.project(dash_direction)
-		var perpendicular_momentum = velocity - dash_component
-		velocity = perpendicular_momentum
-
-func _handle_dash_physics(delta):
-	# Plus besoin de cette fonction avec le système d'impulsion
-	pass
-
-func _get_dash_direction() -> Vector2:
-	match piston_direction:
-		PistonDirection.DOWN:
-			return Vector2.UP
-		PistonDirection.LEFT:
-			return Vector2.RIGHT
-		PistonDirection.UP:
-			return Vector2.DOWN
-		PistonDirection.RIGHT:
-			return Vector2.LEFT
-		_:
-			return Vector2.UP
-
-func _update_dash_cooldown(delta):
-	if dash_cooldown > 0:
-		dash_cooldown -= delta
 
 # === WALL DETECTION ===
 func _handle_wall_detection():
@@ -184,6 +139,10 @@ func _handle_horizontal_movement(delta):
 
 # === JUMP ===
 func _handle_jump():
+	# Ne peut sauter que si le piston pointe vers le bas
+	if piston_direction != PistonDirection.DOWN:
+		return
+		
 	if InputManager.consume_jump_buffer():
 		if is_on_floor() or InputManager.can_coyote_jump():
 			_perform_jump()
@@ -192,6 +151,7 @@ func _handle_jump():
 
 func _perform_jump():
 	velocity.y = PlayerConstants.JUMP_VELOCITY
+	is_jumping = true
 
 func _perform_wall_jump():
 	velocity.y = PlayerConstants.JUMP_VELOCITY
