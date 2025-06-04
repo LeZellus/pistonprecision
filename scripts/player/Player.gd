@@ -34,6 +34,7 @@ var was_grounded: bool = false
 var is_on_wall: bool = false
 var wall_side: int = 0
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
+var dash_start_position: Vector2
 
 func _ready():
 	InputManager.jump_buffered.connect(_on_jump_buffered)
@@ -82,25 +83,34 @@ func _on_dash_requested():
 
 func _perform_dash():
 	var dash_direction = _get_dash_direction()
-	dash_velocity = dash_direction * PlayerConstants.DASH_FORCE
+	var dash_speed = PlayerConstants.DASH_DISTANCE / PlayerConstants.DASH_DURATION
+	dash_velocity = dash_direction * dash_speed
 	dash_distance_remaining = PlayerConstants.DASH_DISTANCE
+	dash_start_position = global_position
 	
 	is_dashing = true
 	dash_timer = PlayerConstants.DASH_DURATION
 	dash_cooldown = PlayerConstants.DASH_COOLDOWN
-	
-	velocity = dash_velocity
 
 func _handle_dash_physics(delta):
 	dash_timer -= delta
-	var distance_this_frame = dash_velocity.length() * delta
-	dash_distance_remaining -= distance_this_frame
 	
-	if dash_timer <= 0 or dash_distance_remaining <= 0:
+	# Calcule la distance parcourue depuis le début
+	var distance_traveled = dash_start_position.distance_to(global_position)
+	
+	# Arrête si on a parcouru 24px ou si le temps est écoulé
+	if dash_timer <= 0 or distance_traveled >= PlayerConstants.DASH_DISTANCE:
 		is_dashing = false
 		dash_velocity = Vector2.ZERO
 		dash_distance_remaining = 0.0
+		# Décélération progressive au lieu d'arrêt net
+		var decel_factor = 0.1  # Ajuste cette valeur (0.0-1.0)
+		if piston_direction == PistonDirection.DOWN or piston_direction == PistonDirection.UP:
+			velocity.y *= decel_factor
+		if piston_direction == PistonDirection.LEFT or piston_direction == PistonDirection.RIGHT:
+			velocity.x *= decel_factor
 	else:
+		# Applique la vitesse de dash (remplace complètement velocity)
 		velocity = dash_velocity
 
 func _get_dash_direction() -> Vector2:
