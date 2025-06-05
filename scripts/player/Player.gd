@@ -52,7 +52,7 @@ func _on_rotate_right():
 	_rotate_piston(1)
 
 func _rotate_piston(direction: int):
-	piston_direction = (piston_direction + direction) % 4 if direction > 0 else (piston_direction + direction + 4) % 4
+	piston_direction = (piston_direction + direction + 4) % 4
 	sprite.rotation_degrees = piston_direction * 90
 
 # === GRAVITY ===

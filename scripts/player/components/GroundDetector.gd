@@ -19,7 +19,7 @@ func _setup_rays():
 	]
 
 func is_grounded() -> bool:
-	return player.is_on_floor() or _any_ray_colliding()
+	return player.is_on_floor()
 
 func _any_ray_colliding() -> bool:
 	return ground_rays.any(func(ray): return ray and ray.is_colliding())

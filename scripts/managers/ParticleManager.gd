@@ -43,10 +43,6 @@ func _get_particle_scene(type: String) -> PackedScene:
 		"run": return RUN_PARTICLE
 		_: return null
 
-# === PARTICLE EMISSION ===
-func emit_run(position: Vector2, direction: float = 0.0):
-	_emit_particle("dust", position, {"direction": direction})
-
 func emit_jump(position: Vector2, follow_target: Node2D = null, target_offset: Vector2 = Vector2.ZERO):
 	var params = {}
 	if follow_target:

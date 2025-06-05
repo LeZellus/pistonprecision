@@ -2,7 +2,8 @@ class_name RunningState
 extends BaseState
 
 func enter():
-	player.sprite.play("Run")
+	# player.sprite.play("Run")
+	pass
 
 func physics_update(delta: float):
 	var velocity = player.velocity
