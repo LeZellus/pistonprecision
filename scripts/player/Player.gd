@@ -8,32 +8,44 @@ class_name Player
 @onready var wall_detector: WallDetector
 @onready var push_detector: PushDetector
 
+# === CACHED REFERENCES ===
+var camera: Camera2D  # Cache de la caméra pour éviter les appels répétés
+
 # === PISTON STATE ===
-enum PistonDirection { DOWN, LEFT, UP, RIGHT }  # Ordre corrigé pour l'animation
+enum PistonDirection { DOWN, LEFT, UP, RIGHT }
 var piston_direction: PistonDirection = PistonDirection.DOWN
 
-# === STATE ===
+# === PHYSICS CACHE ===
+var gravity: float
 var was_grounded: bool = false
-var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var wall_jump_timer: float = 0.0
+
+# === CONSTANTS ===
 const WALL_JUMP_GRACE_TIME: float = 0.15
 
 func _ready():
+	_cache_physics_values()
+	_cache_camera_reference()
 	_setup_detectors()
 	_connect_signals()
 	state_machine.init(self)
+
+func _cache_physics_values():
+	gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
+
+func _cache_camera_reference():
+	# Cache la référence caméra une seule fois
+	camera = get_viewport().get_camera_2d()
+	if not camera:
+		push_warning("Aucune caméra trouvée dans la scène")
 
 func _connect_signals():
 	InputManager.rotate_left_requested.connect(_on_rotate_left)
 	InputManager.rotate_right_requested.connect(_on_rotate_right)
 	
-	# Connexion sécurisée pour le dash
 	if InputManager.has_signal("dash_requested"):
 		if not InputManager.dash_requested.is_connected(_on_push_requested):
 			InputManager.dash_requested.connect(_on_push_requested)
-			print("Signal dash_requested connecté avec succès")
-	else:
-		push_error("Signal dash_requested n'existe pas dans InputManager!")
 
 func _unhandled_input(event: InputEvent):
 	state_machine.process_input(event)
@@ -42,7 +54,7 @@ func _process(delta: float):
 	state_machine.process_frame(delta)
 
 func _physics_process(delta: float):
-	delta = min(delta, 1.0/30.0)
+	delta = min(delta, 1.0/30.0)  # Cap pour éviter les gros deltas
 	_handle_grounding()
 	_update_wall_jump_timer(delta)
 	state_machine.process_physics(delta)
@@ -51,7 +63,7 @@ func _update_wall_jump_timer(delta: float):
 	if wall_jump_timer > 0:
 		wall_jump_timer -= delta
 
-# === MOVEMENT METHODS ===
+# === MOVEMENT METHODS (Optimisées) ===
 func apply_gravity(delta: float):
 	if not is_on_floor():
 		velocity.y += gravity * PlayerConstants.GRAVITY_MULTIPLIER * delta
@@ -63,13 +75,12 @@ func apply_movement(delta: float):
 		velocity.x = input_dir * PlayerConstants.SPEED
 
 func apply_air_movement(delta: float):
-	var input_dir = InputManager.get_movement()
-	if input_dir != 0:
-		velocity.x = input_dir * PlayerConstants.SPEED
+	# Même logique que apply_movement pour l'instant
+	apply_movement(delta)
 
 func apply_friction(delta: float):
-	var friction = PlayerConstants.FRICTION if is_on_floor() else PlayerConstants.AIR_RESISTANCE
-	velocity.x = move_toward(velocity.x, 0, friction * delta)
+	var friction_value = PlayerConstants.FRICTION if is_on_floor() else PlayerConstants.AIR_RESISTANCE
+	velocity.x = move_toward(velocity.x, 0, friction_value * delta)
 
 func apply_wall_slide(delta: float):
 	if velocity.y > 0:
@@ -93,14 +104,6 @@ func wall_jump():
 	
 	AudioManager.play_sfx("player/jump", 0.1)
 
-func _get_push_vector() -> Vector2:
-	match piston_direction:
-		PistonDirection.DOWN: return Vector2.DOWN
-		PistonDirection.LEFT: return Vector2.LEFT
-		PistonDirection.UP: return Vector2.UP
-		PistonDirection.RIGHT: return Vector2.RIGHT
-		_: return Vector2.DOWN
-
 # === WALL DETECTION ===
 func can_wall_slide() -> bool:
 	return wall_detector.is_touching_wall() and wall_jump_timer <= 0
@@ -113,116 +116,81 @@ func _on_rotate_right():
 	_rotate_piston(1)
 
 func _on_push_requested():
-	print("Push requested!")
 	push()
 
 func _rotate_piston(direction: int):
 	piston_direction = (piston_direction + direction + 4) % 4
-	# Rotation normale du sprite pour la tête du piston
 	sprite.rotation_degrees = piston_direction * 90
-	print("Nouvelle direction piston: ", PistonDirection.keys()[piston_direction])
-	print("Rotation sprite: ", sprite.rotation_degrees, "°")
 
-# === PUSH SYSTEM ===
+func _get_push_vector() -> Vector2:
+	match piston_direction:
+		PistonDirection.DOWN: return Vector2.DOWN
+		PistonDirection.LEFT: return Vector2.LEFT
+		PistonDirection.UP: return Vector2.UP
+		PistonDirection.RIGHT: return Vector2.RIGHT
+		_: return Vector2.DOWN
+
+# === PUSH SYSTEM (Optimisé) ===
 func push():
-	# Ne pas push si la tête est vers le bas (contre le sol)
 	if piston_direction == PistonDirection.DOWN:
-		print("Impossible de pousser vers le bas!")
 		return
 	
 	var push_vector = _get_push_vector()
 	
-	# Vérifier si on peut faire l'action (même sans objet)
 	if not _can_perform_push_action(push_vector):
-		print("Push bloqué - Joueur contre un mur")
 		return
 	
-	# Tenter de pousser un objet (AVANT l'animation)
 	var success = _attempt_push(push_vector)
 	var has_pushable_object = push_detector.detect_pushable_object(push_vector) != null
 	
-	# Animation seulement si :
-	# - Il y a un objet ET le push a réussi
-	# - OU il n'y a pas d'objet (animation dans le vide)
 	if (has_pushable_object and success) or (not has_pushable_object):
-		# Faire l'animation de push
-		sprite.play("Push")
-		
-		# FIX: Déconnecter d'abord si déjà connecté pour éviter les doublons
-		if sprite.animation_finished.is_connected(_on_push_animation_finished):
-			sprite.animation_finished.disconnect(_on_push_animation_finished)
-		
-		sprite.animation_finished.connect(_on_push_animation_finished, CONNECT_ONE_SHOT)
+		_play_push_animation()
 		
 		if success:
-			print("Objet poussé avec succès!")
-			# AudioManager.play_sfx("player/push", 0.2)  # Commenté car son manquant
-			
-			# SHAKE ÉCRAN quand push réussi
 			_trigger_push_shake()
-		else:
-			print("Animation de push dans le vide")
-	else:
-		print("Push impossible - Objet bloqué, pas d'animation")
 
-func _can_perform_push_action(direction: Vector2) -> bool:
-	# Vérifier si le joueur lui-même est contre un mur dans la direction du push
-	var space_state = get_world_2d().direct_space_state
-	var test_distance = 8.0  # Distance de test depuis le joueur
-	var start_pos = global_position
-	var end_pos = start_pos + direction * test_distance
+func _play_push_animation():
+	sprite.play("Push")
 	
-	var query = PhysicsRayQueryParameters2D.create(start_pos, end_pos)
-	query.collision_mask = 0b00000010  # SEULEMENT les murs (layer 2), PAS les objets pushables (layer 3)
-	query.exclude = [self]
-	
-	var result = space_state.intersect_ray(query)
-	if result:
-		print("Joueur bloqué par un mur dans la direction: ", direction)
-		return false
-	
-	return true
-
-func _attempt_push(direction: Vector2) -> bool:
-	var pushable_object = push_detector.detect_pushable_object(direction)
-	
-	if not pushable_object:
-		print("Aucun objet pushable détecté")
-		return false
-	
-	# Vérifier si l'objet peut être poussé (il gère sa propre détection de mur)
-	var success = pushable_object.push(direction, pushable_object.push_force)
-	return success
-
-func _on_push_animation_finished():
-	# FIX: Déconnecter explicitement le signal pour éviter les résidus
+	# Déconnecter si déjà connecté
 	if sprite.animation_finished.is_connected(_on_push_animation_finished):
 		sprite.animation_finished.disconnect(_on_push_animation_finished)
 	
-	# Revenir à l'animation appropriée selon l'état
-	if is_on_floor():
-		if InputManager.get_movement() != 0:
-			sprite.play("Run")
-		else:
-			sprite.play("Idle")
-	else:
-		if velocity.y < 0:
-			sprite.play("Jump")
-		else:
-			sprite.play("Fall")
+	sprite.animation_finished.connect(_on_push_animation_finished, CONNECT_ONE_SHOT)
+
+func _can_perform_push_action(direction: Vector2) -> bool:
+	var space_state = get_world_2d().direct_space_state
+	var query = PhysicsRayQueryParameters2D.create(
+		global_position,
+		global_position + direction * 8.0
+	)
+	query.collision_mask = 0b00000010  # Seulement les murs
+	query.exclude = [self]
+	
+	return not space_state.intersect_ray(query)
+
+func _attempt_push(direction: Vector2) -> bool:
+	var pushable_object = push_detector.detect_pushable_object(direction)
+	if not pushable_object:
+		return false
+	
+	return pushable_object.push(direction, pushable_object.push_force)
 
 func _trigger_push_shake():
-	var camera = get_viewport().get_camera_2d()
-	if not camera:
-		print("Aucune caméra trouvée pour le shake")
+	if not camera or not camera.has_method("shake"):
 		return
 	
-	# Appeler directement shake() sur la caméra
-	if camera.has_method("shake"):
-		camera.shake(8.0, 0.15)
-		print("Shake déclenché!")
+	camera.shake(8.0, 0.15)
+
+func _on_push_animation_finished():
+	if sprite.animation_finished.is_connected(_on_push_animation_finished):
+		sprite.animation_finished.disconnect(_on_push_animation_finished)
+	
+	# Retour à l'animation appropriée
+	if is_on_floor():
+		sprite.play("Run" if InputManager.get_movement() != 0 else "Idle")
 	else:
-		print("ERREUR: Méthode shake() introuvable sur la caméra")
+		sprite.play("Jump" if velocity.y < 0 else "Fall")
 
 # === GROUNDING ===
 func _handle_grounding():
@@ -237,7 +205,7 @@ func _handle_grounding():
 	if grounded != was_grounded:
 		InputManager.set_grounded(grounded)
 		was_grounded = grounded
-		
+
 func _setup_detectors():
 	ground_detector = GroundDetector.new(self)
 	wall_detector = WallDetector.new(self)
