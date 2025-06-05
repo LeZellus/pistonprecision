@@ -40,6 +40,12 @@ func _process(delta):
 	if current_state == GameState.PLAYING:
 		level_time += delta
 		total_time += delta
+		
+		# DEBUG: Envoyer des métriques au debug manager
+		var debug_manager = get_node("/root/DebugManager") if has_node("/root/DebugManager") else null
+		if debug_manager:
+			debug_manager.add_custom_info("GAME", "Deaths", str(deaths_count))
+			debug_manager.add_custom_info("GAME", "Current Level", current_level)
 
 # === STATE MANAGEMENT ===
 func change_state(new_state: GameState):
@@ -128,3 +134,13 @@ func load_game_data():
 		collectibles_found = save_data.get("collectibles_found", {})
 		best_times = save_data.get("best_times", {})
 		total_time = save_data.get("total_time", 0.0)
+		
+func example_performance_measurement():
+	var start_time = Time.get_time_dict_from_system()
+	var start_ms = start_time.hour * 3600000 + start_time.minute * 60000 + start_time.second * 1000 + start_time.msec
+	
+	# ...  code à mesurer ...
+	
+	var debug_manager = get_node("/root/DebugManager")
+	if debug_manager:
+		debug_manager.log_performance("MonBloc", start_ms)

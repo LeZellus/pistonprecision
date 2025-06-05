@@ -29,6 +29,8 @@ func _ready():
 	_setup_detectors()
 	_connect_signals()
 	state_machine.init(self)
+	
+	add_to_group("player")
 
 func _cache_physics_values():
 	gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
