@@ -2,26 +2,21 @@ class_name RunState
 extends State
 
 func _ready():
-	pass
-func enter() -> void:
-	super.enter()
+	animation_name = "Run"
 
 func process_physics(delta: float) -> State:
-	parent.apply_gravity(delta)
-	parent.apply_movement(delta)
-	parent.move_and_slide()
+	apply_ground_physics(delta)
 	
-	# Transitions (reste inchangé)
-	if not parent.is_on_floor():
-		if parent.velocity.y < 0:
-			return get_node("../JumpState")
-		else:
-			return get_node("../FallState")
+	# Transitions dans l'ordre de priorité
+	var next_state = check_ground_transitions()
+	if next_state: return next_state
 	
+	next_state = check_jump_input()
+	if next_state: return next_state
+	
+	return _check_idle()
+
+func _check_idle() -> State:
 	if InputManager.get_movement() == 0:
 		return get_node("../IdleState")
-	
-	if InputManager.consume_jump_buffer() and parent.piston_direction == Player.PistonDirection.DOWN:
-		return get_node("../JumpState")
-	
 	return null

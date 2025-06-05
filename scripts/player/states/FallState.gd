@@ -5,25 +5,19 @@ func _ready() -> void:
 	animation_name = "Fall"
 
 func process_physics(delta: float) -> State:
-	parent.apply_gravity(delta)
-	parent.apply_air_movement(delta)
-	parent.move_and_slide()
+	apply_air_physics(delta)
 	
-	# Ajoutez cette vérification pour le coyote jump
+	# Coyote jump
 	if InputManager.consume_jump_buffer() and InputManager.can_coyote_jump():
 		return get_node("../JumpState")
 	
-	# Transitions - PRIORITÉ au sol
-	if parent.is_on_floor():
-		if InputManager.get_movement() != 0:
-			return get_node("../RunState")
-		else:
-			return get_node("../IdleState")
+	# Transitions dans l'ordre de priorité  
+	var next_state = check_air_transitions()
+	if next_state: return next_state
 	
-	if parent.velocity.y < -50:
-		return get_node("../JumpState")
-	
+	return _check_wall_slide()
+
+func _check_wall_slide() -> State:
 	if parent.wall_detector.is_touching_wall() and parent.velocity.y > 50:
 		return get_node("../WallSlideState")
-	
 	return null
