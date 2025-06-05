@@ -2,7 +2,7 @@ extends Node
 
 # === BUFFER SETTINGS ===
 const JUMP_BUFFER_TIME = 0.1
-const COYOTE_TIME = 0.12
+const COYOTE_TIME = 0.05
 
 # === INPUT STATES ===
 var jump_buffer_timer: float = 0.0

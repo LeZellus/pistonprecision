@@ -1,6 +1,9 @@
 class_name IdleState
 extends State
 
+func _ready() -> void:
+	animation_name = "Idle"
+
 func process_physics(delta: float) -> State:
 	parent.apply_gravity(delta)
 	parent.apply_friction(delta)

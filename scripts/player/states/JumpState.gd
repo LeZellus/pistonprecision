@@ -1,6 +1,9 @@
 class_name JumpState
 extends State
 
+func _ready() -> void:
+	animation_name = "Jump"
+
 func process_physics(delta: float) -> State:
 	parent.apply_gravity(delta)
 	parent.apply_air_movement(delta)

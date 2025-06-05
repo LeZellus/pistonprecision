@@ -1,14 +1,10 @@
-[gd_resource type="SpriteFrames" load_steps=10 format=3 uid="uid://j4q15hu1yxfw"]
+[gd_resource type="SpriteFrames" load_steps=9 format=3 uid="uid://j4q15hu1yxfw"]
 
 [ext_resource type="Texture2D" uid="uid://b74ojjb1q6pmt" path="res://assets/sprites/player/PistonSpritesheet.png" id="1_m66vt"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_tdj30"]
 atlas = ExtResource("1_m66vt")
 region = Rect2(96, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_2kavn"]
-atlas = ExtResource("1_m66vt")
-region = Rect2(64, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_anxt5"]
 atlas = ExtResource("1_m66vt")
@@ -18,7 +14,7 @@ region = Rect2(32, 0, 32, 32)
 atlas = ExtResource("1_m66vt")
 region = Rect2(160, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_baqhl"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_0mhvu"]
 atlas = ExtResource("1_m66vt")
 region = Rect2(0, 0, 32, 32)
 
@@ -41,22 +37,19 @@ animations = [{
 "texture": SubResource("AtlasTexture_tdj30")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_2kavn")
-}, {
-"duration": 1.0,
 "texture": SubResource("AtlasTexture_anxt5")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_17okb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0mhvu")
 }],
 "loop": false,
 "name": &"Fall",
 "speed": 25.0
 }, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_baqhl")
-}],
+"frames": [],
 "loop": true,
 "name": &"Idle",
 "speed": 5.0
