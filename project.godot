@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 GameManager="*res://scripts/managers/GameManager.gd"
 InputManager="*res://scripts/managers/InputManager.gd"
+AudioManager="*res://scripts/managers/AudioManager.gd"
 
 [display]
 
@@ -32,6 +33,7 @@ window/stretch/mode="viewport"
 
 folder_colors={
 "res://assets/": "red",
+"res://audio/": "purple",
 "res://resources/": "yellow",
 "res://scenes/": "green",
 "res://scripts/": "teal"

@@ -1,10 +1,14 @@
-[gd_resource type="SpriteFrames" load_steps=7 format=3 uid="uid://j4q15hu1yxfw"]
+[gd_resource type="SpriteFrames" load_steps=8 format=3 uid="uid://j4q15hu1yxfw"]
 
 [ext_resource type="Texture2D" uid="uid://b74ojjb1q6pmt" path="res://assets/sprites/player/PistonSpritesheet.png" id="1_m66vt"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_djrw8"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_3pf4m"]
 atlas = ExtResource("1_m66vt")
-region = Rect2(0, 0, 32, 32)
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3axh6"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(160, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_baqhl"]
 atlas = ExtResource("1_m66vt")
@@ -26,7 +30,10 @@ region = Rect2(0, 32, 32, 32)
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_djrw8")
+"texture": SubResource("AtlasTexture_3pf4m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3axh6")
 }],
 "loop": true,
 "name": &"Fall",
