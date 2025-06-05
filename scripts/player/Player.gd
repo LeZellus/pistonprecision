@@ -159,6 +159,7 @@ func _setup_detectors():
 	add_child(push_detector)  # NOUVEAU
 
 # Remplace la fonction push() par :
+
 func push():
 	# Ne pas push si la tête est vers le bas (contre le sol)
 	if piston_direction == PistonDirection.DOWN:
@@ -170,7 +171,10 @@ func push():
 	
 	if success:
 		print("Objet poussé avec succès!")
-		AudioManager.play_sfx("player/push", 0.2)  # Son de push
+		# AudioManager.play_sfx("player/push", 0.2)  # Commenté car son manquant
+		
+		# SHAKE ÉCRAN quand push réussi
+		_trigger_push_shake()
 		
 		# ANIMATION SEULEMENT SI LE PUSH A RÉUSSI
 		sprite.play("Push")
@@ -180,21 +184,42 @@ func push():
 	else:
 		print("Push impossible - Aucune animation")
 
-# Remplace _attempt_push par :
+func _trigger_push_shake():
+	# Chercher la caméra dans la scène
+	var camera = get_viewport().get_camera_2d()
+	if not camera:
+		print("Aucune caméra trouvée pour le shake")
+		return
+	
+	# Chercher le composant CameraShake ou le créer
+	var shake_component = camera.get_node_or_null("Camera2D")
+	if not shake_component:
+		# Créer le composant dynamiquement si pas trouvé
+		var shake_script = load("res://scripts/utilities/Camera.gd")
+		if shake_script:
+			shake_component = shake_script.new()
+			shake_component.name = "CameraShake"
+			shake_component.camera = camera
+			camera.add_child(shake_component)
+			print("CameraShake créé dynamiquement")
+		else:
+			print("ERREUR: Script CameraShake introuvable")
+			return
+	
+	# Déclencher le shake (intensité, durée)
+	if shake_component and shake_component.has_method("shake"):
+		shake_component.shake(8.0, 0.15)  # Shake léger de 8 pixels pendant 0.15s
+		print("Shake déclenché!")
+	else:
+		print("ERREUR: Méthode shake() introuvable")
+
 func _attempt_push(direction: Vector2) -> bool:
 	var pushable_object = push_detector.detect_pushable_object(direction)
 	
-	if pushable_object:
-		var push_distance = push_detector.get_push_distance(direction)
-		
-		# Vérifier qu'il y a assez d'espace pour pousser (minimum 2 pixels)
-		if push_distance < 2.0:
-			print("Pas assez d'espace pour pousser")
-			return false
-		
-		# UTILISER LA FORCE DE L'OBJET directement - ÉNORME RÉACTIVITÉ
-		var final_force = pushable_object.push_force  # Utilise la vraie valeur de push_force !
-		
-		return pushable_object.push(direction, final_force)
+	if not pushable_object:
+		print("Aucun objet pushable détecté")
+		return false
 	
-	return false
+	# Appliquer directement la force - laisser PushableObject gérer les collisions
+	var success = pushable_object.push(direction, pushable_object.push_force)
+	return success
