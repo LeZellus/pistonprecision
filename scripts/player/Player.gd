@@ -179,6 +179,14 @@ func _on_push_animation_finished():
 func _handle_grounding():
 	var grounded = is_on_floor()
 	
+	# OPTIMISATION: Activer/désactiver les wall raycasts selon le contexte
+	if grounded and was_grounded:
+		# Si on reste au sol, désactiver wall detection
+		wall_detector.set_active(false)
+	elif not grounded:
+		# Si on est en l'air, activer wall detection
+		wall_detector.set_active(true)
+	
 	if grounded and not was_grounded:
 		AudioManager.play_sfx("player/land", 0.01)
 		var dust_pos = global_position + Vector2(0, -4)
