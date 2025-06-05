@@ -21,7 +21,7 @@ shape = SubResource("RectangleShape2D_iwv1m")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = ExtResource("2_kqkg1")
-animation = &"Fall"
+animation = &"Push"
 
 [node name="WallLeftTop" type="RayCast2D" parent="."]
 modulate = Color(0.780986, 0.199655, 0.453845, 1)

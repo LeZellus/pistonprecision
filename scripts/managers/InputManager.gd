@@ -58,6 +58,8 @@ func _read_inputs():
 	
 	# Dash
 	dash_pressed = Input.is_action_just_pressed("dash")
+	if dash_pressed:
+		print("DASH DÉTECTÉ dans InputManager!")
 
 func _process_buffers():
 	# Jump buffer

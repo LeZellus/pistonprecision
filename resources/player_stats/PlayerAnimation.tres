@@ -1,18 +1,6 @@
-[gd_resource type="SpriteFrames" load_steps=9 format=3 uid="uid://j4q15hu1yxfw"]
+[gd_resource type="SpriteFrames" load_steps=14 format=3 uid="uid://j4q15hu1yxfw"]
 
 [ext_resource type="Texture2D" uid="uid://b74ojjb1q6pmt" path="res://assets/sprites/player/PistonSpritesheet.png" id="1_m66vt"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_tdj30"]
-atlas = ExtResource("1_m66vt")
-region = Rect2(96, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_anxt5"]
-atlas = ExtResource("1_m66vt")
-region = Rect2(32, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_17okb"]
-atlas = ExtResource("1_m66vt")
-region = Rect2(160, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0mhvu"]
 atlas = ExtResource("1_m66vt")
@@ -26,6 +14,38 @@ region = Rect2(0, 0, 32, 32)
 atlas = ExtResource("1_m66vt")
 region = Rect2(128, 0, 32, 24)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_s1q30"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_27hjk"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(64, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_utw50"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(96, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ijy5d"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(128, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_inovb"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(160, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bbsvv"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(192, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0ke77"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(224, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c8bg6"]
+atlas = ExtResource("1_m66vt")
+region = Rect2(256, 32, 32, 32)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_01jdo"]
 atlas = ExtResource("1_m66vt")
 region = Rect2(0, 32, 32, 32)
@@ -33,15 +53,6 @@ region = Rect2(0, 32, 32, 32)
 [resource]
 animations = [{
 "frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_tdj30")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_anxt5")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_17okb")
-}, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_0mhvu")
 }],
@@ -64,6 +75,35 @@ animations = [{
 "loop": false,
 "name": &"Jump",
 "speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s1q30")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_27hjk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_utw50")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ijy5d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_inovb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bbsvv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0ke77")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c8bg6")
+}],
+"loop": false,
+"name": &"Push",
+"speed": 60.0
 }, {
 "frames": [{
 "duration": 1.0,
