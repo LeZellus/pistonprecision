@@ -1,16 +1,15 @@
 class_name PlayerStateMachine
 extends Node
 
-# === STATES ===
-enum State { IDLE, RUNNING, JUMPING, FALLING, WALL_SLIDING }
-
 # === SIGNALS ===
-signal state_changed(old_state: State, new_state: State)
+signal state_changed(old_state: String, new_state: String)
 
-# === PROPERTIES ===
-var current_state: State = State.IDLE
-var previous_state: State = State.IDLE
-var fall_frame_override: bool = false
+# === STATES ===
+var states: Dictionary = {}
+var current_state: BaseState
+var previous_state: BaseState
+
+# === RÉFÉRENCES ===
 var player: Player
 
 func _init(player_ref: Player):
@@ -18,95 +17,67 @@ func _init(player_ref: Player):
 
 func _ready():
 	name = "StateMachine"
+	_create_states()
+	_initialize_state("IdleState")
 
-func _physics_process(_delta):
-	var new_state = _calculate_state()
+func _create_states():
+	var state_classes = {
+		"IdleState": IdleState,
+		"RunningState": RunningState,
+		"JumpingState": JumpingState,
+		"FallingState": FallingState,
+		"WallSlidingState": WallSlidingState
+	}
 	
-	# Override frame pendant la chute
-	if current_state == State.FALLING and fall_frame_override:
-		_set_fall_frame_based_on_velocity()
-	
-	if new_state != current_state:
-		_change_state(new_state)
+	for state_name in state_classes:
+		var state = state_classes[state_name].new()
+		state.player = player
+		state.state_machine = self
+		states[state_name] = state
+		add_child(state)
 
-func _calculate_state() -> State:
-	var velocity = player.velocity
-	var is_grounded = player.ground_detector.is_grounded()
-	var wall_data = player.wall_detector.get_wall_state()
-	
-	# Wall sliding prioritaire
-	if wall_data.touching and velocity.y > 50:
-		return State.WALL_SLIDING
-	
-	# États aériens
-	if not is_grounded:
-		if velocity.y < -50:
-			return State.JUMPING
-		else:
-			return State.FALLING
-	
-	# États au sol
-	if abs(velocity.x) > 10:
-		return State.RUNNING
-	else:
-		return State.IDLE
-
-func _change_state(new_state: State):
-	_exit_state(current_state)
-	previous_state = current_state
-	current_state = new_state
-	_enter_state(new_state)
-	
-	state_changed.emit(previous_state, current_state)
-
-func _enter_state(state: State):
-	match state:
-		State.IDLE:
-			player.sprite.play("Idle")
-		State.RUNNING:
-			pass
-		State.JUMPING:
-			player.sprite.play("Jump")
-		State.FALLING:
-			player.sprite.play("Fall")
-			# Empêcher l'animation d'atteindre la dernière frame
-			player.sprite.pause()
-			_set_fall_frame_based_on_velocity()
-		State.WALL_SLIDING:
-			pass
-
-func _exit_state(state: State):
-	match state:
-		State.JUMPING:
-			player.is_jumping = false
-		State.FALLING:
-			fall_frame_override = false
-		_:
-			pass
-			
-func _set_fall_frame_based_on_velocity():
-	var velocity_y = abs(player.velocity.y)
-	var total_frames = player.sprite.sprite_frames.get_frame_count("Fall")
-	
-	if total_frames <= 1:
+func _initialize_state(state_name: String):
+	if not states.has(state_name):
 		return
 	
-	# Progression basée sur la vitesse (max 80% pour éviter crash frame)
-	var max_velocity = PlayerConstants.MAX_FALL_SPEED
-	var velocity_ratio = clamp(velocity_y / max_velocity, 0.0, 0.8)
+	current_state = states[state_name]
+	current_state.enter()
+
+func _process(delta: float):
+	if current_state:
+		current_state.update(delta)
+
+func _physics_process(delta: float):
+	if current_state:
+		current_state.physics_update(delta)
+
+func transition_to(new_state_name: String):
+	if not states.has(new_state_name):
+		return
 	
-	var target_frame = int(velocity_ratio * (total_frames - 1))
-	player.sprite.frame = target_frame
+	if current_state and not current_state.can_transition_to(new_state_name):
+		return
+	
+	var old_state_name = current_state.get_state_name() if current_state else ""
+	
+	if current_state:
+		current_state.exit()
+		previous_state = current_state
+	
+	current_state = states[new_state_name]
+	current_state.enter()
+	
+	state_changed.emit(old_state_name, new_state_name)
 
 # === GETTERS ===
-func is_state(state: State) -> bool:
-	return current_state == state
+func get_current_state_name() -> String:
+	return current_state.get_state_name() if current_state else ""
+
+func is_state(state_name: String) -> bool:
+	return get_current_state_name() == state_name
 
 func is_grounded_state() -> bool:
-	return current_state in [State.IDLE, State.RUNNING]
+	return get_current_state_name() in ["IdleState", "RunningState"]
 
 func is_airborne_state() -> bool:
-	return current_state in [State.JUMPING, State.FALLING, State.WALL_SLIDING]
-
-func get_state_name() -> String:
-	return State.keys()[current_state]
+	return get_current_state_name() in ["JumpingState", "FallingState", "WallSlidingState"]
