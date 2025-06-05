@@ -20,7 +20,6 @@ func process_physics(delta: float) -> State:
 	
 	# Wall jump
 	if InputManager.consume_jump_buffer() and parent.piston_direction == Player.PistonDirection.DOWN:
-		parent.wall_jump()
 		return get_node("../JumpState")
 	
 	# Transitions

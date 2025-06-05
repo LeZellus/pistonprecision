@@ -11,7 +11,6 @@ func process_physics(delta: float) -> State:
 	
 	# Ajoutez cette vérification pour le coyote jump
 	if InputManager.consume_jump_buffer() and InputManager.can_coyote_jump():
-		parent.jump()
 		return get_node("../JumpState")
 	
 	# Transitions - PRIORITÉ au sol

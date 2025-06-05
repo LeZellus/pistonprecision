@@ -20,7 +20,6 @@ func process_physics(delta: float) -> State:
 		return get_node("../RunState")
 	
 	if InputManager.consume_jump_buffer() and parent.piston_direction == Player.PistonDirection.DOWN:
-		parent.jump()
 		return get_node("../JumpState")
 	
 	return null

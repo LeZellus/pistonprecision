@@ -87,23 +87,6 @@ func apply_wall_slide(delta: float):
 		velocity.y *= PlayerConstants.WALL_SLIDE_MULTIPLIER
 		velocity.y = min(velocity.y, PlayerConstants.MAX_FALL_SPEED * PlayerConstants.WALL_SLIDE_MAX_SPEED_MULTIPLIER)
 
-# === ACTIONS ===
-func jump():
-	velocity.y = PlayerConstants.JUMP_VELOCITY
-	AudioManager.play_sfx("player/jump", 0.1)
-	var particle_pos = global_position + Vector2(0, -4)
-	ParticleManager.emit_jump(particle_pos)
-
-func wall_jump():
-	var wall_side = wall_detector.get_wall_side()
-	velocity.y = PlayerConstants.JUMP_VELOCITY
-	velocity.x = -wall_side * PlayerConstants.SPEED * 1.4
-	
-	global_position.x += -wall_side * 2
-	wall_jump_timer = WALL_JUMP_GRACE_TIME
-	
-	AudioManager.play_sfx("player/jump", 0.1)
-
 # === WALL DETECTION ===
 func can_wall_slide() -> bool:
 	return wall_detector.is_touching_wall() and wall_jump_timer <= 0
