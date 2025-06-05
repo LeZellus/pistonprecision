@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 GameManager="*res://scripts/managers/GameManager.gd"
 InputManager="*res://scripts/managers/InputManager.gd"
 AudioManager="*res://scripts/managers/AudioManager.gd"
+ParticleManager="*res://scripts/managers/ParticleManager.gd"
 
 [display]
 

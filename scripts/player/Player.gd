@@ -101,9 +101,11 @@ func _handle_gravity(delta: float):
 func _handle_grounding():
 	var grounded = is_on_floor() or _any_ray_colliding(ground_rays)
 	
-	# Son d'atterrissage
+	# Son et particule d'atterrissage
 	if grounded and not was_grounded:
 		AudioManager.play_sfx("player/land", 0.1)
+		var dust_pos = global_position + Vector2(0, 0)
+		ParticleManager.emit_jump(dust_pos, self, Vector2(0, 0))
 	
 	if grounded != was_grounded:
 		InputManager.set_grounded(grounded)

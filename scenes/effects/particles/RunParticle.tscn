@@ -1,0 +1,3 @@
+[gd_scene format=3 uid="uid://c82ey6ohynfc7"]
+
+[node name="RunParticle" type="Node2D"]

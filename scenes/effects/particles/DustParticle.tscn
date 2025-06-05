@@ -1,0 +1,48 @@
+[gd_scene load_steps=8 format=3 uid="uid://76jib332eiaf"]
+
+[ext_resource type="Script" path="res://scripts/player/particles/JumpParticle.gd" id="1_vb351"]
+[ext_resource type="Texture2D" uid="uid://bpbwhpyhjfakm" path="res://assets/sprites/player/land/dustland.png" id="2_k6pi8"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_12vfr"]
+atlas = ExtResource("2_k6pi8")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_268qr"]
+atlas = ExtResource("2_k6pi8")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ej814"]
+atlas = ExtResource("2_k6pi8")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_chrb1"]
+atlas = ExtResource("2_k6pi8")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ose0u"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_12vfr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_268qr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ej814")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_chrb1")
+}],
+"loop": false,
+"name": &"dust_effect",
+"speed": 25.0
+}]
+
+[node name="DustParticle" type="Node2D"]
+z_index = 100
+script = ExtResource("1_vb351")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_ose0u")
+animation = &"dust_effect"
