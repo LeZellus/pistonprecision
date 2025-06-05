@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://76jib332eiaf"]
 
-[ext_resource type="Script" path="res://scripts/player/particles/JumpParticle.gd" id="1_vb351"]
+[ext_resource type="Script" path="res://scripts/player/particles/DustParticle.gd" id="1_vb351"]
 [ext_resource type="Texture2D" uid="uid://bpbwhpyhjfakm" path="res://assets/sprites/player/land/dustland.png" id="2_k6pi8"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_12vfr"]

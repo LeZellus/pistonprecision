@@ -29,8 +29,8 @@ func _physics_process(delta: float):
 	
 	_handle_wall_detection()
 	_handle_gravity(delta)
+	_handle_grounding() 
 	_handle_horizontal_movement(delta)
-	_handle_grounding()
 	_handle_jump()
 	_handle_animations()
 	
@@ -104,8 +104,8 @@ func _handle_grounding():
 	# Son et particule d'atterrissage
 	if grounded and not was_grounded:
 		AudioManager.play_sfx("player/land", 0.1)
-		var dust_pos = global_position + Vector2(0, 0)
-		ParticleManager.emit_jump(dust_pos, self, Vector2(0, 0))
+		var dust_pos = global_position + Vector2(0, -4)
+		ParticleManager.emit_dust(dust_pos, 0.0, self)
 	
 	if grounded != was_grounded:
 		InputManager.set_grounded(grounded)
