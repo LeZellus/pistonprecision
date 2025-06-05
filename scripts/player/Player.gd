@@ -69,7 +69,7 @@ func apply_gravity(delta: float):
 		velocity.y += gravity * PlayerConstants.GRAVITY_MULTIPLIER * delta
 		velocity.y = min(velocity.y, PlayerConstants.MAX_FALL_SPEED)
 
-func apply_movement(delta: float):
+func apply_movement(_delta: float):
 	var input_dir = InputManager.get_movement()
 	if input_dir != 0:
 		velocity.x = input_dir * PlayerConstants.SPEED
