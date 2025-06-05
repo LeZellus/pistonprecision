@@ -73,18 +73,12 @@ func _trigger_wall_impact_shake(impact_velocity: float):
 		print("Aucune caméra trouvée pour le shake d'impact")
 		return
 	
-	# FIX: Chercher directement le script Camera attaché à la caméra
-	var shake_component = camera
-	if camera.get_script() == null:
-		print("ERREUR: Caméra sans script Camera.gd")
-		return
-	
-	# Déclencher le shake
-	if shake_component.has_method("shake"):
-		shake_component.shake(shake_intensity, shake_duration)
+	# Appeler directement shake() sur la caméra
+	if camera.has_method("shake"):
+		camera.shake(shake_intensity, shake_duration)
 		print("Shake d'impact déclenché! Intensité:", shake_intensity, "Durée:", shake_duration)
 	else:
-		print("ERREUR: Méthode shake() introuvable")
+		print("ERREUR: Méthode shake() introuvable sur la caméra")
 
 func push(direction: Vector2, force: float) -> bool:
 	if not can_be_pushed:

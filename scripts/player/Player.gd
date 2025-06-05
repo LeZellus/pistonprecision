@@ -217,12 +217,12 @@ func _trigger_push_shake():
 		print("Aucune caméra trouvée pour le shake")
 		return
 	
-	# FIX: Appeler directement shake() sur la caméra (qui a le script Camera.gd)
+	# Appeler directement shake() sur la caméra
 	if camera.has_method("shake"):
 		camera.shake(8.0, 0.15)
 		print("Shake déclenché!")
 	else:
-		print("ERREUR: Caméra sans script Camera.gd ou méthode shake() manquante")
+		print("ERREUR: Méthode shake() introuvable sur la caméra")
 
 # === GROUNDING ===
 func _handle_grounding():

@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://c5wnmdcvqeri" path="res://scenes/objects/TileMapWorld.tscn" id="1_dgocu"]
 [ext_resource type="PackedScene" uid="uid://de1wxpab4hcrk" path="res://scenes/player/Player.tscn" id="1_jo2q4"]
 [ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableBox.tscn" id="3_5rson"]
-[ext_resource type="Script" path="res://scripts/utilities/Camera.gd" id="3_mlj37"]
+[ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="3_35dks"]
 
 [node name="MainScene" type="Node2D"]
 
@@ -14,7 +14,25 @@ position = Vector2(208, 234)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(240, 137)
-script = ExtResource("3_mlj37")
+script = ExtResource("3_35dks")
 
 [node name="PushableObject" parent="." instance=ExtResource("3_5rson")]
-position = Vector2(283, 260)
+position = Vector2(101, 236)
+
+[node name="PushableObject2" parent="." instance=ExtResource("3_5rson")]
+position = Vector2(157, 220)
+
+[node name="PushableObject3" parent="." instance=ExtResource("3_5rson")]
+position = Vector2(322, 188)
+
+[node name="PushableObject4" parent="." instance=ExtResource("3_5rson")]
+position = Vector2(235, 204)
+
+[node name="PushableObject5" parent="." instance=ExtResource("3_5rson")]
+position = Vector2(167, 164)
+
+[node name="PushableObject6" parent="." instance=ExtResource("3_5rson")]
+position = Vector2(363, 172)
+
+[node name="PushableObject7" parent="." instance=ExtResource("3_5rson")]
+position = Vector2(299, 188)
