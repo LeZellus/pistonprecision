@@ -2,8 +2,8 @@ extends Node
 
 # === AUDIO PLAYERS POOL ===
 var sfx_players_pool: Array[AudioStreamPlayer] = []
-var active_sfx_players: Array[AudioStreamPlayer] = []
 var music_player: AudioStreamPlayer
+var next_pool_index: int = 0  # Index circulaire pour éviter la recherche
 
 # === AUDIO COLLECTIONS ===
 var audio_collections: Dictionary = {}
@@ -51,17 +51,13 @@ func _scan_directory(path: String, category_path: String):
 		var full_path = path + file_name
 		
 		if dir.current_is_dir():
-			# Dossier - scanner récursivement
 			var new_category = category_path + "/" + file_name if category_path != "" else file_name
 			_scan_directory(full_path + "/", new_category)
 		else:
-			# Fichier audio - ajouter à la collection
 			if _is_audio_file(file_name):
 				_add_to_collection(category_path, full_path)
 		
 		file_name = dir.get_next()
-	
-	_print_collections()
 
 func _is_audio_file(file_name: String) -> bool:
 	var extensions = [".ogg", ".wav", ".mp3"]
@@ -73,27 +69,22 @@ func _add_to_collection(category: String, file_path: String):
 	
 	if not audio_collections.has(category):
 		audio_collections[category] = []
-		# Volume par défaut pour cette catégorie
 		category_volumes[category] = 1.0
 	
 	var stream = load(file_path)
 	if stream:
 		audio_collections[category].append(stream)
 
-func _print_collections():
-	for category in audio_collections.keys():
-		print("Collection '", category, "': ", audio_collections[category].size(), " fichiers")
-
-# === SFX PLAYBACK ===
+# === SFX PLAYBACK (Optimisé) ===
 func play_sfx(category: String, volume_override: float = -1.0, randomize: bool = true):
 	if not audio_collections.has(category) or audio_collections[category].is_empty():
-		print("Collection introuvable: ", category)
 		return
 	
 	var player = _get_available_player()
 	if not player:
 		return
 	
+	# Sélection de l'audio
 	var audio_stream
 	if randomize and audio_collections[category].size() > 1:
 		audio_stream = audio_collections[category].pick_random()
@@ -102,39 +93,41 @@ func play_sfx(category: String, volume_override: float = -1.0, randomize: bool =
 	
 	player.stream = audio_stream
 	
-	# Volume final = master * sfx * catégorie * override
-	var category_vol = category_volumes.get(category, 1.0)
-	var final_volume = sfx_volume * category_vol
-	if volume_override >= 0:
-		final_volume = volume_override
-	
-	player.volume_db = linear_to_db(final_volume * master_volume)
+	# Calcul du volume final
+	var final_volume = _calculate_final_volume(category, volume_override)
+	player.volume_db = linear_to_db(final_volume)
 	
 	player.play()
-	active_sfx_players.append(player)
-	
-	# FIX: Vérifier si le signal n'est pas déjà connecté
-	if not player.finished.is_connected(_on_sfx_finished):
-		player.finished.connect(_on_sfx_finished.bind(player), CONNECT_ONE_SHOT)
 
 func play_multi_sfx(categories: Array[String], volume_override: float = -1.0):
 	for category in categories:
 		play_sfx(category, volume_override)
 
-# === PLAYER MANAGEMENT ===
+# === OPTIMISATION PRINCIPALE ===
 func _get_available_player() -> AudioStreamPlayer:
-	_cleanup_finished_players()
-	
-	for player in sfx_players_pool:
-		if not player in active_sfx_players:
+	# Recherche circulaire depuis le dernier index utilisé
+	for i in range(POOL_SIZE):
+		var index = (next_pool_index + i) % POOL_SIZE
+		var player = sfx_players_pool[index]
+		
+		# Si le player n'est pas en train de jouer, on l'utilise
+		if not player.playing:
+			next_pool_index = (index + 1) % POOL_SIZE
 			return player
-	return null
+	
+	# Si tous sont occupés, écraser le plus ancien (round-robin)
+	var player = sfx_players_pool[next_pool_index]
+	next_pool_index = (next_pool_index + 1) % POOL_SIZE
+	return player
 
-func _on_sfx_finished(player: AudioStreamPlayer):
-	active_sfx_players.erase(player)
-
-func _cleanup_finished_players():
-	active_sfx_players = active_sfx_players.filter(func(p): return p.playing)
+func _calculate_final_volume(category: String, volume_override: float) -> float:
+	var category_vol = category_volumes.get(category, 1.0)
+	var final_volume = sfx_volume * category_vol
+	
+	if volume_override >= 0:
+		final_volume = volume_override
+	
+	return final_volume * master_volume
 
 # === MUSIC ===
 func play_music(music_name: String):
@@ -169,6 +162,20 @@ func get_category_volume(category: String) -> float:
 
 # === UTILITIES ===
 func stop_all_sfx():
-	for player in active_sfx_players:
-		player.stop()
-	active_sfx_players.clear()
+	for player in sfx_players_pool:
+		if player.playing:
+			player.stop()
+
+# === DEBUG ===
+func get_pool_status() -> Dictionary:
+	var active_count = 0
+	for player in sfx_players_pool:
+		if player.playing:
+			active_count += 1
+	
+	return {
+		"total": POOL_SIZE,
+		"active": active_count,
+		"available": POOL_SIZE - active_count,
+		"next_index": next_pool_index
+	}
