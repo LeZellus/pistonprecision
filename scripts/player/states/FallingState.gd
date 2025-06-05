@@ -1,3 +1,4 @@
+# FallingState.gd
 class_name FallingState
 extends BaseState
 
@@ -21,12 +22,13 @@ func physics_update(delta: float):
 	if frame_override:
 		_set_fall_frame_based_on_velocity()
 	
-	# Transitions
+	# PRIORITÉ à la détection du sol
 	if is_grounded:
 		if abs(velocity.x) > 10:
 			transition_to("RunningState")
 		else:
 			transition_to("IdleState")
+	# Ensuite les autres transitions
 	elif wall_data.touching and velocity.y > 50:
 		transition_to("WallSlidingState")
 	elif velocity.y < -50:
