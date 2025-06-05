@@ -112,7 +112,10 @@ func play_sfx(category: String, volume_override: float = -1.0, randomize: bool =
 	
 	player.play()
 	active_sfx_players.append(player)
-	player.finished.connect(_on_sfx_finished.bind(player), CONNECT_ONE_SHOT)
+	
+	# FIX: Vérifier si le signal n'est pas déjà connecté
+	if not player.finished.is_connected(_on_sfx_finished):
+		player.finished.connect(_on_sfx_finished.bind(player), CONNECT_ONE_SHOT)
 
 func play_multi_sfx(categories: Array[String], volume_override: float = -1.0):
 	for category in categories:

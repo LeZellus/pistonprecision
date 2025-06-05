@@ -10,6 +10,7 @@ signal state_changed(old_state: State, new_state: State)
 # === PROPERTIES ===
 var current_state: State = State.IDLE
 var previous_state: State = State.IDLE
+var fall_frame_override: bool = false
 var player: Player
 
 func _init(player_ref: Player):
@@ -20,6 +21,10 @@ func _ready():
 
 func _physics_process(_delta):
 	var new_state = _calculate_state()
+	
+	# Override frame pendant la chute
+	if current_state == State.FALLING and fall_frame_override:
+		_set_fall_frame_based_on_velocity()
 	
 	if new_state != current_state:
 		_change_state(new_state)
@@ -59,20 +64,39 @@ func _enter_state(state: State):
 		State.IDLE:
 			player.sprite.play("Idle")
 		State.RUNNING:
-			pass  # Animation de course si nécessaire
+			pass
 		State.JUMPING:
 			player.sprite.play("Jump")
 		State.FALLING:
 			player.sprite.play("Fall")
+			# Empêcher l'animation d'atteindre la dernière frame
+			player.sprite.pause()
+			_set_fall_frame_based_on_velocity()
 		State.WALL_SLIDING:
-			pass  # Animation wall slide si nécessaire
+			pass
 
 func _exit_state(state: State):
 	match state:
 		State.JUMPING:
 			player.is_jumping = false
+		State.FALLING:
+			fall_frame_override = false
 		_:
 			pass
+			
+func _set_fall_frame_based_on_velocity():
+	var velocity_y = abs(player.velocity.y)
+	var total_frames = player.sprite.sprite_frames.get_frame_count("Fall")
+	
+	if total_frames <= 1:
+		return
+	
+	# Progression basée sur la vitesse (max 80% pour éviter crash frame)
+	var max_velocity = PlayerConstants.MAX_FALL_SPEED
+	var velocity_ratio = clamp(velocity_y / max_velocity, 0.0, 0.8)
+	
+	var target_frame = int(velocity_ratio * (total_frames - 1))
+	player.sprite.frame = target_frame
 
 # === GETTERS ===
 func is_state(state: State) -> bool:
