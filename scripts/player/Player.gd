@@ -3,9 +3,8 @@ class_name Player
 
 # === COMPONENTS ===
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
-@onready var ground_rays: Array[RayCast2D] = [$GroundLeft, $GroundRight, $GroundCenter]
-@onready var wall_left_rays: Array[RayCast2D] = [$WallLeftTop, $WallLeftCenter, $WallLeftBottom]
-@onready var wall_right_rays: Array[RayCast2D] = [$WallRightTop, $WallRightCenter, $WallRightBottom]
+@onready var ground_detector: GroundDetector
+@onready var wall_detector: WallDetector
 
 # === PISTON STATE ===
 enum PistonDirection { DOWN, LEFT, UP, RIGHT }
@@ -13,12 +12,20 @@ var piston_direction: PistonDirection = PistonDirection.DOWN
 
 # === STATE ===
 var was_grounded: bool = false
-var is_on_wall: bool = false
-var wall_side: int = 0
 var is_jumping: bool = false
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 func _ready():
+	_setup_detectors()
+	_connect_signals()
+
+func _setup_detectors():
+	ground_detector = GroundDetector.new(self)
+	wall_detector = WallDetector.new(self)
+	add_child(ground_detector)
+	add_child(wall_detector)
+
+func _connect_signals():
 	InputManager.jump_buffered.connect(_on_jump_buffered)
 	InputManager.movement_changed.connect(_on_movement_changed)
 	InputManager.rotate_left_requested.connect(_on_rotate_left)
@@ -27,7 +34,6 @@ func _ready():
 func _physics_process(delta: float):
 	delta = min(delta, 1.0/30.0)
 	
-	_handle_wall_detection()
 	_handle_gravity(delta)
 	_handle_grounding() 
 	_handle_horizontal_movement(delta)
@@ -58,35 +64,14 @@ func _rotate_piston(direction: int):
 	piston_direction = (piston_direction + direction) % 4 if direction > 0 else (piston_direction + direction + 4) % 4
 	sprite.rotation_degrees = piston_direction * 90
 
-# === WALL DETECTION ===
-func _handle_wall_detection():
-	var left_wall = _any_ray_colliding(wall_left_rays)
-	var right_wall = _any_ray_colliding(wall_right_rays)
-	
-	if not is_on_floor():
-		if left_wall:
-			is_on_wall = true
-			wall_side = -1
-		elif right_wall:
-			is_on_wall = true
-			wall_side = 1
-		else:
-			is_on_wall = false
-			wall_side = 0
-	else:
-		is_on_wall = false
-		wall_side = 0
-
-func _any_ray_colliding(rays: Array[RayCast2D]) -> bool:
-	return rays.any(func(ray): return ray and ray.is_colliding())
-
 # === GRAVITY ===
 func _handle_gravity(delta: float):
 	if not is_on_floor():
+		var wall_data = wall_detector.get_wall_state()
 		var gravity_multiplier = PlayerConstants.GRAVITY_MULTIPLIER
 		var max_fall = PlayerConstants.MAX_FALL_SPEED
 		
-		if is_on_wall and velocity.y > 0:
+		if wall_data.touching and velocity.y > 0:
 			gravity_multiplier *= PlayerConstants.WALL_SLIDE_MULTIPLIER
 			max_fall *= PlayerConstants.WALL_SLIDE_MAX_SPEED_MULTIPLIER
 		
@@ -99,7 +84,7 @@ func _handle_gravity(delta: float):
 
 # === GROUNDING ===
 func _handle_grounding():
-	var grounded = is_on_floor() or _any_ray_colliding(ground_rays)
+	var grounded = ground_detector.is_grounded()
 	
 	# Son et particule d'atterrissage
 	if grounded and not was_grounded:
@@ -128,7 +113,7 @@ func _handle_jump():
 	
 	if is_on_floor() or InputManager.can_coyote_jump():
 		_perform_jump()
-	elif is_on_wall:
+	elif wall_detector.is_touching_wall():
 		_perform_wall_jump()
 
 func _perform_jump():
@@ -140,6 +125,7 @@ func _perform_jump():
 	ParticleManager.emit_jump(jump_pos)
 
 func _perform_wall_jump():
+	var wall_side = wall_detector.get_wall_side()
 	velocity.y = PlayerConstants.JUMP_VELOCITY
 	velocity.x = -wall_side * PlayerConstants.SPEED * 1.2
 	AudioManager.play_sfx("player/jump", 0.1)
