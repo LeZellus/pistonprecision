@@ -6,6 +6,7 @@ class_name Player
 @onready var state_machine: StateMachine = $StateMachine
 @onready var ground_detector: GroundDetector
 @onready var wall_detector: WallDetector
+@onready var push_detector: PushDetector
 
 # === PISTON STATE ===
 enum PistonDirection { DOWN, LEFT, UP, RIGHT }  # Ordre corrigé pour l'animation
@@ -21,12 +22,6 @@ func _ready():
 	_setup_detectors()
 	_connect_signals()
 	state_machine.init(self)
-
-func _setup_detectors():
-	ground_detector = GroundDetector.new(self)
-	wall_detector = WallDetector.new(self)
-	add_child(ground_detector)
-	add_child(wall_detector)
 
 func _connect_signals():
 	InputManager.rotate_left_requested.connect(_on_rotate_left)
@@ -98,24 +93,6 @@ func wall_jump():
 	
 	AudioManager.play_sfx("player/jump", 0.1)
 
-func push():
-	# Ne pas push si la tête est vers le bas (contre le sol)
-	if piston_direction == PistonDirection.DOWN:
-		print("Impossible de pousser vers le bas!")
-		return
-	
-	print("Push direction: ", PistonDirection.keys()[piston_direction])
-	
-	var push_vector = _get_push_vector()
-	_attempt_push(push_vector)
-	
-	# Joue l'animation et revient à l'état normal après
-	sprite.play("Push")
-	
-	# Attendre la fin de l'animation puis revenir à l'état normal
-	if not sprite.animation_finished.is_connected(_on_push_animation_finished):
-		sprite.animation_finished.connect(_on_push_animation_finished, CONNECT_ONE_SHOT)
-
 func _on_push_animation_finished():
 	# Revenir à l'animation appropriée selon l'état
 	if is_on_floor():
@@ -136,11 +113,6 @@ func _get_push_vector() -> Vector2:
 		PistonDirection.UP: return Vector2.UP
 		PistonDirection.RIGHT: return Vector2.RIGHT
 		_: return Vector2.DOWN
-
-func _attempt_push(direction: Vector2):
-	# TODO: Ajouter ici la logique de détection et push d'objets
-	# Exemple: détecter les objets pushables dans la direction
-	print("Tentative de push vers: ", direction)
 
 # === WALL DETECTION ===
 func can_wall_slide() -> bool:
@@ -177,3 +149,52 @@ func _handle_grounding():
 	if grounded != was_grounded:
 		InputManager.set_grounded(grounded)
 		was_grounded = grounded
+		
+func _setup_detectors():
+	ground_detector = GroundDetector.new(self)
+	wall_detector = WallDetector.new(self)
+	push_detector = PushDetector.new(self)  # NOUVEAU
+	add_child(ground_detector)
+	add_child(wall_detector)
+	add_child(push_detector)  # NOUVEAU
+
+# Remplace la fonction push() par :
+func push():
+	# Ne pas push si la tête est vers le bas (contre le sol)
+	if piston_direction == PistonDirection.DOWN:
+		print("Impossible de pousser vers le bas!")
+		return
+	
+	var push_vector = _get_push_vector()
+	var success = _attempt_push(push_vector)
+	
+	if success:
+		print("Objet poussé avec succès!")
+		AudioManager.play_sfx("player/push", 0.2)  # Son de push
+		
+		# ANIMATION SEULEMENT SI LE PUSH A RÉUSSI
+		sprite.play("Push")
+		
+		if not sprite.animation_finished.is_connected(_on_push_animation_finished):
+			sprite.animation_finished.connect(_on_push_animation_finished, CONNECT_ONE_SHOT)
+	else:
+		print("Push impossible - Aucune animation")
+
+# Remplace _attempt_push par :
+func _attempt_push(direction: Vector2) -> bool:
+	var pushable_object = push_detector.detect_pushable_object(direction)
+	
+	if pushable_object:
+		var push_distance = push_detector.get_push_distance(direction)
+		
+		# Vérifier qu'il y a assez d'espace pour pousser (minimum 2 pixels)
+		if push_distance < 2.0:
+			print("Pas assez d'espace pour pousser")
+			return false
+		
+		# UTILISER LA FORCE DE L'OBJET directement - ÉNORME RÉACTIVITÉ
+		var final_force = pushable_object.push_force  # Utilise la vraie valeur de push_force !
+		
+		return pushable_object.push(direction, final_force)
+	
+	return false

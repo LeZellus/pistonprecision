@@ -1,14 +1,18 @@
-[gd_scene load_steps=3 format=3 uid="uid://bxngpqv51c6i"]
+[gd_scene load_steps=4 format=3 uid="uid://bxngpqv51c6i"]
 
 [ext_resource type="PackedScene" uid="uid://c5wnmdcvqeri" path="res://scenes/objects/TileMapWorld.tscn" id="1_dgocu"]
 [ext_resource type="PackedScene" uid="uid://de1wxpab4hcrk" path="res://scenes/player/Player.tscn" id="1_jo2q4"]
+[ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableBox.tscn" id="3_5rson"]
 
 [node name="MainScene" type="Node2D"]
 
 [node name="TileMapLayer" parent="." instance=ExtResource("1_dgocu")]
 
 [node name="CharacterBody2D" parent="." instance=ExtResource("1_jo2q4")]
-position = Vector2(212, 212)
+position = Vector2(208, 234)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(240, 137)
+
+[node name="PushableObject" parent="." instance=ExtResource("3_5rson")]
+position = Vector2(283, 260)
