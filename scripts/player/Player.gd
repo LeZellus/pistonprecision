@@ -5,6 +5,7 @@ class_name Player
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var ground_detector: GroundDetector
 @onready var wall_detector: WallDetector
+@onready var state_machine: PlayerStateMachine
 
 # === PISTON STATE ===
 enum PistonDirection { DOWN, LEFT, UP, RIGHT }
@@ -22,8 +23,10 @@ func _ready():
 func _setup_detectors():
 	ground_detector = GroundDetector.new(self)
 	wall_detector = WallDetector.new(self)
+	state_machine = PlayerStateMachine.new(self)
 	add_child(ground_detector)
 	add_child(wall_detector)
+	add_child(state_machine)
 
 func _connect_signals():
 	InputManager.jump_buffered.connect(_on_jump_buffered)
@@ -38,20 +41,8 @@ func _physics_process(delta: float):
 	_handle_grounding() 
 	_handle_horizontal_movement(delta)
 	_handle_jump()
-	_handle_animations()
 	
 	move_and_slide()
-
-# === ANIMATIONS ===
-func _handle_animations():
-	if not is_on_floor():
-		if is_jumping or velocity.y < -50:
-			if sprite.animation != "Jump":
-				sprite.play("Jump")
-	else:
-		is_jumping = false
-		if sprite.animation != "Idle":
-			sprite.play("Idle")
 
 # === ROTATION SYSTEM ===
 func _on_rotate_left():
@@ -86,7 +77,6 @@ func _handle_gravity(delta: float):
 func _handle_grounding():
 	var grounded = ground_detector.is_grounded()
 	
-	# Son et particule d'atterrissage
 	if grounded and not was_grounded:
 		AudioManager.play_sfx("player/land", 0.01)
 		var dust_pos = global_position + Vector2(0, -4)
@@ -121,8 +111,8 @@ func _perform_jump():
 	is_jumping = true
 	AudioManager.play_sfx("player/jump", 0.1)
 	
-	var jump_pos = global_position + Vector2(0, -4)
-	ParticleManager.emit_jump(jump_pos)
+	var particle_pos = global_position + Vector2(0, -4)
+	ParticleManager.emit_jump(particle_pos)
 
 func _perform_wall_jump():
 	var wall_side = wall_detector.get_wall_side()
