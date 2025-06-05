@@ -93,19 +93,6 @@ func wall_jump():
 	
 	AudioManager.play_sfx("player/jump", 0.1)
 
-func _on_push_animation_finished():
-	# Revenir à l'animation appropriée selon l'état
-	if is_on_floor():
-		if InputManager.get_movement() != 0:
-			sprite.play("Run")
-		else:
-			sprite.play("Idle")
-	else:
-		if velocity.y < 0:
-			sprite.play("Jump")
-		else:
-			sprite.play("Fall")
-
 func _get_push_vector() -> Vector2:
 	match piston_direction:
 		PistonDirection.DOWN: return Vector2.DOWN
@@ -136,6 +123,107 @@ func _rotate_piston(direction: int):
 	print("Nouvelle direction piston: ", PistonDirection.keys()[piston_direction])
 	print("Rotation sprite: ", sprite.rotation_degrees, "°")
 
+# === PUSH SYSTEM ===
+func push():
+	# Ne pas push si la tête est vers le bas (contre le sol)
+	if piston_direction == PistonDirection.DOWN:
+		print("Impossible de pousser vers le bas!")
+		return
+	
+	var push_vector = _get_push_vector()
+	
+	# Vérifier si on peut faire l'action (même sans objet)
+	if not _can_perform_push_action(push_vector):
+		print("Push bloqué - Joueur contre un mur")
+		return
+	
+	# Tenter de pousser un objet (AVANT l'animation)
+	var success = _attempt_push(push_vector)
+	var has_pushable_object = push_detector.detect_pushable_object(push_vector) != null
+	
+	# Animation seulement si :
+	# - Il y a un objet ET le push a réussi
+	# - OU il n'y a pas d'objet (animation dans le vide)
+	if (has_pushable_object and success) or (not has_pushable_object):
+		# Faire l'animation de push
+		sprite.play("Push")
+		
+		# FIX: Déconnecter d'abord si déjà connecté pour éviter les doublons
+		if sprite.animation_finished.is_connected(_on_push_animation_finished):
+			sprite.animation_finished.disconnect(_on_push_animation_finished)
+		
+		sprite.animation_finished.connect(_on_push_animation_finished, CONNECT_ONE_SHOT)
+		
+		if success:
+			print("Objet poussé avec succès!")
+			# AudioManager.play_sfx("player/push", 0.2)  # Commenté car son manquant
+			
+			# SHAKE ÉCRAN quand push réussi
+			_trigger_push_shake()
+		else:
+			print("Animation de push dans le vide")
+	else:
+		print("Push impossible - Objet bloqué, pas d'animation")
+
+func _can_perform_push_action(direction: Vector2) -> bool:
+	# Vérifier si le joueur lui-même est contre un mur dans la direction du push
+	var space_state = get_world_2d().direct_space_state
+	var test_distance = 8.0  # Distance de test depuis le joueur
+	var start_pos = global_position
+	var end_pos = start_pos + direction * test_distance
+	
+	var query = PhysicsRayQueryParameters2D.create(start_pos, end_pos)
+	query.collision_mask = 0b00000010  # SEULEMENT les murs (layer 2), PAS les objets pushables (layer 3)
+	query.exclude = [self]
+	
+	var result = space_state.intersect_ray(query)
+	if result:
+		print("Joueur bloqué par un mur dans la direction: ", direction)
+		return false
+	
+	return true
+
+func _attempt_push(direction: Vector2) -> bool:
+	var pushable_object = push_detector.detect_pushable_object(direction)
+	
+	if not pushable_object:
+		print("Aucun objet pushable détecté")
+		return false
+	
+	# Vérifier si l'objet peut être poussé (il gère sa propre détection de mur)
+	var success = pushable_object.push(direction, pushable_object.push_force)
+	return success
+
+func _on_push_animation_finished():
+	# FIX: Déconnecter explicitement le signal pour éviter les résidus
+	if sprite.animation_finished.is_connected(_on_push_animation_finished):
+		sprite.animation_finished.disconnect(_on_push_animation_finished)
+	
+	# Revenir à l'animation appropriée selon l'état
+	if is_on_floor():
+		if InputManager.get_movement() != 0:
+			sprite.play("Run")
+		else:
+			sprite.play("Idle")
+	else:
+		if velocity.y < 0:
+			sprite.play("Jump")
+		else:
+			sprite.play("Fall")
+
+func _trigger_push_shake():
+	var camera = get_viewport().get_camera_2d()
+	if not camera:
+		print("Aucune caméra trouvée pour le shake")
+		return
+	
+	# FIX: Appeler directement shake() sur la caméra (qui a le script Camera.gd)
+	if camera.has_method("shake"):
+		camera.shake(8.0, 0.15)
+		print("Shake déclenché!")
+	else:
+		print("ERREUR: Caméra sans script Camera.gd ou méthode shake() manquante")
+
 # === GROUNDING ===
 func _handle_grounding():
 	var grounded = is_on_floor()
@@ -153,73 +241,7 @@ func _handle_grounding():
 func _setup_detectors():
 	ground_detector = GroundDetector.new(self)
 	wall_detector = WallDetector.new(self)
-	push_detector = PushDetector.new(self)  # NOUVEAU
+	push_detector = PushDetector.new(self)
 	add_child(ground_detector)
 	add_child(wall_detector)
-	add_child(push_detector)  # NOUVEAU
-
-# Remplace la fonction push() par :
-
-func push():
-	# Ne pas push si la tête est vers le bas (contre le sol)
-	if piston_direction == PistonDirection.DOWN:
-		print("Impossible de pousser vers le bas!")
-		return
-	
-	var push_vector = _get_push_vector()
-	var success = _attempt_push(push_vector)
-	
-	if success:
-		print("Objet poussé avec succès!")
-		# AudioManager.play_sfx("player/push", 0.2)  # Commenté car son manquant
-		
-		# SHAKE ÉCRAN quand push réussi
-		_trigger_push_shake()
-		
-		# ANIMATION SEULEMENT SI LE PUSH A RÉUSSI
-		sprite.play("Push")
-		
-		if not sprite.animation_finished.is_connected(_on_push_animation_finished):
-			sprite.animation_finished.connect(_on_push_animation_finished, CONNECT_ONE_SHOT)
-	else:
-		print("Push impossible - Aucune animation")
-
-func _trigger_push_shake():
-	# Chercher la caméra dans la scène
-	var camera = get_viewport().get_camera_2d()
-	if not camera:
-		print("Aucune caméra trouvée pour le shake")
-		return
-	
-	# Chercher le composant CameraShake ou le créer
-	var shake_component = camera.get_node_or_null("Camera2D")
-	if not shake_component:
-		# Créer le composant dynamiquement si pas trouvé
-		var shake_script = load("res://scripts/utilities/Camera.gd")
-		if shake_script:
-			shake_component = shake_script.new()
-			shake_component.name = "CameraShake"
-			shake_component.camera = camera
-			camera.add_child(shake_component)
-			print("CameraShake créé dynamiquement")
-		else:
-			print("ERREUR: Script CameraShake introuvable")
-			return
-	
-	# Déclencher le shake (intensité, durée)
-	if shake_component and shake_component.has_method("shake"):
-		shake_component.shake(8.0, 0.15)  # Shake léger de 8 pixels pendant 0.15s
-		print("Shake déclenché!")
-	else:
-		print("ERREUR: Méthode shake() introuvable")
-
-func _attempt_push(direction: Vector2) -> bool:
-	var pushable_object = push_detector.detect_pushable_object(direction)
-	
-	if not pushable_object:
-		print("Aucun objet pushable détecté")
-		return false
-	
-	# Appliquer directement la force - laisser PushableObject gérer les collisions
-	var success = pushable_object.push(direction, pushable_object.push_force)
-	return success
+	add_child(push_detector)
