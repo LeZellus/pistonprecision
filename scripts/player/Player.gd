@@ -103,7 +103,7 @@ func _handle_grounding():
 	
 	# Son et particule d'atterrissage
 	if grounded and not was_grounded:
-		AudioManager.play_sfx("player/land", 0.1)
+		AudioManager.play_sfx("player/land", 0.01)
 		var dust_pos = global_position + Vector2(0, -4)
 		ParticleManager.emit_dust(dust_pos, 0.0, self)
 	
@@ -135,6 +135,9 @@ func _perform_jump():
 	velocity.y = PlayerConstants.JUMP_VELOCITY
 	is_jumping = true
 	AudioManager.play_sfx("player/jump", 0.1)
+	
+	var jump_pos = global_position + Vector2(0, -4)
+	ParticleManager.emit_jump(jump_pos)
 
 func _perform_wall_jump():
 	velocity.y = PlayerConstants.JUMP_VELOCITY

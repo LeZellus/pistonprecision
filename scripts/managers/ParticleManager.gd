@@ -58,7 +58,7 @@ func emit_dust(position: Vector2, direction: float = 0.0, follow_target: Node2D 
 	var params = {"direction": direction}
 	if follow_target:
 		params["follow_target"] = follow_target
-		params["target_offset"] = Vector2(0, 8)
+		params["target_offset"] = Vector2(0, -4)
 	_emit_particle("dust", position, params)
 
 func _emit_particle(type: String, pos: Vector2, params: Dictionary):
@@ -68,6 +68,10 @@ func _emit_particle(type: String, pos: Vector2, params: Dictionary):
 	
 	particle.global_position = pos
 	particle.visible = true
+	
+	# AJOUTEZ CETTE LIGNE :
+	if particle.has_node("AnimatedSprite2D"):
+		particle.get_node("AnimatedSprite2D").visible = true
 	
 	# Appliquer les paramètres
 	for key in params.keys():
