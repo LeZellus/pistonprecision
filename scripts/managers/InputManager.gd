@@ -8,7 +8,7 @@ var is_grounded: bool = false
 # === CACHED INPUT DATA ===
 var movement_input: float = 0.0
 var jump_held: bool = false
-var dash_pressed: bool = false  # NOUVELLE VARIABLE
+var dash_just_pressed: bool = false  # Renommé pour plus de clarté
 
 # === SIGNALS ===
 signal jump_buffered
@@ -17,6 +17,7 @@ signal movement_changed(direction: float)
 signal rotate_left_requested
 signal rotate_right_requested
 signal push_requested
+signal dash_requested  # NOUVEAU signal pour le dash
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -35,8 +36,10 @@ func _read_inputs():
 	# Jump state
 	jump_held = Input.is_action_pressed("jump")
 	
-	# FIX: Dash state - Reset à false à chaque frame
-	dash_pressed = Input.is_action_just_pressed("dash")
+	# Dash - Lecture directe sans stockage
+	if Input.is_action_just_pressed("dash"):
+		dash_just_pressed = true
+		dash_requested.emit()
 	
 	# Actions instantanées (just_pressed)
 	if Input.is_action_just_pressed("jump"):
@@ -91,7 +94,5 @@ func was_jump_released() -> bool:
 	return Input.is_action_just_released("jump")
 
 func was_dash_pressed() -> bool:
-	if dash_pressed:
-		dash_pressed = false  # Consommer l'input immédiatement
-		return true
-	return false
+	# Simplifié - retourne directement l'état de l'input
+	return Input.is_action_just_pressed("dash")

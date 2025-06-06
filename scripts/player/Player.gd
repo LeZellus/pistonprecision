@@ -61,7 +61,7 @@ func _physics_process(delta: float):
 	delta = min(delta, 1.0/30.0)  # Cap pour éviter les gros deltas
 	_handle_grounding()
 	_update_wall_jump_timer(delta)
-	_update_dash_cooldown(delta) 
+	_update_dash_cooldown(delta)
 	state_machine.process_physics(delta)
 
 func _update_wall_jump_timer(delta: float):
@@ -110,6 +110,10 @@ func _on_rotate_right():
 func _on_push_requested():
 	push()
 		
+func use_dash():
+	"""Appelée quand un dash est effectué"""
+	dash_cooldown_timer = PlayerConstants.DASH_COOLDOWN
+
 func can_dash() -> bool:
 	# Peut dasher si cooldown terminé ET tête pas vers le bas
 	return dash_cooldown_timer <= 0.0 and piston_direction != PistonDirection.DOWN
