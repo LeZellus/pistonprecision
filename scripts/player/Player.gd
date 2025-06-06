@@ -108,10 +108,7 @@ func _on_rotate_right():
 	_rotate_piston(1)
 
 func _on_push_requested():
-	if _can_dash():
-		_perform_dash()
-	else:
-		push()
+	push()
 		
 func _can_dash() -> bool:
 	# Peut dasher si cooldown terminé ET tête pas vers le bas
