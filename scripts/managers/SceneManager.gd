@@ -8,7 +8,7 @@ var current_world: WorldData
 var current_room: RoomData
 
 # === CONSTANTS ===
-const ROOM_SIZE = Vector2(320, 240)
+const ROOM_SIZE = Vector2(1320, 240)
 const TRANSITION_BUFFER = 16
 
 func _ready():

@@ -91,12 +91,6 @@ func _start_game():
 		# ESSAI: Forcer la visibilité
 		SceneManager.player.visible = true
 		SceneManager.player.modulate = Color.WHITE
-		
-		# ESSAI: S'assurer que la caméra suit le joueur
-		var camera = get_viewport().get_camera_2d()
-		if camera:
-			camera.global_position = SceneManager.player.global_position
-			print("Caméra repositionnée sur: ", camera.global_position)
 	else:
 		print("ERREUR: Pas de joueur trouvé!")
 	
