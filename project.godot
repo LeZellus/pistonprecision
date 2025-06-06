@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="PistonPrecision"
+config/description="Control a piston player, resolve puzzles and go fast to bait you're previous score "
 run/main_scene="res://scenes/levels/MainScene.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
@@ -40,6 +41,10 @@ folder_colors={
 "res://scenes/": "green",
 "res://scripts/": "teal"
 }
+
+[gui]
+
+theme/custom_font="res://assets/fonts/awcathode-webfont.ttf"
 
 [input]
 

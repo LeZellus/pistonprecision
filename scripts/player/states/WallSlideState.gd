@@ -1,6 +1,9 @@
 class_name WallSlideState
 extends State
 
+func _ready() -> void:
+	animation_name = "Fall"
+
 func process_physics(delta: float) -> State:
 	parent.apply_gravity(delta)
 	parent.apply_wall_slide(delta)

@@ -10,29 +10,37 @@
 [node name="TileMapLayer" parent="." instance=ExtResource("1_dgocu")]
 
 [node name="CharacterBody2D" parent="." instance=ExtResource("1_jo2q4")]
+z_index = 50
 position = Vector2(208, 234)
+
+[node name="PushableObject" parent="." instance=ExtResource("3_5rson")]
+z_index = 50
+position = Vector2(101, 236)
+
+[node name="PushableObject2" parent="." instance=ExtResource("3_5rson")]
+z_index = 50
+position = Vector2(157, 220)
+
+[node name="PushableObject3" parent="." instance=ExtResource("3_5rson")]
+z_index = 50
+position = Vector2(322, 188)
+
+[node name="PushableObject4" parent="." instance=ExtResource("3_5rson")]
+z_index = 50
+position = Vector2(235, 204)
+
+[node name="PushableObject5" parent="." instance=ExtResource("3_5rson")]
+z_index = 50
+position = Vector2(167, 164)
+
+[node name="PushableObject6" parent="." instance=ExtResource("3_5rson")]
+z_index = 50
+position = Vector2(363, 172)
+
+[node name="PushableObject7" parent="." instance=ExtResource("3_5rson")]
+z_index = 50
+position = Vector2(299, 188)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(240, 137)
 script = ExtResource("3_35dks")
-
-[node name="PushableObject" parent="." instance=ExtResource("3_5rson")]
-position = Vector2(101, 236)
-
-[node name="PushableObject2" parent="." instance=ExtResource("3_5rson")]
-position = Vector2(157, 220)
-
-[node name="PushableObject3" parent="." instance=ExtResource("3_5rson")]
-position = Vector2(322, 188)
-
-[node name="PushableObject4" parent="." instance=ExtResource("3_5rson")]
-position = Vector2(235, 204)
-
-[node name="PushableObject5" parent="." instance=ExtResource("3_5rson")]
-position = Vector2(167, 164)
-
-[node name="PushableObject6" parent="." instance=ExtResource("3_5rson")]
-position = Vector2(363, 172)
-
-[node name="PushableObject7" parent="." instance=ExtResource("3_5rson")]
-position = Vector2(299, 188)
