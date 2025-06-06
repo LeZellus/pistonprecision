@@ -110,25 +110,9 @@ func _on_rotate_right():
 func _on_push_requested():
 	push()
 		
-func _can_dash() -> bool:
+func can_dash() -> bool:
 	# Peut dasher si cooldown terminé ET tête pas vers le bas
 	return dash_cooldown_timer <= 0.0 and piston_direction != PistonDirection.DOWN
-
-func _perform_dash():
-	if not _can_dash():
-		return
-	
-	# Activer le cooldown
-	dash_cooldown_timer = PlayerConstants.DASH_COOLDOWN
-	
-	# Passer à l'état dash
-	var dash_state = state_machine.get_node("DashState")
-	if dash_state:
-		state_machine.change_state(dash_state)
-
-# Méthode utilitaire pour les autres états
-func can_dash() -> bool:
-	return _can_dash()
 
 func _rotate_piston(direction: int):
 	piston_direction = (piston_direction + direction + 4) % 4

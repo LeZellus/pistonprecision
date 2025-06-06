@@ -44,14 +44,15 @@ func _perform_dash():
 		parent.camera.shake(5.0, 0.1)
 
 func _get_dash_direction() -> Vector2:
+	# FIX: Logique corrigée - dasher dans la direction de la tête
 	match parent.piston_direction:
-		Player.PistonDirection.LEFT:  # Tête à gauche = dash droite
-			return Vector2.RIGHT
-		Player.PistonDirection.RIGHT: # Tête à droite = dash gauche  
+		Player.PistonDirection.LEFT:   # Tête à gauche = dash vers la gauche
 			return Vector2.LEFT
-		Player.PistonDirection.UP:    # Tête en haut = dash bas
-			return Vector2.DOWN
-		_: # PistonDirection.DOWN = pas de dash (garde le jump)
+		Player.PistonDirection.RIGHT:  # Tête à droite = dash vers la droite
+			return Vector2.RIGHT
+		Player.PistonDirection.UP:     # Tête en haut = dash vers le haut
+			return Vector2.UP
+		_: # PistonDirection.DOWN = pas de dash
 			return Vector2.ZERO
 
 func _check_end_dash_state() -> State:

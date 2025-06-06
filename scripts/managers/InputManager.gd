@@ -35,7 +35,7 @@ func _read_inputs():
 	# Jump state
 	jump_held = Input.is_action_pressed("jump")
 	
-	# Dash state (NOUVELLE LIGNE)
+	# FIX: Dash state - Reset à false à chaque frame
 	dash_pressed = Input.is_action_just_pressed("dash")
 	
 	# Actions instantanées (just_pressed)
@@ -49,7 +49,7 @@ func _read_inputs():
 	if Input.is_action_just_pressed("rotate_right"):
 		rotate_right_requested.emit()
 	
-	if Input.is_action_just_pressed("push"):  # Changez aussi le nom de l'action
+	if Input.is_action_just_pressed("push"):
 		push_requested.emit()
 
 func _update_timers(delta):
@@ -90,6 +90,8 @@ func is_jump_held() -> bool:
 func was_jump_released() -> bool:
 	return Input.is_action_just_released("jump")
 
-# NOUVELLE FONCTION POUR LE DASH
 func was_dash_pressed() -> bool:
-	return dash_pressed
+	var result = dash_pressed
+	# Optionnel: Reset immédiatement après lecture pour éviter les double-lectures
+	# dash_pressed = false
+	return result
