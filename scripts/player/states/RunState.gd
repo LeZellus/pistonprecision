@@ -11,6 +11,9 @@ func process_physics(delta: float) -> State:
 	var next_state = check_ground_transitions()
 	if next_state: return next_state
 	
+	next_state = check_dash_input()  # NOUVELLE LIGNE
+	if next_state: return next_state
+	
 	next_state = check_jump_input()
 	if next_state: return next_state
 	

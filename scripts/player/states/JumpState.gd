@@ -22,6 +22,10 @@ func process_physics(delta: float) -> State:
 	next_state = _check_fall()
 	if next_state: return next_state
 	
+	# NOUVELLE LIGNE AJOUTÉE ICI :
+	next_state = check_dash_input()
+	if next_state: return next_state
+	
 	return check_wall_slide_transition()
 
 func _perform_jump():

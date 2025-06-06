@@ -8,6 +8,7 @@ var is_grounded: bool = false
 # === CACHED INPUT DATA ===
 var movement_input: float = 0.0
 var jump_held: bool = false
+var dash_pressed: bool = false  # NOUVELLE VARIABLE
 
 # === SIGNALS ===
 signal jump_buffered
@@ -15,7 +16,7 @@ signal coyote_jump_available
 signal movement_changed(direction: float)
 signal rotate_left_requested
 signal rotate_right_requested
-signal dash_requested
+signal push_requested
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -34,6 +35,9 @@ func _read_inputs():
 	# Jump state
 	jump_held = Input.is_action_pressed("jump")
 	
+	# Dash state (NOUVELLE LIGNE)
+	dash_pressed = Input.is_action_just_pressed("dash")
+	
 	# Actions instantanées (just_pressed)
 	if Input.is_action_just_pressed("jump"):
 		jump_buffer_timer = PlayerConstants.JUMP_BUFFER_TIME
@@ -45,8 +49,8 @@ func _read_inputs():
 	if Input.is_action_just_pressed("rotate_right"):
 		rotate_right_requested.emit()
 	
-	if Input.is_action_just_pressed("dash"):
-		dash_requested.emit()
+	if Input.is_action_just_pressed("push"):  # Changez aussi le nom de l'action
+		push_requested.emit()
 
 func _update_timers(delta):
 	if jump_buffer_timer > 0:
@@ -85,3 +89,7 @@ func is_jump_held() -> bool:
 
 func was_jump_released() -> bool:
 	return Input.is_action_just_released("jump")
+
+# NOUVELLE FONCTION POUR LE DASH
+func was_dash_pressed() -> bool:
+	return dash_pressed

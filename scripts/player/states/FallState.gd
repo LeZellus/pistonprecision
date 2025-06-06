@@ -15,7 +15,14 @@ func process_physics(delta: float) -> State:
 	var next_state = check_air_transitions()
 	if next_state: return next_state
 	
-	return _check_wall_slide()
+	next_state = _check_wall_slide()
+	if next_state: return next_state
+	
+	# NOUVELLE LIGNE AJOUTÉE ICI :
+	next_state = check_dash_input()
+	if next_state: return next_state
+	
+	return null  # Ce return null était déjà là
 
 func _check_wall_slide() -> State:
 	if parent.wall_detector.is_touching_wall() and parent.velocity.y > 50:

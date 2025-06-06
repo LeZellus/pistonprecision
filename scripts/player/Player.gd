@@ -20,6 +20,8 @@ var gravity: float
 var was_grounded: bool = false
 var wall_jump_timer: float = 0.0
 
+var dash_cooldown_timer: float = 0.0
+
 # === CONSTANTS ===
 const WALL_JUMP_GRACE_TIME: float = 0.15
 
@@ -45,9 +47,9 @@ func _connect_signals():
 	InputManager.rotate_left_requested.connect(_on_rotate_left)
 	InputManager.rotate_right_requested.connect(_on_rotate_right)
 	
-	if InputManager.has_signal("dash_requested"):
-		if not InputManager.dash_requested.is_connected(_on_push_requested):
-			InputManager.dash_requested.connect(_on_push_requested)
+	if InputManager.has_signal("push_requested"):
+		if not InputManager.push_requested.is_connected(_on_push_requested):
+			InputManager.push_requested.connect(_on_push_requested)
 
 func _unhandled_input(event: InputEvent):
 	state_machine.process_input(event)
@@ -59,11 +61,16 @@ func _physics_process(delta: float):
 	delta = min(delta, 1.0/30.0)  # Cap pour éviter les gros deltas
 	_handle_grounding()
 	_update_wall_jump_timer(delta)
+	_update_dash_cooldown(delta) 
 	state_machine.process_physics(delta)
 
 func _update_wall_jump_timer(delta: float):
 	if wall_jump_timer > 0:
 		wall_jump_timer -= delta
+		
+func _update_dash_cooldown(delta: float):
+	if dash_cooldown_timer > 0:
+		dash_cooldown_timer -= delta
 
 # === MOVEMENT METHODS (Optimisées) ===
 func apply_gravity(delta: float):
@@ -101,7 +108,30 @@ func _on_rotate_right():
 	_rotate_piston(1)
 
 func _on_push_requested():
-	push()
+	if _can_dash():
+		_perform_dash()
+	else:
+		push()
+		
+func _can_dash() -> bool:
+	# Peut dasher si cooldown terminé ET tête pas vers le bas
+	return dash_cooldown_timer <= 0.0 and piston_direction != PistonDirection.DOWN
+
+func _perform_dash():
+	if not _can_dash():
+		return
+	
+	# Activer le cooldown
+	dash_cooldown_timer = PlayerConstants.DASH_COOLDOWN
+	
+	# Passer à l'état dash
+	var dash_state = state_machine.get_node("DashState")
+	if dash_state:
+		state_machine.change_state(dash_state)
+
+# Méthode utilitaire pour les autres états
+func can_dash() -> bool:
+	return _can_dash()
 
 func _rotate_piston(direction: int):
 	piston_direction = (piston_direction + direction + 4) % 4

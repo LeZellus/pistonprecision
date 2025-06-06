@@ -40,6 +40,7 @@ animations = [{
 }]
 
 [node name="JumpParticle" type="Node2D"]
+z_index = 50
 script = ExtResource("1_j64og")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

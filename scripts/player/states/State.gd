@@ -55,3 +55,9 @@ func check_wall_slide_transition() -> State:
 	if parent.wall_detector.is_touching_wall():
 		return get_node("../WallSlideState")
 	return null
+	
+func check_dash_input() -> State:
+	# Vérifie l'input dash seulement si on peut dasher
+	if InputManager.was_dash_pressed() and parent.can_dash():
+		return get_node("../DashState")
+	return null
