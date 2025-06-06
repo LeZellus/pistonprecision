@@ -91,7 +91,7 @@ func was_jump_released() -> bool:
 	return Input.is_action_just_released("jump")
 
 func was_dash_pressed() -> bool:
-	var result = dash_pressed
-	# Optionnel: Reset immédiatement après lecture pour éviter les double-lectures
-	# dash_pressed = false
-	return result
+	if dash_pressed:
+		dash_pressed = false  # Consommer l'input immédiatement
+		return true
+	return false
