@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://bxngpqv51c6i"]
+[gd_scene load_steps=5 format=3 uid="uid://bxngpqv51c6i"]
 
 [ext_resource type="Script" path="res://scripts/GameLevel.gd" id="1_5infr"]
 [ext_resource type="Resource" uid="uid://cuvhoalkb2p7v" path="res://data/worlds/world_01.tres" id="2_gbm5w"]
 [ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="3_tl3xi"]
+[ext_resource type="PackedScene" uid="uid://b5olalvxo1hqu" path="res://scenes/ui/MainMenu.tscn" id="4_klvcu"]
 
 [node name="GameLevel" type="Node2D"]
 script = ExtResource("1_5infr")
@@ -12,5 +13,10 @@ player_spawn_position = Vector2(10, 10)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 anchor_mode = 0
-zoom = Vector2(6, 6)
+zoom = Vector2(8, 8)
 script = ExtResource("3_tl3xi")
+
+[node name="MenuLayer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="MainMenu" parent="MenuLayer" instance=ExtResource("4_klvcu")]

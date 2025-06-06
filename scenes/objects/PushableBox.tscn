@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://comxhy83n1rdo" path="res://assets/sprites/tiles/Tilemap.png" id="2_xv75o"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_70vbl"]
-size = Vector2(8, 7)
+size = Vector2(8, 7.9)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_txk7y"]
 size = Vector2(10, 8)
