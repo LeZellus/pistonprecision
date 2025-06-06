@@ -1,6 +1,7 @@
 extends Control
 
 signal play_requested
+signal settings_requested
 
 @onready var play_button: Button = $CenterContainer/VBoxContainer/PlayButton
 @onready var settings_button: Button = $CenterContainer/VBoxContainer/SettingsButton
@@ -17,8 +18,8 @@ func _on_play_pressed():
 	play_requested.emit()
 
 func _on_settings_pressed():
-	print("Bouton Paramètres pressé - TODO: Ouvrir paramètres")
-	# TODO: Ouvrir menu paramètres
+	print("Bouton Paramètres pressé")
+	settings_requested.emit()
 
 func _on_quit_pressed():
 	print("Bouton Quitter pressé")

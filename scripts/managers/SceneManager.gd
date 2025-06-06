@@ -21,8 +21,10 @@ func _ready():
 
 # === INITIALIZATION ===
 func initialize_with_player(player_scene: PackedScene):
-	if player:
+	# FIX: Vérifier que le joueur existe ET qu'il est valide
+	if player and is_instance_valid(player):
 		player.queue_free()
+		await player.tree_exited  # Attendre qu'il soit vraiment supprimé
 	
 	player = player_scene.instantiate()
 	world_container.add_child(player)
@@ -54,7 +56,7 @@ func load_room(room_id: String):
 	current_room = room_data
 	
 	# Supprimer l'ancienne salle
-	if current_room_node:
+	if current_room_node and is_instance_valid(current_room_node):
 		current_room_node.queue_free()
 		await current_room_node.tree_exited
 	
@@ -69,8 +71,22 @@ func load_room(room_id: String):
 	world_container.add_child(current_room_node)
 	
 	# S'assurer que le joueur reste au-dessus
-	if player:
+	if player and is_instance_valid(player):
 		world_container.move_child(player, -1)
+
+# === CLEANUP METHOD ===
+func cleanup_world():
+	"""Nettoie tout le contenu du monde (salles + joueur)"""
+	if player and is_instance_valid(player):
+		player.queue_free()
+		player = null
+	
+	if current_room_node and is_instance_valid(current_room_node):
+		current_room_node.queue_free()
+		current_room_node = null
+	
+	current_world = null
+	current_room = null
 
 # === TRANSITIONS ===
 func transition_to_room(direction: String):
@@ -83,25 +99,25 @@ func transition_to_room(direction: String):
 		return
 	
 	# Sauvegarder la vélocité du joueur
-	var preserved_velocity = player.velocity if player else Vector2.ZERO
+	var preserved_velocity = player.velocity if player and is_instance_valid(player) else Vector2.ZERO
 	
 	# Calculer la nouvelle position
 	var new_position = _calculate_transition_position(direction)
 	
 	# Commencer la transition sur le joueur
-	if player and player.has_method("start_room_transition"):
+	if player and is_instance_valid(player) and player.has_method("start_room_transition"):
 		player.start_room_transition()
 	
 	# Charger la nouvelle salle
 	await load_room(next_room_id)
 	
 	# Repositionner le joueur
-	if player:
+	if player and is_instance_valid(player):
 		player.global_position = new_position
 		player.velocity = preserved_velocity
 
 func _calculate_transition_position(direction: String) -> Vector2:
-	if not player:
+	if not player or not is_instance_valid(player):
 		return Vector2.ZERO
 	
 	var current_pos = player.global_position
