@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bt8bvgcp2hvdk"]
+
+[ext_resource type="TileSet" uid="uid://dp471m1i76xxf" path="res://resources/level_data/TilesetGround.tres" id="1_vmu8v"]
+
+[node name="Ground" type="TileMapLayer"]
+tile_set = ExtResource("1_vmu8v")

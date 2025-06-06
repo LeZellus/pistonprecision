@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=5 format=3 uid="uid://cuvhoalkb2p7v"]
+
+[ext_resource type="Script" path="res://scripts/data/RoomData.gd" id="1_7kiyk"]
+[ext_resource type="Script" path="res://scripts/data/WorldData.gd" id="2_dqpew"]
+
+[sub_resource type="Resource" id="Resource_oa8co"]
+script = ExtResource("1_7kiyk")
+room_id = "room_01"
+scene_path = "res://scenes/worlds/world_01/room_01.tscn"
+connections = {
+"right": "room_02"
+}
+spawn_points = {}
+
+[sub_resource type="Resource" id="Resource_ggvit"]
+script = ExtResource("1_7kiyk")
+room_id = "room_02"
+scene_path = "res://scenes/worlds/world_01/room_02.tscn"
+connections = {
+"left": "room_01"
+}
+spawn_points = {}
+
+[resource]
+script = ExtResource("2_dqpew")
+world_id = "world_01"
+world_name = "First World"
+rooms = Array[ExtResource("1_7kiyk")]([SubResource("Resource_oa8co"), SubResource("Resource_ggvit")])
+spawn_room_id = "room_01"

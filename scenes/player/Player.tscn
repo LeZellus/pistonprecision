@@ -14,6 +14,7 @@
 size = Vector2(6, 7)
 
 [node name="CharacterBody2D" type="CharacterBody2D"]
+z_index = 50
 collision_mask = 6
 script = ExtResource("1_0orsa")
 

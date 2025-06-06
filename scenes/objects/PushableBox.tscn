@@ -10,6 +10,7 @@ size = Vector2(8, 7)
 size = Vector2(10, 8)
 
 [node name="PushableObject" type="CharacterBody2D"]
+z_index = 50
 collision_layer = 4
 collision_mask = 6
 script = ExtResource("1_53puw")

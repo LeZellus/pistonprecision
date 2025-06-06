@@ -15,6 +15,9 @@ var camera: Camera2D  # Cache de la caméra pour éviter les appels répétés
 enum PistonDirection { DOWN, LEFT, UP, RIGHT }
 var piston_direction: PistonDirection = PistonDirection.DOWN
 
+var transition_immunity_timer: float = 0.0
+const TRANSITION_IMMUNITY_TIME = 0.1
+
 # === PHYSICS CACHE ===
 var gravity: float
 var was_grounded: bool = false
@@ -33,6 +36,22 @@ func _ready():
 	state_machine.init(self)
 	
 	add_to_group("player")
+	
+func _process(delta: float):
+	state_machine.process_frame(delta)
+
+func _physics_process(delta: float):
+	delta = min(delta, 1.0/30.0)  # Cap pour éviter les gros deltas
+	_handle_grounding()
+	_update_wall_jump_timer(delta)
+	_update_dash_cooldown(delta)
+	state_machine.process_physics(delta)
+	
+	# Gestion des transitions de salle
+	if transition_immunity_timer > 0:
+		transition_immunity_timer -= delta
+		global_position += velocity * delta
+		return
 
 func _cache_physics_values():
 	gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
@@ -53,16 +72,6 @@ func _connect_signals():
 
 func _unhandled_input(event: InputEvent):
 	state_machine.process_input(event)
-
-func _process(delta: float):
-	state_machine.process_frame(delta)
-
-func _physics_process(delta: float):
-	delta = min(delta, 1.0/30.0)  # Cap pour éviter les gros deltas
-	_handle_grounding()
-	_update_wall_jump_timer(delta)
-	_update_dash_cooldown(delta)
-	state_machine.process_physics(delta)
 
 func _update_wall_jump_timer(delta: float):
 	if wall_jump_timer > 0:
@@ -197,12 +206,9 @@ func _on_push_animation_finished():
 func _handle_grounding():
 	var grounded = is_on_floor()
 	
-	# OPTIMISATION: Activer/désactiver les wall raycasts selon le contexte
 	if grounded and was_grounded:
-		# Si on reste au sol, désactiver wall detection
 		wall_detector.set_active(false)
 	elif not grounded:
-		# Si on est en l'air, activer wall detection
 		wall_detector.set_active(true)
 	
 	if grounded and not was_grounded:
@@ -222,3 +228,7 @@ func _setup_detectors():
 	add_child(ground_detector)
 	add_child(wall_detector)
 	add_child(push_detector)
+	
+func start_room_transition():
+	transition_immunity_timer = TRANSITION_IMMUNITY_TIME
+	

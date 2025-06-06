@@ -1,0 +1,33 @@
+[gd_scene load_steps=6 format=4 uid="uid://c38acy50fcdcs"]
+
+[ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_c20re"]
+[ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_abstl"]
+[ext_resource type="Script" path="res://scripts/world/RoomTrigger.gd" id="2_np7nx"]
+[ext_resource type="PackedScene" uid="uid://dqimbr7lydigd" path="res://scenes/objects/LayerWalls.tscn" id="3_dykpx"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_axaw5"]
+size = Vector2(8, 16)
+
+[node name="Room02" type="Node2D"]
+
+[node name="TileMapLayer" type="Node" parent="."]
+
+[node name="Background" parent="TileMapLayer" instance=ExtResource("1_c20re")]
+
+[node name="Ground" parent="TileMapLayer" instance=ExtResource("2_abstl")]
+tile_map_data = PackedByteArray("AAAAABYAAAAPAAgAAAABABYAAAAPAAgAAAACABYAAAAPAAgAAAADABYAAAAPAAgAAAAEABYAAAAPAAgAAAAFABYAAAAPAAgAAAAGABYAAAAPAAgAAAAHABYAAAAPAAgAAAAIABYAAAAPAAgAAAAJABYAAAAPAAgAAAAKABYAAAAPAAgAAAALABYAAAAPAAgAAAAMABYAAAAPAAgAAAANABYAAAAPAAgAAAAOABYAAAAPAAgAAAAPABYAAAAPAAgAAAAQABYAAAAPAAgAAAARABYAAAAPAAgAAAASABYAAAAPAAgAAAATABYAAAAPAAgAAAAUABYAAAAPAAgAAAAVABYAAAAPAAgAAAAWABYAAAAPAAgAAAAXABYAAAAPAAgAAAAYABYAAAAPAAgAAAAZABYAAAAPAAgAAAAaABYAAAAPAAgAAAAbABYAAAAPAAgAAAAcABYAAAAPAAgAAAAdABYAAAAPAAgAAAAeABYAAAAPAAgAAAAfABYAAAAPAAgAAAAgABYAAAAPAAgAAAAhABYAAAAPAAgAAAAiABYAAAAPAAgAAAAjABYAAAAPAAgAAAAkABYAAAAPAAgAAAAlABYAAAAPAAgAAAAmABYAAAAPAAgAAAAnABYAAAAPAAgAAAA=")
+
+[node name="Walls" parent="TileMapLayer" instance=ExtResource("3_dykpx")]
+
+[node name="TriggerLeft" type="Area2D" parent="."]
+z_index = 1
+position = Vector2(5, 168)
+script = ExtResource("2_np7nx")
+direction = "left"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerLeft"]
+shape = SubResource("RectangleShape2D_axaw5")
+debug_color = Color(0.946503, 0.160254, 0.650251, 0.42)
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(32, 96)
