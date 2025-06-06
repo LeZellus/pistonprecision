@@ -13,6 +13,8 @@ extends Node2D
 var game_started: bool = false
 
 func _ready():
+	AudioManager._scan_audio_folders()
+	
 	# Connecter les signaux des menus
 	if main_menu:
 		main_menu.play_requested.connect(_start_game)

@@ -66,7 +66,12 @@ func _check_wall_impact(old_velocity: float):
 
 func _trigger_wall_impact_shake(impact_velocity: float):
 	var shake_intensity = clamp(impact_velocity * 0.01, 2.0, 15.0)
-	var shake_duration = clamp(impact_velocity * 0.0001, 0.1, 0.3)
+	# var shake_duration = clamp(impact_velocity * 0.0001, 0.1, 0.4)
+	var shake_duration = 1.5
+	
+	# NOUVEAU : Son d'impact basé sur la vélocité
+	var impact_volume = clamp(impact_velocity * 0.002, 0.1, 0.3)
+	AudioManager.play_sfx("objects/wall_impact", impact_volume)
 	
 	var camera = get_viewport().get_camera_2d()
 	if not camera:

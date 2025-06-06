@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=4 uid="uid://ckw83swiwevhx"]
 
-[ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableBox.tscn" id="1_ku13x"]
+[ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableObject.tscn" id="1_ku13x"]
 [ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_r7ns6"]
 [ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_7sxm0"]
 [ext_resource type="Script" path="res://scripts/world/RoomTrigger.gd" id="2_rjd5w"]
@@ -13,10 +13,10 @@ size = Vector2(8, 16)
 [node name="Room01" type="Node2D"]
 
 [node name="PushableObject" parent="." instance=ExtResource("1_ku13x")]
-position = Vector2(92, 23)
+position = Vector2(51, 76)
 
 [node name="PushableObject2" parent="." instance=ExtResource("1_ku13x")]
-position = Vector2(14, 17)
+position = Vector2(-139, 76)
 
 [node name="TileMapLayer" type="Node" parent="."]
 
