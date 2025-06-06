@@ -2,7 +2,7 @@ extends Node2D
 
 @export var starting_world: WorldData
 @export var starting_room: String = ""
-@export var player_spawn_position: Vector2 = Vector2(150, 220)
+@export var player_spawn_position: Vector2 = Vector2(10, 10)
 
 # === MENU REFERENCES ===
 @onready var menu_layer: CanvasLayer = $MenuLayer
@@ -28,6 +28,9 @@ func _ready():
 	
 	# Commencer par afficher le menu principal
 	_show_main_menu()
+	
+	# NE PLUS INITIALISER LE JEU ICI !
+	# L'initialisation se fait maintenant dans _start_game()
 
 func _input(event):
 	# Échap pendant le jeu = pause
@@ -54,10 +57,17 @@ func _start_game():
 	"""Lance le jeu et cache tous les menus"""
 	print("Démarrage du jeu...")
 	game_started = true
+	
+	# Cacher les menus AVANT d'initialiser le jeu
 	if menu_layer:
 		menu_layer.visible = false
 	
-	# Votre code existant pour initialiser le jeu
+	# S'assurer que le GameManager est en mode PLAYING
+	var game_manager = get_node("/root/GameManager")
+	if game_manager:
+		game_manager.change_state(GameManager.GameState.PLAYING)
+	
+	# MAINTENANT initialiser le jeu
 	if not starting_world:
 		push_error("Aucun monde de départ défini!")
 		return
@@ -67,9 +77,30 @@ func _start_game():
 	SceneManager.initialize_with_player(player_scene)
 	await SceneManager.load_world(starting_world, starting_room)
 	
+	# Attendre que tout soit stable
+	await get_tree().process_frame
+	
 	if SceneManager.player:
 		SceneManager.player.global_position = player_spawn_position
 		SceneManager.player.velocity = Vector2.ZERO
+		
+		# Debug simple
+		print("Joueur final - Position: ", SceneManager.player.global_position)
+		print("Joueur final - Visible: ", SceneManager.player.visible)
+		
+		# ESSAI: Forcer la visibilité
+		SceneManager.player.visible = true
+		SceneManager.player.modulate = Color.WHITE
+		
+		# ESSAI: S'assurer que la caméra suit le joueur
+		var camera = get_viewport().get_camera_2d()
+		if camera:
+			camera.global_position = SceneManager.player.global_position
+			print("Caméra repositionnée sur: ", camera.global_position)
+	else:
+		print("ERREUR: Pas de joueur trouvé!")
+	
+	print("=== Initialisation terminée ===")
 
 # === GESTION DE LA PAUSE ===
 func _pause_game():
@@ -100,6 +131,13 @@ func return_to_menu():
 	"""Retourne au menu principal depuis le jeu"""
 	print("Retour au menu...")
 	game_started = false
+	
 	# Nettoyer proprement le SceneManager
 	SceneManager.cleanup_world()
+	
+	# Remettre le GameManager en état MENU
+	var game_manager = get_node("/root/GameManager")
+	if game_manager:
+		game_manager.change_state(GameManager.GameState.MENU)
+	
 	_show_main_menu()

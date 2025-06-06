@@ -12,8 +12,6 @@ script = ExtResource("1_5infr")
 starting_world = ExtResource("2_gbm5w")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-anchor_mode = 0
-zoom = Vector2(8, 8)
 script = ExtResource("3_tl3xi")
 
 [node name="MenuLayer" type="CanvasLayer" parent="."]

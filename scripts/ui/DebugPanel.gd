@@ -11,15 +11,6 @@ extends CanvasLayer  # Retour au CanvasLayer
 var frame_times: Array[float] = []
 var max_frame_samples: int = 60
 
-func _ready():
-	follow_viewport_enabled = false
-	
-	# Utiliser la taille native du viewport
-	var viewport_size = get_viewport().get_visible_rect().size
-	scale = Vector2.ONE
-	
-	visible = true
-
 func _process(delta):
 	if visible:
 		_update_performance(delta)
