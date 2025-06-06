@@ -12,7 +12,12 @@ var frame_times: Array[float] = []
 var max_frame_samples: int = 60
 
 func _ready():
-	# Visible par défaut
+	follow_viewport_enabled = false
+	
+	# Utiliser la taille native du viewport
+	var viewport_size = get_viewport().get_visible_rect().size
+	scale = Vector2.ONE
+	
 	visible = true
 
 func _process(delta):
@@ -65,6 +70,6 @@ func hide_panel():
 	visible = false
 
 # Ajouter des infos custom si besoin
-func add_custom_info(text: String):
+func add_custom_info(_text: String):
 	# Vous pouvez étendre ça pour ajouter des labels dynamiques
 	pass

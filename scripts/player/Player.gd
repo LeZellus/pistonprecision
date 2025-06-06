@@ -91,7 +91,7 @@ func apply_friction(delta: float):
 	var friction_value = PlayerConstants.FRICTION if is_on_floor() else PlayerConstants.AIR_RESISTANCE
 	velocity.x = move_toward(velocity.x, 0, friction_value * delta)
 
-func apply_wall_slide(delta: float):
+func apply_wall_slide(_delta: float):
 	if velocity.y > 0:
 		velocity.y *= PlayerConstants.WALL_SLIDE_MULTIPLIER
 		velocity.y = min(velocity.y, PlayerConstants.MAX_FALL_SPEED * PlayerConstants.WALL_SLIDE_MAX_SPEED_MULTIPLIER)
@@ -119,7 +119,8 @@ func can_dash() -> bool:
 	return dash_cooldown_timer <= 0.0 and piston_direction != PistonDirection.DOWN
 
 func _rotate_piston(direction: int):
-	piston_direction = (piston_direction + direction + 4) % 4
+	var new_direction = (piston_direction + direction + 4) % 4
+	piston_direction = new_direction as PistonDirection
 	sprite.rotation_degrees = piston_direction * 90
 
 func _get_push_vector() -> Vector2:
