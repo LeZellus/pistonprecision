@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://ylt41ox5quua"]
+
+[ext_resource type="Script" path="res://scripts/objects/DeathZone.gd" id="1_srtck"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c7od0"]
+
+[node name="DeathZone" type="Area2D"]
+script = ExtResource("1_srtck")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+z_index = 50
+shape = SubResource("RectangleShape2D_c7od0")
+debug_color = Color(0.833593, 0.0179896, 6.73831e-07, 0.419608)

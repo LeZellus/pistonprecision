@@ -19,7 +19,6 @@ signal checkpoint_reached(checkpoint_id: String)
 var current_state: GameState = GameState.MENU
 var current_level: String = ""
 var current_checkpoint: String = ""
-var player_lives: int = 3
 var deaths_count: int = 0
 var level_time: float = 0.0
 var total_time: float = 0.0
@@ -89,19 +88,6 @@ func complete_level():
 func set_checkpoint(checkpoint_id: String):
 	current_checkpoint = checkpoint_id
 	checkpoint_reached.emit(checkpoint_id)
-
-# === PLAYER MANAGEMENT ===
-func player_die():
-	deaths_count += 1
-	player_lives -= 1
-	player_died.emit()
-	
-	if player_lives <= 0:
-		change_state(GameState.GAME_OVER)
-
-func reset_player_stats():
-	player_lives = 3
-	deaths_count = 0
 
 # === SAVE/LOAD ===
 func save_game_data():

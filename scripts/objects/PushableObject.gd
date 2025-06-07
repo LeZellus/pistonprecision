@@ -61,12 +61,9 @@ func _physics_process(delta):
 	if abs(push_velocity.x) < 10.0:
 		has_impacted = false
 
-# Plus besoin de cette fonction
-# func _check_wall_impact() supprimée
-
 func _trigger_wall_impact_shake(impact_velocity: float):
 	var shake_intensity = clamp(impact_velocity * 0.01, 2.0, 15.0)
-	var shake_duration = 1.5
+	var shake_duration = 1
 	
 	# Son d'impact basé sur la vélocité
 	var impact_volume = clamp(impact_velocity * 0.002, 0.1, 0.3)
