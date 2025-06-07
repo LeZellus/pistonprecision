@@ -15,7 +15,8 @@ size = Vector2(8, 16)
 [node name="Room01" type="Node2D"]
 
 [node name="SpawnPoint" parent="." instance=ExtResource("1_va5oy")]
-position = Vector2(-143, 64)
+position = Vector2(-143, 69)
+script = null
 
 [node name="PushableObject" parent="." instance=ExtResource("1_ku13x")]
 position = Vector2(51, 76)

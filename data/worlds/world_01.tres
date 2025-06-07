@@ -10,7 +10,9 @@ scene_path = "res://scenes/worlds/world_01/room_01.tscn"
 connections = {
 "right": "room_02"
 }
-spawn_points = {}
+spawn_points = {
+"default": Vector2(0, 5)
+}
 
 [sub_resource type="Resource" id="Resource_ggvit"]
 script = ExtResource("1_7kiyk")

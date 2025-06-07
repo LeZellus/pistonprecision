@@ -77,23 +77,6 @@ func _start_game():
 	SceneManager.initialize_with_player(player_scene)
 	await SceneManager.load_world(starting_world, starting_room)
 	
-	# Attendre que tout soit stable
-	await get_tree().process_frame
-	
-	if SceneManager.player:
-		SceneManager.player.global_position = player_spawn_position
-		SceneManager.player.velocity = Vector2.ZERO
-		
-		# Debug simple
-		print("Joueur final - Position: ", SceneManager.player.global_position)
-		print("Joueur final - Visible: ", SceneManager.player.visible)
-		
-		# ESSAI: Forcer la visibilité
-		SceneManager.player.visible = true
-		SceneManager.player.modulate = Color.WHITE
-	else:
-		print("ERREUR: Pas de joueur trouvé!")
-	
 	print("=== Initialisation terminée ===")
 
 # === GESTION DE LA PAUSE ===

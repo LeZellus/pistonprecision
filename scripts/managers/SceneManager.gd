@@ -67,8 +67,8 @@ func load_world(world_resource: WorldData, start_room_id: String = ""):
 	
 	await load_room(room_id)
 
-func load_room(room_id: String):
-	print("=== DÉBUT load_room: ", room_id, " ===")
+func load_room(room_id: String, from_direction: String = ""):
+	print("=== DÉBUT load_room: ", room_id, " depuis: ", from_direction, " ===")
 	if not current_world:
 		push_error("Aucun monde chargé")
 		return
@@ -79,14 +79,11 @@ func load_room(room_id: String):
 		return
 	
 	current_room = room_data
-	print("Room data trouvée: ", room_data.scene_path)
 	
 	# Supprimer l'ancienne salle
 	if current_room_node and is_instance_valid(current_room_node):
-		print("Suppression ancienne salle: ", current_room_node.name)
 		current_room_node.queue_free()
 		await current_room_node.tree_exited
-		print("Ancienne salle supprimée")
 	
 	# Charger la nouvelle salle
 	var room_scene = load(room_data.scene_path)
@@ -94,22 +91,20 @@ func load_room(room_id: String):
 		push_error("Impossible de charger: " + room_data.scene_path)
 		return
 	
-	print("Instanciation nouvelle salle...")
 	current_room_node = room_scene.instantiate()
 	current_room_node.name = "CurrentRoom"
 	world_container.add_child(current_room_node)
-	print("Nouvelle salle ajoutée: ", current_room_node.name)
 	
-	# S'assurer que le joueur reste au-dessus
+	# NOUVEAU : Positionner le joueur au bon spawn
 	if player and is_instance_valid(player):
-		print("Déplacement joueur au premier plan...")
 		world_container.move_child(player, -1)
-		print("Position joueur dans la hiérarchie: ", player.get_index())
-		print("Position joueur globale: ", player.global_position)
-	else:
-		print("ATTENTION: Pas de joueur à déplacer!")
-	
-	print("=== FIN load_room ===")
+		
+		# Utiliser le système de spawn unifié
+		var spawn_pos = _get_spawn_position_for_room(current_room_node, from_direction)
+		player.global_position = spawn_pos
+		player.velocity = Vector2.ZERO
+		
+		print("Joueur positionné au spawn: ", spawn_pos)
 
 # === CLEANUP METHOD ===
 func cleanup_world():
@@ -135,22 +130,18 @@ func transition_to_room(direction: String):
 	if not next_room_id:
 		return
 	
-	# Sauvegarder la vélocité du joueur
+	# Sauvegarder la vélocité
 	var preserved_velocity = player.velocity if player and is_instance_valid(player) else Vector2.ZERO
 	
-	# Calculer la nouvelle position
-	var new_position = _calculate_transition_position(direction)
-	
-	# Commencer la transition sur le joueur
+	# Commencer la transition
 	if player and is_instance_valid(player) and player.has_method("start_room_transition"):
 		player.start_room_transition()
 	
-	# Charger la nouvelle salle
-	await load_room(next_room_id)
+	# Charger avec la direction d'origine
+	await load_room(next_room_id, direction)
 	
-	# Repositionner le joueur
+	# Restaurer la vélocité
 	if player and is_instance_valid(player):
-		player.global_position = new_position
 		player.velocity = preserved_velocity
 
 func _calculate_transition_position(direction: String) -> Vector2:
@@ -170,6 +161,19 @@ func _calculate_transition_position(direction: String) -> Vector2:
 			return Vector2(current_pos.x, TRANSITION_BUFFER)
 	
 	return current_pos
+	
+func _get_spawn_position_for_room(room_node: Node2D, from_direction: String = "") -> Vector2:
+	# 1. Chercher un SpawnPoint dans la salle
+	var spawn_point = room_node.get_node_or_null("SpawnPoint")
+	if spawn_point:
+		return spawn_point.global_position
+	
+	# 2. Utiliser les spawn_points du RoomData si définis
+	if current_room and current_room.spawn_points.has("from_" + from_direction):
+		return current_room.spawn_points["from_" + from_direction]
+	
+	# 3. Position par défaut au centre de la salle
+	return Vector2(ROOM_SIZE.x * 0.1, ROOM_SIZE.y * 0.8)  # Position sûre
 
 # === GETTERS ===
 func get_current_room_id() -> String:
