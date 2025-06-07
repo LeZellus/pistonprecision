@@ -2,7 +2,7 @@ class_name PushDetector
 extends Node2D
 
 var player: CharacterBody2D
-const RAY_LENGTH = 20.0
+const RAY_LENGTH = 6.0
 
 func _init(player_ref: CharacterBody2D):
 	player = player_ref

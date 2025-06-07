@@ -150,14 +150,20 @@ func push():
 	if not _can_perform_push_action(push_vector):
 		return
 	
-	var success = _attempt_push(push_vector)
-	var has_pushable_object = push_detector.detect_pushable_object(push_vector) != null
+	var pushable_object = push_detector.detect_pushable_object(push_vector)
+	var success = false
 	
-	if (has_pushable_object and success) or (not has_pushable_object):
-		_play_push_animation()
-		
-		if success:
-			_trigger_push_shake()
+	if pushable_object:
+		success = _attempt_push(push_vector)
+	else:
+		print("Aucun objet pushable détecté")
+	
+	# ✅ SOLUTION : Animation joue toujours si action possible
+	_play_push_animation()
+	
+	# Shake seulement en cas de succès
+	if success:
+		_trigger_push_shake()
 
 func _play_push_animation():
 	sprite.play("Push")
@@ -193,6 +199,7 @@ func _trigger_push_shake():
 	camera.shake(8.0, 0.15)
 
 func _on_push_animation_finished():
+	print("Animation push terminée") # Debug
 	if sprite.animation_finished.is_connected(_on_push_animation_finished):
 		sprite.animation_finished.disconnect(_on_push_animation_finished)
 	

@@ -17,9 +17,6 @@ func _on_volume_changed(value: float):
 	print("Volume changé: ", value)
 	AudioManager.set_master_volume(value)
 	
-	# Test audio pour feedback immédiat
-	AudioManager.play_sfx("player/jump", 0.1)
-
 func _on_back_pressed():
 	print("Retour au menu principal")
 	back_requested.emit()

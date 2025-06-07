@@ -11,11 +11,6 @@ var target_offset: Vector2 = Vector2.ZERO
 func _ready():
 	animated_sprite.animation_finished.connect(_on_animation_finished)
 
-func _process(_delta):
-	# Suit la cible si définie
-	if follow_target and is_instance_valid(follow_target):
-		global_position = follow_target.global_position + target_offset
-
 func start_effect():
 	# Applique la direction (flip si nécessaire)
 	if direction < 0:

@@ -73,6 +73,7 @@ func set_grounded(grounded: bool):
 # === BUFFER CHECKS ===
 func consume_jump_buffer() -> bool:
 	if jump_buffer_timer > 0:
+		print("=== JUMP BUFFER CONSUMED ===")
 		jump_buffer_timer = 0.0
 		return true
 	return false

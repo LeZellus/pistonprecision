@@ -5,6 +5,13 @@ func _ready() -> void:
 	animation_name = "Jump"
 
 func enter() -> void:
+	print("=== JumpState.enter() appelé ===")
+	print("Stack trace:")
+	for i in range(get_stack().size()):
+		var frame = get_stack()[i]
+		print("  ", i, ": ", frame.source, ":", frame.line, " in ", frame.function)
+	print("=== Fin stack trace ===")
+	
 	super.enter()
 	_perform_jump()
 
@@ -29,8 +36,9 @@ func process_physics(delta: float) -> State:
 	return check_wall_slide_transition()
 
 func _perform_jump():
+	print("=== _perform_jump() appelé ===")
 	parent.velocity.y = PlayerConstants.JUMP_VELOCITY
-	AudioManager.play_sfx("player/jump", 0.1)
+	AudioManager.play_sfx("player/jump", 0.1)  # ← Le son est ici !
 	var particle_pos = parent.global_position + Vector2(0, -4)
 	ParticleManager.emit_jump(particle_pos)
 

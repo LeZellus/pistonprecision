@@ -1,38 +1,52 @@
-[gd_scene load_steps=8 format=3 uid="uid://76jib332eiaf"]
+[gd_scene load_steps=10 format=3 uid="uid://76jib332eiaf"]
 
 [ext_resource type="Script" path="res://scripts/player/particles/DustParticle.gd" id="1_vb351"]
 [ext_resource type="Texture2D" uid="uid://bpbwhpyhjfakm" path="res://assets/sprites/player/land/dustland.png" id="2_k6pi8"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_12vfr"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_5fl71"]
 atlas = ExtResource("2_k6pi8")
 region = Rect2(0, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_268qr"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_mw13l"]
 atlas = ExtResource("2_k6pi8")
 region = Rect2(16, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ej814"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_xk5wq"]
 atlas = ExtResource("2_k6pi8")
 region = Rect2(32, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_chrb1"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_2i663"]
 atlas = ExtResource("2_k6pi8")
 region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_o3tli"]
+atlas = ExtResource("2_k6pi8")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eble4"]
+atlas = ExtResource("2_k6pi8")
+region = Rect2(80, 0, 16, 16)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_ose0u"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_12vfr")
+"texture": SubResource("AtlasTexture_5fl71")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_268qr")
+"texture": SubResource("AtlasTexture_mw13l")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ej814")
+"texture": SubResource("AtlasTexture_xk5wq")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_chrb1")
+"texture": SubResource("AtlasTexture_2i663")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_o3tli")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eble4")
 }],
 "loop": false,
 "name": &"dust_effect",
@@ -40,7 +54,7 @@ animations = [{
 }]
 
 [node name="DustParticle" type="Node2D"]
-z_index = 50
+z_index = 51
 script = ExtResource("1_vb351")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

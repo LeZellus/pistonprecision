@@ -45,9 +45,6 @@ func emit_jump(position: Vector2, follow_target: Node2D = null, target_offset: V
 
 func emit_dust(position: Vector2, direction: float = 0.0, follow_target: Node2D = null):
 	var params = {"direction": direction}
-	if follow_target:
-		params["follow_target"] = follow_target
-		params["target_offset"] = Vector2(0, -4)
 	_emit_particle("dust", position, params)
 
 func _emit_particle(type: String, pos: Vector2, params: Dictionary):

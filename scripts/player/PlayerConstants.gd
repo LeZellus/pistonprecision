@@ -1,7 +1,7 @@
 class_name PlayerConstants
 
 # === MOVEMENT ===
-const SPEED = 120.0
+const SPEED = 100.0
 const ACCELERATION = 500.0
 const FRICTION = 2000.0
 const AIR_RESISTANCE = 600.0  # Réduit pour moins de friction en l'air
