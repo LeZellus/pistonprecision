@@ -24,7 +24,6 @@ AudioManager="*res://scripts/managers/AudioManager.gd"
 ParticleManager="*res://scripts/managers/ParticleManager.gd"
 DebugManager="*res://scripts/managers/DebugManager.gd"
 SceneManager="*res://scripts/managers/SceneManager.gd"
-SpawnManager="*res://scripts/managers/SpawnManager.gd"
 
 [display]
 

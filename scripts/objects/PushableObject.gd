@@ -62,8 +62,8 @@ func _physics_process(delta):
 		has_impacted = false
 
 func _trigger_wall_impact_shake(impact_velocity: float):
-	var shake_intensity = clamp(impact_velocity * 0.01, 2.0, 15.0)
-	var shake_duration = 1
+	var shake_intensity = clamp(impact_velocity * 0.01, 2.0, 5.0)
+	var shake_duration = 0.5
 	
 	# Son d'impact basé sur la vélocité
 	var impact_volume = clamp(impact_velocity * 0.002, 0.1, 0.3)

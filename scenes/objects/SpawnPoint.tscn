@@ -5,4 +5,3 @@
 [node name="SpawnPoint" type="Marker2D"]
 z_index = 50
 script = ExtResource("1_7gw8q")
-is_default_spawn = true
