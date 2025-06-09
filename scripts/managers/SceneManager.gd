@@ -1,4 +1,4 @@
-# scripts/managers/SceneManager.gd - Version avec reset
+# scripts/managers/SceneManager.gd - Version avec reset et mort
 extends Node
 
 # === REFERENCES ===
@@ -22,27 +22,15 @@ func _ready():
 
 # === INITIALIZATION ===
 func initialize_with_player(player_scene: PackedScene):
-	print("=== DÉBUT initialize_with_player ===")
-	
 	# FIX: Vérifier que le joueur existe ET qu'il est valide
 	if player and is_instance_valid(player):
-		print("Suppression ancien joueur: ", player.name)
 		player.queue_free()
 		await player.tree_exited
-		print("Ancien joueur supprimé")
 	
-	print("Instanciation nouveau joueur...")
 	player = player_scene.instantiate()
-	print("Nouveau joueur créé: ", player.name)
 	
 	if world_container:
-		print("Ajout du joueur au world_container...")
 		world_container.add_child(player)
-		print("Joueur ajouté. Parent: ", player.get_parent().name)
-	else:
-		print("ERREUR: world_container est NULL!")
-	
-	print("=== FIN initialize_with_player ===")
 
 func load_world(world_resource: WorldData, start_room_id: String = ""):
 	if not world_resource:
@@ -59,7 +47,6 @@ func load_world(world_resource: WorldData, start_room_id: String = ""):
 	await load_room(room_id)
 
 func load_room(room_id: String, spawn_id: String = "default"):
-	print("=== DÉBUT load_room: ", room_id, " spawn: ", spawn_id, " ===")
 	if not current_world:
 		push_error("Aucun monde chargé")
 		return
@@ -94,22 +81,37 @@ func load_room(room_id: String, spawn_id: String = "default"):
 		player.global_position = spawn_pos
 		player.velocity = Vector2.ZERO
 		
-		print("Joueur positionné au spawn: ", spawn_pos)
+		# Reset du joueur si nécessaire (après une mort)
+		if player.has_method("on_room_reset"):
+			player.on_room_reset()
 
-# === NOUVEAU : RESET DE SALLE ===
+# === RESET DE SALLE (pour la mort) ===
 func reset_current_room():
-	"""Reset complet de la salle actuelle"""
+	"""Reset complet de la salle actuelle après une mort"""
 	if not current_room:
 		push_error("Aucune salle à reset")
 		return
 	
-	print("=== RESET SALLE ===")
-	
-	# Recharger la salle
+	# Sauvegarder l'ID de la salle courante
 	var current_room_id = current_room.room_id
-	await load_room(current_room_id, "default")
 	
-	print("=== SALLE RESETÉE ===")
+	# Recharger la salle complètement
+	await load_room(current_room_id, "default")
+
+# === RESET LÉGER (optionnel) ===
+func soft_reset_player():
+	"""Reset uniquement le joueur à sa position de spawn sans recharger la salle"""
+	if not player or not is_instance_valid(player):
+		return
+	
+	# Reset du joueur
+	if player.has_method("on_room_reset"):
+		player.on_room_reset()
+	
+	# Repositionner au spawn
+	var spawn_pos = _get_spawn_position("default")
+	player.global_position = spawn_pos
+	player.velocity = Vector2.ZERO
 
 # === TRANSITIONS ===
 func transition_to_room(target_room_id: String, spawn_id: String = "default"):
@@ -118,8 +120,10 @@ func transition_to_room(target_room_id: String, spawn_id: String = "default"):
 		push_error("Aucun monde chargé")
 		return
 	
-	# Sauvegarder la vélocité
-	var preserved_velocity = player.velocity if player and is_instance_valid(player) else Vector2.ZERO
+	# Sauvegarder la vélocité seulement si le joueur n'est pas mort
+	var preserved_velocity = Vector2.ZERO
+	if player and is_instance_valid(player) and not player.is_player_dead():
+		preserved_velocity = player.velocity
 	
 	# Commencer la transition
 	if player and is_instance_valid(player) and player.has_method("start_room_transition"):
@@ -128,8 +132,8 @@ func transition_to_room(target_room_id: String, spawn_id: String = "default"):
 	# Charger la nouvelle salle
 	await load_room(target_room_id, spawn_id)
 	
-	# Restaurer la vélocité si c'est une transition fluide (pas un reset)
-	if player and is_instance_valid(player) and spawn_id != "default":
+	# Restaurer la vélocité si c'est une transition fluide (pas un reset de mort)
+	if player and is_instance_valid(player) and spawn_id != "default" and not player.is_player_dead():
 		player.velocity = preserved_velocity
 
 func _get_spawn_position(spawn_id: String = "default") -> Vector2:

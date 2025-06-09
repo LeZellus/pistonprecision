@@ -8,14 +8,16 @@ var active_particles: Dictionary = {}
 const PARTICLE_SCENES = {
 	"dust": preload("res://scenes/effects/particles/DustParticle.tscn"),
 	"jump": preload("res://scenes/effects/particles/JumpParticle.tscn"),
-	"run": preload("res://scenes/effects/particles/RunParticle.tscn")
+	"run": preload("res://scenes/effects/particles/RunParticle.tscn"),
+	"death": preload("res://scenes/effects/particles/DeathParticle.tscn")
 }
 
 # === POOL SETTINGS ===
 const POOL_SIZES = {
 	"dust": 15,
 	"jump": 8,
-	"run": 10
+	"run": 10,
+	"death": 5
 }
 
 func _ready():
@@ -28,7 +30,7 @@ func _create_particle_pools():
 		particle_pools[particle_type] = []
 		active_particles[particle_type] = []
 		
-		var scene = PARTICLE_SCENES[particle_type]  # Direct access au lieu de _get_particle_scene()
+		var scene = PARTICLE_SCENES[particle_type]
 		
 		for i in POOL_SIZES[particle_type]:
 			var particle = scene.instantiate()
@@ -47,10 +49,15 @@ func emit_dust(position: Vector2, direction: float = 0.0, follow_target: Node2D 
 	var params = {"direction": direction}
 	_emit_particle("dust", position, params)
 
+func emit_death(position: Vector2, intensity: float = 1.0) -> Node:
+	var params = {"intensity": intensity}
+	var death_particle = _emit_particle("death", position, params)
+	return death_particle
+
 func _emit_particle(type: String, pos: Vector2, params: Dictionary):
 	var particle = _get_available_particle(type)
 	if not particle:
-		return
+		return null
 	
 	particle.global_position = pos
 	particle.visible = true
@@ -71,6 +78,8 @@ func _emit_particle(type: String, pos: Vector2, params: Dictionary):
 	# Auto-retour au pool
 	if particle.has_signal("finished"):
 		particle.finished.connect(_return_to_pool.bind(particle, type), CONNECT_ONE_SHOT)
+	
+	return particle
 
 func _get_available_particle(type: String) -> Node:
 	_cleanup_finished_particles(type)
@@ -81,6 +90,10 @@ func _get_available_particle(type: String) -> Node:
 	return null
 
 func _return_to_pool(particle: Node, type: String):
+	# Nettoyer la particule avant de la remettre au pool
+	if particle.has_method("cleanup"):
+		particle.cleanup()
+	
 	particle.visible = false
 	active_particles[type].erase(particle)
 

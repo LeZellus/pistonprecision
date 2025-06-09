@@ -1,52 +1,59 @@
-[gd_scene load_steps=10 format=3 uid="uid://76jib332eiaf"]
+[gd_scene load_steps=11 format=3 uid="uid://76jib332eiaf"]
 
 [ext_resource type="Script" path="res://scripts/player/particles/DustParticle.gd" id="1_vb351"]
 [ext_resource type="Texture2D" uid="uid://bpbwhpyhjfakm" path="res://assets/sprites/player/land/dustland.png" id="2_k6pi8"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_5fl71"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_s36aj"]
 atlas = ExtResource("2_k6pi8")
-region = Rect2(0, 0, 16, 16)
+region = Rect2(0, 0, 32, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_mw13l"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_3ltwp"]
 atlas = ExtResource("2_k6pi8")
-region = Rect2(16, 0, 16, 16)
+region = Rect2(32, 0, 32, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_xk5wq"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_xyftq"]
 atlas = ExtResource("2_k6pi8")
-region = Rect2(32, 0, 16, 16)
+region = Rect2(64, 0, 32, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_2i663"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_vocnb"]
 atlas = ExtResource("2_k6pi8")
-region = Rect2(48, 0, 16, 16)
+region = Rect2(96, 0, 32, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_o3tli"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_t2vv6"]
 atlas = ExtResource("2_k6pi8")
-region = Rect2(64, 0, 16, 16)
+region = Rect2(128, 0, 32, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_eble4"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_4ehlc"]
 atlas = ExtResource("2_k6pi8")
-region = Rect2(80, 0, 16, 16)
+region = Rect2(160, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nmms2"]
+atlas = ExtResource("2_k6pi8")
+region = Rect2(192, 0, 32, 16)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_ose0u"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_5fl71")
+"texture": SubResource("AtlasTexture_s36aj")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_mw13l")
+"texture": SubResource("AtlasTexture_3ltwp")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_xk5wq")
+"texture": SubResource("AtlasTexture_xyftq")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_2i663")
+"texture": SubResource("AtlasTexture_vocnb")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_o3tli")
+"texture": SubResource("AtlasTexture_t2vv6")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_eble4")
+"texture": SubResource("AtlasTexture_4ehlc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nmms2")
 }],
 "loop": false,
 "name": &"dust_effect",

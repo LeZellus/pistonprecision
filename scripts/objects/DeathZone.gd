@@ -1,33 +1,35 @@
+# scripts/objects/DeathZone.gd
 extends Area2D
 class_name DeathZone
 
 func _ready():
 	body_entered.connect(_on_body_entered)
+	
+	# Configuration des layers pour éviter les conflits
+	collision_layer = 0
+	collision_mask = 1  # Layer du joueur
 
 func _on_body_entered(body: Node2D):
-	if body.is_in_group("player"):
-		print("Joueur mort dans la deathzone!")
+	# Vérifications de sécurité
+	if not body.is_in_group("player"):
+		return
 		
-		# Effets visuels/sonores
-		_play_death_effects()
-		
-		# Reset complet de la salle via SceneManager
-		SceneManager.reset_current_room()
-		
-		# Notifier le GameManager pour les stats
-		var game_manager = get_node("/root/GameManager")
-		if game_manager and game_manager.has_signal("player_died"):
-			game_manager.player_died.emit()
+	if not body.has_method("trigger_death") or not body.has_method("is_player_dead"):
+		push_warning("DeathZone: Le joueur n'a pas les méthodes de mort requises")
+		return
+	
+	# Vérifier que le joueur n'est pas déjà mort
+	if body.is_player_dead():
+		return
+	
+	# Déclencher la mort du joueur de manière différée pour éviter les conflits de collision
+	body.call_deferred("trigger_death")
+	
+	# Notifier le GameManager pour les statistiques
+	call_deferred("_notify_game_manager")
 
-func _play_death_effects():
-	# Shake caméra
-	var camera = get_viewport().get_camera_2d()
-	if camera and camera.has_method("shake"):
-		camera.shake(3.0, 0.2)
-	
-	# Son de mort
-	AudioManager.play_sfx("player/death", 0.3)
-	
-	# Particules de mort (optionnel)
-	if SceneManager.player:
-		ParticleManager.emit_dust(SceneManager.player.global_position, 0.0)
+func _notify_game_manager():
+	"""Notifie le GameManager de la mort du joueur pour les stats"""
+	var game_manager = get_node("/root/GameManager")
+	if game_manager and game_manager.has_signal("player_died"):
+		game_manager.player_died.emit()

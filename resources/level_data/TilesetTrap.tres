@@ -1,0 +1,18 @@
+[gd_resource type="TileSet" load_steps=3 format=3 uid="uid://cbqwn7u2b1nsu"]
+
+[ext_resource type="Texture2D" uid="uid://dprnjcrpaag6n" path="res://assets/sprites/objects/trap_16x16.png" id="1_idfl1"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dsbfg"]
+texture = ExtResource("1_idfl1")
+0:0/animation_columns = 7
+0:0/animation_frame_0/duration = 0.1
+0:0/animation_frame_1/duration = 0.1
+0:0/animation_frame_2/duration = 0.1
+0:0/animation_frame_3/duration = 0.1
+0:0/animation_frame_4/duration = 0.1
+0:0/animation_frame_5/duration = 0.1
+0:0/animation_frame_6/duration = 3.0
+0:0/0 = 0
+
+[resource]
+sources/0 = SubResource("TileSetAtlasSource_dsbfg")

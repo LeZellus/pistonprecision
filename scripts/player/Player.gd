@@ -7,6 +7,7 @@ class_name Player
 @onready var ground_detector: GroundDetector
 @onready var wall_detector: WallDetector
 @onready var push_detector: PushDetector
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 # === CACHED REFERENCES ===
 var camera: Camera2D  # Cache de la caméra pour éviter les appels répétés
@@ -18,9 +19,6 @@ var piston_direction: PistonDirection = PistonDirection.DOWN
 var transition_immunity_timer: float = 0.0
 const TRANSITION_IMMUNITY_TIME = 0.1
 
-# === LANDING SOUND MANAGEMENT ===
-var landing_sound_cooldown: float = 0.0
-
 # === PHYSICS CACHE ===
 var gravity: float
 var was_grounded: bool = false
@@ -28,10 +26,12 @@ var wall_jump_timer: float = 0.0
 
 var dash_cooldown_timer: float = 0.0
 
+# === DEATH STATE ===
+var is_dead: bool = false
+var death_explosion: Node = null
+
 # === CONSTANTS ===
 const WALL_JUMP_GRACE_TIME: float = 0.15
-const MAX_STEP_HEIGHT: float = 1.0  # Hauteur max des marches (assez pour 0.1px + marge)
-const STEP_CHECK_DISTANCE: float = 8.0  # Distance de détection devant le joueur
 
 func _ready():
 	_cache_physics_values()
@@ -40,24 +40,20 @@ func _ready():
 	_connect_signals()
 	state_machine.init(self)
 	
-	floor_snap_length = 3.0
-	floor_max_angle = deg_to_rad(50)
-	
 	add_to_group("player")
 	
 func _process(delta: float):
 	state_machine.process_frame(delta)
 
 func _physics_process(delta: float):
-	delta = min(delta, 1.0/30.0)
+	# Ne pas traiter la physique si mort
+	if is_dead:
+		return
+		
+	delta = min(delta, 1.0/30.0)  # Cap pour éviter les gros deltas
 	_handle_grounding()
 	_update_wall_jump_timer(delta)
 	_update_dash_cooldown(delta)
-	
-	# Décrémenter le cooldown du son d'atterrissage
-	if landing_sound_cooldown > 0:
-		landing_sound_cooldown -= delta
-	
 	state_machine.process_physics(delta)
 	
 	# Gestion des transitions de salle
@@ -84,7 +80,8 @@ func _connect_signals():
 			InputManager.push_requested.connect(_on_push_requested)
 
 func _unhandled_input(event: InputEvent):
-	state_machine.process_input(event)
+	if not is_dead:
+		state_machine.process_input(event)
 
 func _update_wall_jump_timer(delta: float):
 	if wall_jump_timer > 0:
@@ -124,21 +121,24 @@ func can_wall_slide() -> bool:
 
 # === ROTATION & PUSH ===
 func _on_rotate_left():
-	_rotate_piston(-1)
+	if not is_dead:
+		_rotate_piston(-1)
 
 func _on_rotate_right():
-	_rotate_piston(1)
+	if not is_dead:
+		_rotate_piston(1)
 
 func _on_push_requested():
-	push()
+	if not is_dead:
+		push()
 		
 func use_dash():
 	"""Appelée quand un dash est effectué"""
 	dash_cooldown_timer = PlayerConstants.DASH_COOLDOWN
 
 func can_dash() -> bool:
-	# Peut dasher si cooldown terminé ET tête pas vers le bas
-	return dash_cooldown_timer <= 0.0 and piston_direction != PistonDirection.DOWN
+	# Peut dasher si cooldown terminé ET tête pas vers le bas ET pas mort
+	return dash_cooldown_timer <= 0.0 and piston_direction != PistonDirection.DOWN and not is_dead
 
 func _rotate_piston(direction: int):
 	var new_direction = (piston_direction + direction + 4) % 4
@@ -212,13 +212,14 @@ func _trigger_push_shake():
 	camera.shake(8.0, 0.15)
 
 func _on_push_animation_finished():
-	print("Animation push terminée") # Debug
 	if sprite.animation_finished.is_connected(_on_push_animation_finished):
 		sprite.animation_finished.disconnect(_on_push_animation_finished)
 	
 	# Retour à l'animation appropriée
-	if state_machine and state_machine.current_state:
-		state_machine.current_state.enter()
+	if is_on_floor():
+		sprite.play("Run" if InputManager.get_movement() != 0 else "Idle")
+	else:
+		sprite.play("Jump" if velocity.y < 0 else "Fall")
 
 # === GROUNDING ===
 func _handle_grounding():
@@ -229,11 +230,9 @@ func _handle_grounding():
 	elif not grounded:
 		wall_detector.set_active(true)
 	
-	# Son d'atterrissage avec cooldown simple
-	if grounded and not was_grounded and landing_sound_cooldown <= 0:
-		AudioManager.play_sfx("player/land", 0.1)
+	if grounded and not was_grounded:
+		AudioManager.play_sfx("player/land", 1)
 		ParticleManager.emit_dust(global_position, 0.0, self)
-		landing_sound_cooldown = 0.3  # 200ms de cooldown
 		wall_jump_timer = 0.0
 	
 	if grounded != was_grounded:
@@ -250,4 +249,82 @@ func _setup_detectors():
 	
 func start_room_transition():
 	transition_immunity_timer = TRANSITION_IMMUNITY_TIME
+
+# === DEATH SYSTEM ===
+func trigger_death():
+	if is_dead:
+		return
 	
+	is_dead = true
+	
+	# Utiliser call_deferred pour éviter l'erreur de collision
+	call_deferred("_disable_player_physics")
+	
+	# Créer l'explosion avec votre particule
+	death_explosion = ParticleManager.emit_death(global_position, 1.5)
+	if death_explosion and death_explosion.has_signal("finished"):
+		death_explosion.finished.connect(_on_explosion_finished, CONNECT_ONE_SHOT)
+	
+	# Shake caméra
+	if camera:
+		camera.shake(8.0, 0.3)
+
+func _disable_player_physics():
+	"""Désactive la physique du joueur de manière sécurisée"""
+	set_physics_process(false)
+	collision_shape.disabled = true
+	sprite.visible = false
+
+func _on_explosion_finished():
+	# S'assurer que la particule est désactivée
+	if death_explosion and is_instance_valid(death_explosion):
+		death_explosion.visible = false
+		if death_explosion.has_method("cleanup"):
+			death_explosion.cleanup()
+	
+	# Attendre un court moment après l'explosion
+	await get_tree().create_timer(0.5).timeout
+	
+	# Reset via SceneManager
+	SceneManager.reset_current_room()
+
+func reset_player():
+	"""Réinitialise le joueur après une mort"""
+	is_dead = false
+	
+	# Nettoyer la référence à l'explosion
+	death_explosion = null
+	
+	# Utiliser call_deferred pour réactiver la physique de manière sécurisée
+	call_deferred("_enable_player_physics")
+	
+	# Reset vélocité et états
+	velocity = Vector2.ZERO
+	piston_direction = PistonDirection.DOWN
+	sprite.rotation_degrees = 0
+	
+	# Reset état machine vers Idle
+	if state_machine.current_state:
+		state_machine.change_state(state_machine.get_node("IdleState"))
+
+func _enable_player_physics():
+	"""Réactive la physique du joueur de manière sécurisée"""
+	set_physics_process(true)
+	
+	# Réactiver collision
+	if collision_shape:
+		collision_shape.disabled = false
+	
+	# Reset visuel avec fade-in
+	sprite.visible = true
+	sprite.modulate.a = 0.0
+	
+	var tween = create_tween()
+	tween.tween_property(sprite, "modulate:a", 1.0, 0.3)
+
+func is_player_dead() -> bool:
+	return is_dead
+
+func on_room_reset():
+	"""Appelé par SceneManager lors du reset"""
+	reset_player()
