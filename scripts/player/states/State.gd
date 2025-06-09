@@ -1,3 +1,4 @@
+# scripts/player/states/State.gd
 class_name State
 extends Node
 
@@ -46,9 +47,23 @@ func check_air_transitions() -> State:
 		return get_node("../RunState") if InputManager.get_movement() != 0 else get_node("../IdleState")
 	return null
 
+# === JUMP INPUT UNIFIÉ ===
 func check_jump_input() -> State:
-	if InputManager.consume_jump_buffer() and parent.piston_direction == Player.PistonDirection.DOWN:
+	# SOLUTION : Vérification unifiée qui évite les doubles appels
+	if not InputManager.consume_jump_buffer():
+		return null
+	
+	# À ce point, le buffer est consommé, on vérifie les conditions
+	if parent.piston_direction != Player.PistonDirection.DOWN:
+		print("Jump impossible : piston pas DOWN")
+		return null
+	
+	# Jump normal (au sol) ou coyote jump
+	if parent.is_on_floor() or InputManager.can_coyote_jump():
+		print("JUMP VALIDÉ : ", "Sol" if parent.is_on_floor() else "Coyote")
 		return get_node("../JumpState")
+	
+	print("Jump refusé : pas au sol et pas de coyote")
 	return null
 
 func check_wall_slide_transition() -> State:
@@ -57,7 +72,6 @@ func check_wall_slide_transition() -> State:
 	return null
 	
 func check_dash_input() -> State:
-	# Vérifie l'input dash seulement si on peut dasher
 	if InputManager.was_dash_pressed() and parent.can_dash():
 		return get_node("../DashState")
 	return null

@@ -1,3 +1,4 @@
+# scripts/managers/InputManager.gd
 extends Node
 
 # === INPUT STATES ===
@@ -8,7 +9,10 @@ var is_grounded: bool = false
 # === CACHED INPUT DATA ===
 var movement_input: float = 0.0
 var jump_held: bool = false
-var dash_just_pressed: bool = false  # Renommé pour plus de clarté
+var dash_just_pressed: bool = false
+
+# === JUMP PROTECTION ===
+var jump_consumed_this_frame: bool = false  # NOUVEAU : Protection contre double consommation
 
 # === SIGNALS ===
 signal jump_buffered
@@ -17,12 +21,15 @@ signal movement_changed(direction: float)
 signal rotate_left_requested
 signal rotate_right_requested
 signal push_requested
-signal dash_requested  # NOUVEAU signal pour le dash
+signal dash_requested
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 func _process(delta):
+	# IMPORTANT : Reset au début de chaque frame
+	jump_consumed_this_frame = false
+	
 	_update_timers(delta)
 	_read_inputs()
 
@@ -70,11 +77,17 @@ func set_grounded(grounded: bool):
 		coyote_timer = PlayerConstants.COYOTE_TIME
 		coyote_jump_available.emit()
 
-# === BUFFER CHECKS ===
+# === BUFFER CHECKS (PROTÉGÉS) ===
 func consume_jump_buffer() -> bool:
+	# PROTECTION : Un seul jump par frame
+	if jump_consumed_this_frame:
+		print("PROTECTION: Jump déjà consommé cette frame!")
+		return false
+	
 	if jump_buffer_timer > 0:
 		print("=== JUMP BUFFER CONSUMED ===")
 		jump_buffer_timer = 0.0
+		jump_consumed_this_frame = true  # Marquer comme consommé
 		return true
 	return false
 
@@ -95,5 +108,4 @@ func was_jump_released() -> bool:
 	return Input.is_action_just_released("jump")
 
 func was_dash_pressed() -> bool:
-	# Simplifié - retourne directement l'état de l'input
 	return Input.is_action_just_pressed("dash")
