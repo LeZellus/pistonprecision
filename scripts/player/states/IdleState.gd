@@ -5,8 +5,8 @@ func _ready() -> void:
 	animation_name = "Idle"
 
 func process_physics(delta: float) -> State:
-	parent.apply_gravity(delta)
-	parent.apply_friction(delta)
+	parent.physics_component.apply_gravity(delta)
+	parent.physics_component.apply_friction(delta)
 	parent.move_and_slide()
 	
 	# Transitions dans l'ordre de priorité

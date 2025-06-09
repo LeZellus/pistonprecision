@@ -14,7 +14,7 @@ func _ready():
 
 func detect_pushable_object(direction: Vector2) -> PushableObject:
 	# OPTIMISATION: PhysicsRayQuery à la demande au lieu de raycasts permanents
-	var space_state = player.get_world_2d().direct_space_state
+	var space_state = player.world_space_state
 	
 	var start_pos = player.global_position
 	var end_pos = start_pos + direction * RAY_LENGTH
@@ -41,7 +41,7 @@ func detect_pushable_object(direction: Vector2) -> PushableObject:
 	return null
 
 func get_push_distance(direction: Vector2) -> float:
-	var space_state = player.get_world_2d().direct_space_state
+	var space_state = player.world_space_state
 	
 	var start_pos = player.global_position
 	var end_pos = start_pos + direction * RAY_LENGTH

@@ -44,7 +44,7 @@ func _perform_dash():
 		return
 	
 	dash_timer = PlayerConstants.DASH_DURATION
-	parent.use_dash()  # IMPORTANT : Activer le cooldown
+	parent.actions_component.use_dash()  # IMPORTANT : Activer le cooldown
 	
 	# Effet de disparition
 	_create_dash_fade_effect()

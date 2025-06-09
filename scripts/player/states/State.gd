@@ -23,17 +23,17 @@ func process_physics(_delta: float) -> State:
 
 # === PHYSIQUE COMMUNE ===
 func apply_basic_physics(delta: float):
-	parent.apply_gravity(delta)
+	parent.physics_component.apply_gravity(delta)
 	parent.move_and_slide()
 
 func apply_ground_physics(delta: float):
-	parent.apply_gravity(delta)
-	parent.apply_movement(delta)
+	parent.physics_component.apply_gravity(delta)
+	parent.physics_component.apply_movement(delta)
 	parent.move_and_slide()
 
 func apply_air_physics(delta: float):
-	parent.apply_gravity(delta)
-	parent.apply_air_movement(delta)
+	parent.physics_component.apply_gravity(delta)
+	parent.physics_component.apply_air_movement(delta)
 	parent.move_and_slide()
 
 # === TRANSITIONS COMMUNES ===
@@ -72,6 +72,6 @@ func check_wall_slide_transition() -> State:
 	return null
 	
 func check_dash_input() -> State:
-	if InputManager.was_dash_pressed() and parent.can_dash():
+	if InputManager.was_dash_pressed() and parent.actions_component.can_dash():
 		return get_node("../DashState")
 	return null

@@ -5,8 +5,8 @@ func _ready() -> void:
 	animation_name = "Fall"
 
 func process_physics(delta: float) -> State:
-	parent.apply_gravity(delta)
-	parent.apply_wall_slide(delta)
+	parent.physics_component.apply_gravity(delta)
+	parent.physics_component.apply_wall_slide(delta)
 	
 	# Réduction de la friction horizontale pendant le wall slide
 	var input_dir = InputManager.get_movement()
