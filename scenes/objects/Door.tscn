@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/objects/Door.gd" id="1_pad6l"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j8tv8"]
-size = Vector2(8, 16)
+size = Vector2(16, 32)
 
 [node name="Door" type="Area2D"]
 z_index = 50
@@ -12,13 +12,13 @@ script = ExtResource("1_pad6l")
 target_room_id = "room_02"
 
 [node name="ColorRect" type="ColorRect" parent="."]
-custom_minimum_size = Vector2(8, 16)
+custom_minimum_size = Vector2(16, 32)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(4.81307e-07, 0.594121, 0.150935, 1)
+color = Color(1.92523e-07, 0.517138, 0.794318, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_j8tv8")

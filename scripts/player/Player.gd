@@ -219,9 +219,8 @@ func _handle_grounding():
 		wall_detector.set_active(true)
 	
 	if grounded and not was_grounded:
-		AudioManager.play_sfx("player/land", 0.01)
-		var dust_pos = global_position + Vector2(0, -4)
-		ParticleManager.emit_dust(dust_pos, 0.0, self)
+		AudioManager.play_sfx("player/land", 1)
+		ParticleManager.emit_dust(global_position, 0.0, self)
 		wall_jump_timer = 0.0
 	
 	if grounded != was_grounded:

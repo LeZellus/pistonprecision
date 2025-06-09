@@ -22,5 +22,5 @@ layer = 100
 visible = false
 
 [node name="Camera2D2" type="Camera2D" parent="."]
-zoom = Vector2(6, 6)
+zoom = Vector2(4, 4)
 script = ExtResource("3_tl3xi")

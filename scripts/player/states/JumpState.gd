@@ -38,9 +38,8 @@ func process_physics(delta: float) -> State:
 func _perform_jump():
 	print("=== _perform_jump() appelé ===")
 	parent.velocity.y = PlayerConstants.JUMP_VELOCITY
-	AudioManager.play_sfx("player/jump", 0.1)  # ← Le son est ici !
-	var particle_pos = parent.global_position + Vector2(0, -4)
-	ParticleManager.emit_jump(particle_pos)
+	AudioManager.play_sfx("player/jump", 1)  # ← Le son est ici !
+	ParticleManager.emit_jump(parent.global_position)
 
 func _check_fall() -> State:
 	if parent.velocity.y >= 0:

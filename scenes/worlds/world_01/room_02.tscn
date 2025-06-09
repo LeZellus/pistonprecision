@@ -30,7 +30,6 @@ script = ExtResource("4_rpvke")
 
 [node name="Door" parent="." instance=ExtResource("5_jwnet")]
 position = Vector2(154, 23)
-collision_layer = 0
 target_room_id = "room_01"
 
 [node name="SpawnPoint" parent="." instance=ExtResource("6_vdq8j")]
