@@ -29,7 +29,7 @@ func _ready():
 	set_collision_mask_value(3, true)
 	
 	previous_position = global_position
-
+	
 func _physics_process(delta):
 	var old_push_velocity = push_velocity.x
 	previous_position = global_position

@@ -18,6 +18,9 @@ var piston_direction: PistonDirection = PistonDirection.DOWN
 var transition_immunity_timer: float = 0.0
 const TRANSITION_IMMUNITY_TIME = 0.1
 
+# === LANDING SOUND MANAGEMENT ===
+var landing_sound_cooldown: float = 0.0
+
 # === PHYSICS CACHE ===
 var gravity: float
 var was_grounded: bool = false
@@ -27,6 +30,8 @@ var dash_cooldown_timer: float = 0.0
 
 # === CONSTANTS ===
 const WALL_JUMP_GRACE_TIME: float = 0.15
+const MAX_STEP_HEIGHT: float = 1.0  # Hauteur max des marches (assez pour 0.1px + marge)
+const STEP_CHECK_DISTANCE: float = 8.0  # Distance de détection devant le joueur
 
 func _ready():
 	_cache_physics_values()
@@ -35,16 +40,24 @@ func _ready():
 	_connect_signals()
 	state_machine.init(self)
 	
+	floor_snap_length = 3.0
+	floor_max_angle = deg_to_rad(50)
+	
 	add_to_group("player")
 	
 func _process(delta: float):
 	state_machine.process_frame(delta)
 
 func _physics_process(delta: float):
-	delta = min(delta, 1.0/30.0)  # Cap pour éviter les gros deltas
+	delta = min(delta, 1.0/30.0)
 	_handle_grounding()
 	_update_wall_jump_timer(delta)
 	_update_dash_cooldown(delta)
+	
+	# Décrémenter le cooldown du son d'atterrissage
+	if landing_sound_cooldown > 0:
+		landing_sound_cooldown -= delta
+	
 	state_machine.process_physics(delta)
 	
 	# Gestion des transitions de salle
@@ -204,10 +217,8 @@ func _on_push_animation_finished():
 		sprite.animation_finished.disconnect(_on_push_animation_finished)
 	
 	# Retour à l'animation appropriée
-	if is_on_floor():
-		sprite.play("Run" if InputManager.get_movement() != 0 else "Idle")
-	else:
-		sprite.play("Jump" if velocity.y < 0 else "Fall")
+	if state_machine and state_machine.current_state:
+		state_machine.current_state.enter()
 
 # === GROUNDING ===
 func _handle_grounding():
@@ -218,9 +229,11 @@ func _handle_grounding():
 	elif not grounded:
 		wall_detector.set_active(true)
 	
-	if grounded and not was_grounded:
-		AudioManager.play_sfx("player/land", 1)
+	# Son d'atterrissage avec cooldown simple
+	if grounded and not was_grounded and landing_sound_cooldown <= 0:
+		AudioManager.play_sfx("player/land", 0.1)
 		ParticleManager.emit_dust(global_position, 0.0, self)
+		landing_sound_cooldown = 0.3  # 200ms de cooldown
 		wall_jump_timer = 0.0
 	
 	if grounded != was_grounded:

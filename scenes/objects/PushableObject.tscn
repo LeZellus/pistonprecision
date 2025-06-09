@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://52qci1kdnwmc" path="res://assets/sprites/tiles/tileset_iron_16x16.png" id="2_hsgv8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_70vbl"]
-size = Vector2(16, 16)
+size = Vector2(15.9, 15.9)
 
 [node name="PushableObject" type="CharacterBody2D"]
 z_index = 50
