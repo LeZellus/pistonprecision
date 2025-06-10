@@ -83,7 +83,7 @@ static func _handle_air_states(current_state: State, player: Player, _delta: flo
 	
 	return null
 
-static func _handle_wall_slide_state(current_state: State, player: Player, _delta: float) -> State:
+static func _handle_wall_slide_state(_current_state: State, player: Player, _delta: float) -> State:
 	# Atterrir ?
 	if player.is_on_floor():
 		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
