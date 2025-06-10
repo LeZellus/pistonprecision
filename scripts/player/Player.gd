@@ -10,6 +10,7 @@ class_name Player
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var physics_component: PlayerPhysics
 @onready var actions_component: PlayerActions
+@onready var controller: PlayerController 
 
 # === CACHED REFERENCES ===
 var camera: Camera2D  # Cache de la caméra pour éviter les appels répétés
@@ -44,25 +45,6 @@ func _ready():
 	state_machine.init(self)
 	
 	add_to_group("player")
-	
-func _process(delta: float):
-	state_machine.process_frame(delta)
-
-func _physics_process(delta: float):
-	# Ne pas traiter la physique si mort
-	if is_dead:
-		return
-		
-	delta = min(delta, 1.0/30.0)  # Cap pour éviter les gros deltas
-	_handle_grounding()
-	_update_wall_jump_timer(delta)
-	state_machine.process_physics(delta)
-	
-	# Gestion des transitions de salle
-	if transition_immunity_timer > 0:
-		transition_immunity_timer -= delta
-		global_position += velocity * delta
-		return
 
 func _cache_camera_reference():
 	# Cache la référence caméra une seule fois
@@ -77,14 +59,10 @@ func _connect_signals():
 	if InputManager.has_signal("push_requested"):
 		if not InputManager.push_requested.is_connected(_on_push_requested):
 			InputManager.push_requested.connect(_on_push_requested)
-
+			
 func _unhandled_input(event: InputEvent):
 	if not is_dead:
 		state_machine.process_input(event)
-
-func _update_wall_jump_timer(delta: float):
-	if wall_jump_timer > 0:
-		wall_jump_timer -= delta
 
 # === WALL DETECTION ===
 func can_wall_slide() -> bool:
@@ -103,36 +81,20 @@ func _on_push_requested():
 	if not is_dead:
 		actions_component.execute_push()
 
-# === GROUNDING ===
-func _handle_grounding():
-	var grounded = is_on_floor()
-	
-	if grounded and was_grounded:
-		wall_detector.set_active(false)
-	elif not grounded:
-		wall_detector.set_active(true)
-	
-	if grounded and not was_grounded:
-		AudioManager.play_sfx("player/land", 1)
-		ParticleManager.emit_dust(global_position, 0.0, self)
-		wall_jump_timer = 0.0
-	
-	if grounded != was_grounded:
-		InputManager.set_grounded(grounded)
-		was_grounded = grounded
-
 func _setup_detectors():
 	ground_detector = GroundDetector.new(self)
 	wall_detector = WallDetector.new(self)
 	push_detector = PushDetector.new(self)
 	physics_component = PlayerPhysics.new(self)
 	actions_component = PlayerActions.new(self)
+	controller = PlayerController.new(self)
 	
 	add_child(ground_detector)
 	add_child(wall_detector)
 	add_child(push_detector)
 	add_child(physics_component)
 	add_child(actions_component)
+	add_child(controller)
 	
 func start_room_transition():
 	transition_immunity_timer = TRANSITION_IMMUNITY_TIME

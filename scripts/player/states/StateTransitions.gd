@@ -75,7 +75,7 @@ static func _handle_wall_slide_state(current_state: State, player: Player, _delt
 		return current_state.get_node("../RunState") if InputManager.get_movement() != 0 else current_state.get_node("../IdleState")
 	
 	# Wall jump ?
-	if InputManager.consume_jump_buffer() and player.piston_direction == Player.PistonDirection.DOWN:
+	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
 		return current_state.get_node("../JumpState")
 	
 	# Plus de mur ?
