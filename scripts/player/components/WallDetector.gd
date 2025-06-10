@@ -1,11 +1,7 @@
 class_name WallDetector
-extends Node2D
+extends CollisionDetector  # ← Hérite maintenant
 
-var player: CharacterBody2D
 var is_active: bool = true
-
-func _init(player_ref: CharacterBody2D):
-	player = player_ref
 
 func set_active(active: bool):
 	is_active = active
@@ -14,38 +10,13 @@ func is_touching_wall() -> bool:
 	if not is_active:
 		return false
 	
-	var space_state = player.world_space_state
-	
-	# 3 raycasts à gauche (comme avant)
-	var left_queries = [
-		Vector2(-9, -7),  # Top
-		Vector2(-9, 0),   # Center  
-		Vector2(-9, 7)    # Bottom
+	var wall_offsets = [
+		Vector2(-9, -7), Vector2(-9, 0), Vector2(-9, 7),  # Gauche
+		Vector2(9, -7), Vector2(9, 0), Vector2(9, 7)     # Droite
 	]
 	
-	for offset in left_queries:
-		var query = PhysicsRayQueryParameters2D.create(
-			player.global_position,
-			player.global_position + offset
-		)
-		query.collision_mask = 4
-		if space_state.intersect_ray(query):
-			return true
-	
-	# 3 raycasts à droite
-	var right_queries = [
-		Vector2(9, -7),   # Top
-		Vector2(9, 0),    # Center
-		Vector2(9, 7)     # Bottom
-	]
-	
-	for offset in right_queries:
-		var query = PhysicsRayQueryParameters2D.create(
-			player.global_position,
-			player.global_position + offset
-		)
-		query.collision_mask = 4
-		if space_state.intersect_ray(query):
+	for offset in wall_offsets:
+		if cast_ray(offset, 4):  # ← Utilise la méthode factorisée
 			return true
 	
 	return false
@@ -54,28 +25,16 @@ func get_wall_side() -> int:
 	if not is_active:
 		return 0
 	
-	var space_state = player.world_space_state
-	
-	# Test gauche avec 3 points
-	var left_queries = [Vector2(-9, -7), Vector2(-9, 0), Vector2(-9, 7)]
-	for offset in left_queries:
-		var query = PhysicsRayQueryParameters2D.create(
-			player.global_position,
-			player.global_position + offset
-		)
-		query.collision_mask = 4
-		if space_state.intersect_ray(query):
+	# Test gauche
+	var left_offsets = [Vector2(-9, -7), Vector2(-9, 0), Vector2(-9, 7)]
+	for offset in left_offsets:
+		if cast_ray(offset, 4):
 			return -1
 	
-	# Test droite avec 3 points
-	var right_queries = [Vector2(9, -7), Vector2(9, 0), Vector2(9, 7)]
-	for offset in right_queries:
-		var query = PhysicsRayQueryParameters2D.create(
-			player.global_position,
-			player.global_position + offset
-		)
-		query.collision_mask = 4
-		if space_state.intersect_ray(query):
+	# Test droite  
+	var right_offsets = [Vector2(9, -7), Vector2(9, 0), Vector2(9, 7)]
+	for offset in right_offsets:
+		if cast_ray(offset, 4):
 			return 1
 	
 	return 0
