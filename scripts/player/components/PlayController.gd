@@ -13,6 +13,12 @@ func _physics_process(delta: float):
 	if player.is_player_dead():
 		return
 		
+	if player.transition_immunity_timer > 0:
+		player.transition_immunity_timer -= delta
+		# Pas de physique normale pendant l'immunité de respawn
+		if player.transition_immunity_timer > 0.4:  # Les 0.1 premières secondes
+			return
+		
 	delta = min(delta, 1.0/30.0)
 	_handle_grounding()
 	_update_wall_jump_timer(delta)

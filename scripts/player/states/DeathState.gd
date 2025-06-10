@@ -4,12 +4,14 @@ extends State
 signal death_animation_finished
 
 var death_explosion: Node = null
+var death_complete: bool = false
 
 func _ready() -> void:
 	animation_name = ""
 
 func enter() -> void:
 	print("=== ENTREE DEATH STATE ===")
+	death_complete = false
 	
 	# Désactiver la physique immédiatement
 	parent.set_physics_process(false)
@@ -39,8 +41,10 @@ func _on_explosion_finished():
 		if death_explosion.has_method("cleanup"):
 			death_explosion.cleanup()
 	
-	# Attendre un peu puis signaler la fin
-	await parent.get_tree().create_timer(0.5).timeout
+	# Marquer comme terminé
+	death_complete = true
+	
+	print("=== DEATH STATE: Prêt pour le respawn ===")
 	
 	# Signal que l'animation de mort est terminée
 	death_animation_finished.emit()
@@ -48,3 +52,5 @@ func _on_explosion_finished():
 func exit() -> void:
 	print("=== SORTIE DEATH STATE ===")
 	death_explosion = null
+	death_complete = false
+	# Le reset du joueur se fera APRÈS la sortie complète

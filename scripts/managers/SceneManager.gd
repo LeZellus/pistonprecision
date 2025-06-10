@@ -90,15 +90,21 @@ func respawn_player():
 	
 	print("=== SCENEMANAGER: Début du respawn ===")
 	
-	# Reset du joueur
-	player.reset_for_respawn()
+	# Reset du joueur AVANT de le repositionner
+	await player.reset_for_respawn()
+	
+	# Attendre une frame pour que la physique se mette à jour
+	await player.get_tree().physics_frame
 	
 	# Repositionner au spawn par défaut
 	var spawn_pos = _get_spawn_position("default")
+	print("=== SCENEMANAGER: Position de spawn trouvée : ", spawn_pos, " ===")
+	
+	# Forcer la position
 	player.global_position = spawn_pos
 	player.velocity = Vector2.ZERO
 	
-	print("=== SCENEMANAGER: Joueur respawn à : ", spawn_pos, " ===")
+	print("=== SCENEMANAGER: Joueur respawn à : ", player.global_position, " ===")
 
 # === TRANSITIONS ===
 func transition_to_room(target_room_id: String, spawn_id: String = "default"):

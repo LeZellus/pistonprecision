@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=4 uid="uid://ckw83swiwevhx"]
+[gd_scene load_steps=11 format=4 uid="uid://ckw83swiwevhx"]
 
 [ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableObject.tscn" id="1_ku13x"]
 [ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_r7ns6"]
@@ -11,13 +11,10 @@
 [ext_resource type="PackedScene" uid="uid://ylt41ox5quua" path="res://scenes/objects/DeathZone.tscn" id="7_pnsws"]
 [ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="9_st4ct"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ljeip"]
-size = Vector2(79, 5)
-
 [node name="Room01" type="Node2D"]
 
 [node name="SpawnPoint" parent="." instance=ExtResource("1_va5oy")]
-position = Vector2(-184, 70)
+position = Vector2(-191, -79)
 
 [node name="PushableObject" parent="." instance=ExtResource("1_ku13x")]
 position = Vector2(51, 76)
@@ -47,10 +44,6 @@ position = Vector2(168, -32)
 
 [node name="DeathZone" parent="." instance=ExtResource("7_pnsws")]
 position = Vector2(168, 93)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DeathZone"]
-shape = SubResource("RectangleShape2D_ljeip")
-debug_color = Color(0.781871, 0.101506, 0.441273, 0.42)
 
 [node name="Camera2D2" type="Camera2D" parent="."]
 zoom = Vector2(4, 4)

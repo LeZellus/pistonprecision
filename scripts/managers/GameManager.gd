@@ -75,6 +75,9 @@ func _on_player_death_animation_finished():
 	deaths_count += 1
 	player_died.emit()
 	
+	# Attendre un peu plus pour que le DeathState se termine proprement
+	await get_tree().create_timer(0.1).timeout
+	
 	# Attendre le délai de respawn
 	await get_tree().create_timer(respawn_delay).timeout
 	

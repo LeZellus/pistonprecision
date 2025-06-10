@@ -127,10 +127,10 @@ func reset_for_respawn():
 	tween.tween_property(sprite, "modulate:a", 1.0, 0.3)
 	
 	# Reset states
-	velocity = Vector2.ZERO
 	piston_direction = PistonDirection.DOWN
 	sprite.rotation_degrees = 0
 	
 	# Transition vers IdleState
 	if state_machine and state_machine.has_node("IdleState"):
+		print("JE PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASSSSSSZE")
 		state_machine.change_state(state_machine.get_node("IdleState"))

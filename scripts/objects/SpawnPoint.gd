@@ -1,4 +1,4 @@
-# scripts/objects/SpawnPoint.gd - Version simplifiée
+# scripts/objects/SpawnPoint.gd - Version corrigée
 extends Marker2D
 class_name SpawnPoint
 
@@ -6,7 +6,11 @@ class_name SpawnPoint
 @export var is_default_spawn: bool = true
 
 func _ready():
+	# IMPORTANT: Ajouter au groupe spawn_points
 	add_to_group("spawn_points")
+	
+	# Debug
+	print("SpawnPoint créé - ID: ", spawn_id, ", Position: ", global_position, ", Default: ", is_default_spawn)
 	
 	# Debug visuel (optionnel)
 	if not Engine.is_editor_hint():
