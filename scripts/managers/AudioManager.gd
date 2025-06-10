@@ -77,24 +77,21 @@ func _add_to_collection(category: String, file_path: String):
 
 # === SFX PLAYBACK (Optimisé) ===
 func play_sfx(category: String, volume_override: float = -1.0, random_selection: bool = true):
-	if not audio_collections.has(category) or audio_collections[category].is_empty():
+	# Vérification rapide en début
+	if not audio_collections.has(category):
+		return
+	
+	var sounds = audio_collections[category]
+	if sounds.is_empty():
 		return
 	
 	var audio_player = _get_available_player()
-	if not audio_player:
-		return
 	
-	# Sélection de l'audio
-	var audio_stream
-	if random_selection and audio_collections[category].size() > 1:
-		audio_stream = audio_collections[category].pick_random()
-	else:
-		audio_stream = audio_collections[category][0]
+	# Sélection de l'audio (optimisée)
+	audio_player.stream = sounds.pick_random() if random_selection and sounds.size() > 1 else sounds[0]
 	
-	audio_player.stream = audio_stream
-	
-	# Calcul du volume final
-	var final_volume = _calculate_final_volume(category, volume_override)
+	# Volume final (calculé en une ligne)
+	var final_volume = (volume_override if volume_override >= 0 else sfx_volume * category_volumes.get(category, 1.0)) * master_volume
 	audio_player.volume_db = linear_to_db(final_volume)
 	
 	audio_player.play()
@@ -105,20 +102,16 @@ func play_multi_sfx(categories: Array[String], volume_override: float = -1.0):
 
 # === OPTIMISATION PRINCIPALE ===
 func _get_available_player() -> AudioStreamPlayer:
-	# Recherche circulaire depuis le dernier index utilisé
-	for i in range(POOL_SIZE):
-		var index = (next_pool_index + i) % POOL_SIZE
-		var audio_player = sfx_players_pool[index]  # ← Renommé pour éviter confusion
-		
-		# Si le player n'est pas en train de jouer, on l'utilise
-		if not audio_player.playing:
-			next_pool_index = (index + 1) % POOL_SIZE
-			return audio_player
-	
-	# Si tous sont occupés, écraser le plus ancien (round-robin)
-	var fallback_player = sfx_players_pool[next_pool_index]  # ← Nom distinct
+	"""Version optimisée sans boucle"""
+	# Prend directement le prochain player dans la rotation
+	var audio_player = sfx_players_pool[next_pool_index]
 	next_pool_index = (next_pool_index + 1) % POOL_SIZE
-	return fallback_player
+	
+	# Si le player est occupé, l'arrête (round-robin forcé)
+	if audio_player.playing:
+		audio_player.stop()
+	
+	return audio_player
 
 func _calculate_final_volume(category: String, volume_override: float) -> float:
 	var category_vol = category_volumes.get(category, 1.0)
