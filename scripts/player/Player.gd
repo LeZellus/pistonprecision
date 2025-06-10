@@ -139,22 +139,11 @@ func start_room_transition():
 
 # === DEATH SYSTEM ===
 func trigger_death():
-	if is_dead:
+	if is_player_dead():
 		return
 	
-	is_dead = true
-	
-	# Utiliser call_deferred pour éviter l'erreur de collision
-	call_deferred("_disable_player_physics")
-	
-	# Créer l'explosion avec votre particule
-	death_explosion = ParticleManager.emit_death(global_position, 1.5)
-	if death_explosion and death_explosion.has_signal("finished"):
-		death_explosion.finished.connect(_on_explosion_finished, CONNECT_ONE_SHOT)
-	
-	# Shake caméra
-	if camera:
-		camera.shake(8.0, 0.3)
+	# Simple transition vers DeathState
+	state_machine.change_state(state_machine.get_node("DeathState"))
 
 func _disable_player_physics():
 	"""Désactive la physique du joueur de manière sécurisée"""
@@ -210,7 +199,7 @@ func _enable_player_physics():
 	tween.tween_property(sprite, "modulate:a", 1.0, 0.3)
 
 func is_player_dead() -> bool:
-	return is_dead
+	return state_machine.current_state is DeathState
 
 func on_room_reset():
 	"""Appelé par SceneManager lors du reset"""

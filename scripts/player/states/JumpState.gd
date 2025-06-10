@@ -5,43 +5,22 @@ func _ready() -> void:
 	animation_name = "Jump"
 
 func enter() -> void:
-	print("=== JumpState.enter() appelé ===")
-	print("Stack trace:")
-	for i in range(get_stack().size()):
-		var frame = get_stack()[i]
-		print("  ", i, ": ", frame.source, ":", frame.line, " in ", frame.function)
-	print("=== Fin stack trace ===")
-	
 	super.enter()
 	_perform_jump()
 
 func process_physics(delta: float) -> State:
-	apply_air_physics(delta)
+	parent.physics_component.apply_gravity(delta)
+	parent.physics_component.apply_air_movement(delta)
 	
 	# Jump cut
 	if parent.velocity.y < 0 and InputManager.was_jump_released():
 		parent.velocity.y *= PlayerConstants.JUMP_CUT_MULTIPLIER
 	
-	# Transitions dans l'ordre de priorité
-	var next_state = check_air_transitions()
-	if next_state: return next_state
+	parent.move_and_slide()
 	
-	next_state = _check_fall()
-	if next_state: return next_state
-	
-	# NOUVELLE LIGNE AJOUTÉE ICI :
-	next_state = check_dash_input()
-	if next_state: return next_state
-	
-	return check_wall_slide_transition()
+	return StateTransitions.get_next_state(self, parent, delta)
 
 func _perform_jump():
-	print("=== _perform_jump() appelé ===")
 	parent.velocity.y = PlayerConstants.JUMP_VELOCITY
-	AudioManager.play_sfx("player/jump", 1)  # ← Le son est ici !
+	AudioManager.play_sfx("player/jump", 1)
 	ParticleManager.emit_jump(parent.global_position)
-
-func _check_fall() -> State:
-	if parent.velocity.y >= 0:
-		return get_node("../FallState")
-	return null

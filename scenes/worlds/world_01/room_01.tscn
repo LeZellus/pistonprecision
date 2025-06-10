@@ -46,10 +46,9 @@ tile_map_data = PackedByteArray("AAAIAAUAAAAAAAAAAAAJAAUAAAAAAAAAAAAKAAUAAAAAAAA
 position = Vector2(168, -32)
 
 [node name="DeathZone" parent="." instance=ExtResource("7_pnsws")]
-position = Vector2(139, 86)
+position = Vector2(168, 93)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DeathZone"]
-position = Vector2(29.5, 7.5)
 shape = SubResource("RectangleShape2D_ljeip")
 debug_color = Color(0.781871, 0.101506, 0.441273, 0.42)
 
