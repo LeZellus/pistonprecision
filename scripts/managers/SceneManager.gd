@@ -52,7 +52,7 @@ func load_world(world_resource: WorldData, start_room_id: String = ""):
 	
 	await load_room(room_id)
 
-func load_room(room_id: String, spawn_id: String = "default"):
+func load_room(room_id: String, _spawn_id: String = "default"):
 	if not current_world:
 		push_error("Aucun monde chargé")
 		return

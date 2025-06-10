@@ -10,14 +10,12 @@ func enter() -> void:
 
 func process_physics(delta: float) -> State:
 	parent.physics_component.apply_gravity(delta)
-	parent.physics_component.apply_air_movement(delta)
+	parent.physics_component.apply_movement(delta, 0.8)  # 80% efficacité en l'air
 	
-	# Jump cut
 	if parent.velocity.y < 0 and InputManager.was_jump_released():
 		parent.velocity.y *= PlayerConstants.JUMP_CUT_MULTIPLIER
 	
 	parent.move_and_slide()
-	
 	return StateTransitions.get_next_state(self, parent, delta)
 
 func _perform_jump():

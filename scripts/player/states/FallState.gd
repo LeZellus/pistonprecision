@@ -6,7 +6,7 @@ func _ready() -> void:
 
 func process_physics(delta: float) -> State:
 	parent.physics_component.apply_gravity(delta)
-	parent.physics_component.apply_air_movement(delta)
-	parent.move_and_slide()
+	parent.physics_component.apply_movement(delta, 0.8)  # 80% efficacité en l'air
 	
+	parent.move_and_slide()
 	return StateTransitions.get_next_state(self, parent, delta)

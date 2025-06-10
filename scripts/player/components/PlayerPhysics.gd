@@ -1,3 +1,4 @@
+# scripts/player/components/PlayerPhysics.gd - Version optimisée
 class_name PlayerPhysics
 extends Node
 
@@ -15,13 +16,15 @@ func apply_gravity(delta: float):
 		player.velocity.y += gravity * PlayerConstants.GRAVITY_MULTIPLIER * delta
 		player.velocity.y = min(player.velocity.y, PlayerConstants.MAX_FALL_SPEED)
 
-func apply_movement(_delta: float):
+func apply_movement(delta: float, air_modifier: float = 1.0):
+	"""Mouvement unifié pour sol et air"""
 	var input_dir = InputManager.get_movement()
+	
 	if input_dir != 0:
-		player.velocity.x = input_dir * PlayerConstants.SPEED
-
-func apply_air_movement(delta: float):
-	apply_movement(delta)
+		var target_speed = input_dir * PlayerConstants.SPEED * air_modifier
+		var acceleration = PlayerConstants.ACCELERATION * delta
+		
+		player.velocity.x = move_toward(player.velocity.x, target_speed, acceleration)
 
 func apply_friction(delta: float):
 	var friction_value = PlayerConstants.FRICTION if player.is_on_floor() else PlayerConstants.AIR_RESISTANCE
