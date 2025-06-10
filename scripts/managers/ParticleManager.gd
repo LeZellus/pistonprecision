@@ -9,7 +9,6 @@ const PARTICLE_SCENES = {
 	"dust": preload("res://scenes/effects/particles/DustParticle.tscn"),
 	"jump": preload("res://scenes/effects/particles/JumpParticle.tscn"),
 	"run": preload("res://scenes/effects/particles/RunParticle.tscn"),
-	"death": preload("res://scenes/effects/particles/DeathParticle.tscn")
 }
 
 # === POOL SETTINGS ===
@@ -17,7 +16,6 @@ const POOL_SIZES = {
 	"dust": 15,
 	"jump": 8,
 	"run": 10,
-	"death": 5
 }
 
 func _ready():
@@ -48,11 +46,6 @@ func emit_jump(position: Vector2, follow_target: Node2D = null, target_offset: V
 func emit_dust(position: Vector2, direction: float = 0.0, follow_target: Node2D = null):
 	var params = {"direction": direction}
 	_emit_particle("dust", position, params)
-
-func emit_death(position: Vector2, intensity: float = 1.0) -> Node:
-	var params = {"intensity": intensity}
-	var death_particle = _emit_particle("death", position, params)
-	return death_particle
 
 func _emit_particle(type: String, pos: Vector2, params: Dictionary):
 	var particle = _get_available_particle(type)

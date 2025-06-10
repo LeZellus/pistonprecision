@@ -77,34 +77,7 @@ func load_room(room_id: String, spawn_id: String = "default"):
 	if player and is_instance_valid(player):
 		world_container.move_child(player, -1)
 		
-		var spawn_pos = _get_spawn_position(spawn_id)
-		player.global_position = spawn_pos
 		player.velocity = Vector2.ZERO
-
-# === RESPAWN SIMPLIFIÉ ===
-func respawn_player():
-	"""Respawn du joueur après une mort - méthode unique et claire"""
-	if not player or not is_instance_valid(player):
-		push_error("Aucun joueur à respawn")
-		return
-	
-	print("=== SCENEMANAGER: Début du respawn ===")
-	
-	# Reset du joueur AVANT de le repositionner
-	await player.reset_for_respawn()
-	
-	# Attendre une frame pour que la physique se mette à jour
-	await player.get_tree().physics_frame
-	
-	# Repositionner au spawn par défaut
-	var spawn_pos = _get_spawn_position("default")
-	print("=== SCENEMANAGER: Position de spawn trouvée : ", spawn_pos, " ===")
-	
-	# Forcer la position
-	player.global_position = spawn_pos
-	player.velocity = Vector2.ZERO
-	
-	print("=== SCENEMANAGER: Joueur respawn à : ", player.global_position, " ===")
 
 # === TRANSITIONS ===
 func transition_to_room(target_room_id: String, spawn_id: String = "default"):
@@ -128,32 +101,6 @@ func transition_to_room(target_room_id: String, spawn_id: String = "default"):
 	# Restaurer la vélocité si c'est une transition fluide (pas un reset de mort)
 	if player and is_instance_valid(player) and spawn_id != "default" and not player.is_player_dead():
 		player.velocity = preserved_velocity
-
-func _get_spawn_position(spawn_id: String = "default") -> Vector2:
-	"""Trouve la position d'un spawn dans la salle actuelle"""
-	if not current_room_node:
-		return Vector2(0, 96)  # Position de secours
-	
-	# 1. Chercher le SpawnPoint avec l'ID demandé
-	var spawn_points = current_room_node.get_children().filter(
-		func(node): return node.is_in_group("spawn_points")
-	)
-	
-	for spawn in spawn_points:
-		if spawn.spawn_id == spawn_id:
-			return spawn.global_position
-	
-	# 2. Chercher le spawn par défaut
-	for spawn in spawn_points:
-		if spawn.is_default_spawn:
-			return spawn.global_position
-	
-	# 3. Prendre le premier spawn trouvé
-	if spawn_points.size() > 0:
-		return spawn_points[0].global_position
-	
-	# 4. Position de secours
-	return Vector2(0, 96)
 
 # === CLEANUP METHOD ===
 func cleanup_world():

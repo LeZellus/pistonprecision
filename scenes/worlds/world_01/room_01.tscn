@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=4 uid="uid://ckw83swiwevhx"]
+[gd_scene load_steps=10 format=4 uid="uid://ckw83swiwevhx"]
 
 [ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableObject.tscn" id="1_ku13x"]
 [ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_r7ns6"]
@@ -8,7 +8,6 @@
 [ext_resource type="TileSet" uid="uid://djdhs2mj0yrle" path="res://resources/level_data/TilesetGround2.tres" id="5_jdayx"]
 [ext_resource type="PackedScene" uid="uid://pu42l8l3bunb" path="res://scenes/objects/Door.tscn" id="6_eerqf"]
 [ext_resource type="PackedScene" uid="uid://baocy14u3yxvg" path="res://scenes/objects/LayerTraps.tscn" id="7_3dmaq"]
-[ext_resource type="PackedScene" uid="uid://ylt41ox5quua" path="res://scenes/objects/DeathZone.tscn" id="7_pnsws"]
 [ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="9_st4ct"]
 
 [node name="Room01" type="Node2D"]
@@ -41,9 +40,6 @@ tile_map_data = PackedByteArray("AAAIAAUAAAAAAAAAAAAJAAUAAAAAAAAAAAAKAAUAAAAAAAA
 
 [node name="Door" parent="." instance=ExtResource("6_eerqf")]
 position = Vector2(168, -32)
-
-[node name="DeathZone" parent="." instance=ExtResource("7_pnsws")]
-position = Vector2(168, 93)
 
 [node name="Camera2D2" type="Camera2D" parent="."]
 zoom = Vector2(4, 4)

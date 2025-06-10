@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://dtv4d02f10rqa"]
 
-[ext_resource type="Script" path="res://scenes/effects/particles/JumpParticle.gd" id="1_j64og"]
+[ext_resource type="Script" path="res://scripts/player/particles/JumpParticle.gd" id="1_j64og"]
 [ext_resource type="Texture2D" uid="uid://blkq52jtyj0jg" path="res://assets/sprites/player/Jump/JumpParticle.png" id="2_pc6o6"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_g0wn5"]

@@ -22,15 +22,10 @@ enum PistonDirection { DOWN, LEFT, UP, RIGHT }
 var piston_direction: PistonDirection = PistonDirection.DOWN
 
 var transition_immunity_timer: float = 0.0
-const TRANSITION_IMMUNITY_TIME = 0.1
 
 # === PHYSICS CACHE ===
 var was_grounded: bool = false
 var wall_jump_timer: float = 0.0
-
-# === DEATH STATE ===
-var is_dead: bool = false
-var death_explosion: Node = null
 
 # === CONSTANTS ===
 const WALL_JUMP_GRACE_TIME: float = 0.15
@@ -61,8 +56,7 @@ func _connect_signals():
 			InputManager.push_requested.connect(_on_push_requested)
 			
 func _unhandled_input(event: InputEvent):
-	if not is_dead:
-		state_machine.process_input(event)
+	state_machine.process_input(event)
 
 # === WALL DETECTION ===
 func can_wall_slide() -> bool:
@@ -70,16 +64,13 @@ func can_wall_slide() -> bool:
 
 # === ROTATION & PUSH ===
 func _on_rotate_left():
-	if not is_dead:
-		actions_component.rotate_piston(-1)
+	actions_component.rotate_piston(-1)
 
 func _on_rotate_right():
-	if not is_dead:
-		actions_component.rotate_piston(1)
+	actions_component.rotate_piston(1)
 
 func _on_push_requested():
-	if not is_dead:
-		actions_component.execute_push()
+	actions_component.execute_push()
 
 func _setup_detectors():
 	ground_detector = GroundDetector.new(self)
@@ -95,42 +86,3 @@ func _setup_detectors():
 	add_child(physics_component)
 	add_child(actions_component)
 	add_child(controller)
-	
-func start_room_transition():
-	transition_immunity_timer = TRANSITION_IMMUNITY_TIME
-
-func trigger_death():
-	if is_player_dead():
-		return
-	
-	print("=== PLAYER: Déclenchement de la mort ===")
-	# Simple transition vers DeathState
-	state_machine.change_state(state_machine.get_node("DeathState"))
-
-func is_player_dead() -> bool:
-	return state_machine.current_state is DeathState
-	
-func reset_for_respawn():
-	"""Remet le joueur dans un état propre pour le respawn"""
-	print("=== PLAYER: Reset pour respawn ===")
-	
-	# Réactiver le joueur
-	set_physics_process(true)
-	collision_shape.disabled = false
-	is_dead = false
-	
-	# Reset visuel avec fade-in
-	sprite.visible = true
-	sprite.modulate.a = 0.0
-	
-	var tween = create_tween()
-	tween.tween_property(sprite, "modulate:a", 1.0, 0.3)
-	
-	# Reset states
-	piston_direction = PistonDirection.DOWN
-	sprite.rotation_degrees = 0
-	
-	# Transition vers IdleState
-	if state_machine and state_machine.has_node("IdleState"):
-		print("JE PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASSSSSSZE")
-		state_machine.change_state(state_machine.get_node("IdleState"))

@@ -1,13 +1,8 @@
 class_name StateTransitions
 
-# Système centralisé de transitions - plus de duplication !
 static func get_next_state(current_state: State, player: Player, delta: float) -> State:
 	
-	# === PRIORITÉ 1 : Mort ===
-	if _should_die(player):
-		return current_state.get_node("../DeathState")
-	
-	# === PRIORITÉ 2 : Transitions spéciales selon l'état actuel ===
+	# === TRANSITIONS selon l'état actuel ===
 	if current_state is IdleState or current_state is RunState:
 		return _handle_ground_states(current_state, player, delta)
 	elif current_state is JumpState or current_state is FallState:
@@ -18,10 +13,6 @@ static func get_next_state(current_state: State, player: Player, delta: float) -
 		return null  # DashState gère ses propres transitions
 	
 	return null
-
-static func _should_die(player: Player) -> bool:
-	# Logique de mort centralisée ici si besoin
-	return false
 
 static func _handle_ground_states(current_state: State, player: Player, _delta: float) -> State:
 	# Quitter le sol ?

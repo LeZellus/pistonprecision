@@ -1,6 +1,5 @@
-[gd_scene load_steps=8 format=4 uid="uid://c38acy50fcdcs"]
+[gd_scene load_steps=7 format=4 uid="uid://c38acy50fcdcs"]
 
-[ext_resource type="PackedScene" uid="uid://ylt41ox5quua" path="res://scenes/objects/DeathZone.tscn" id="1_4t6b3"]
 [ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_c20re"]
 [ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_abstl"]
 [ext_resource type="PackedScene" uid="uid://dqimbr7lydigd" path="res://scenes/objects/LayerWalls.tscn" id="3_dykpx"]
@@ -9,9 +8,6 @@
 [ext_resource type="PackedScene" uid="uid://0hhkm4tctscq" path="res://scenes/objects/SpawnPoint.tscn" id="6_vdq8j"]
 
 [node name="Room02" type="Node2D"]
-
-[node name="DeathZone" parent="." instance=ExtResource("1_4t6b3")]
-position = Vector2(71, 51)
 
 [node name="TileMapLayer" type="Node" parent="."]
 

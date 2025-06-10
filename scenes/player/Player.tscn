@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://de1wxpab4hcrk"]
+[gd_scene load_steps=11 format=3 uid="uid://de1wxpab4hcrk"]
 
 [ext_resource type="Script" path="res://scripts/player/Player.gd" id="1_0orsa"]
 [ext_resource type="SpriteFrames" uid="uid://j4q15hu1yxfw" path="res://resources/player_stats/PlayerAnimation.tres" id="2_kqkg1"]
@@ -9,7 +9,6 @@
 [ext_resource type="Script" path="res://scripts/player/states/FallState.gd" id="7_lwr6x"]
 [ext_resource type="Script" path="res://scripts/player/states/WallSlideState.gd" id="8_6g2hb"]
 [ext_resource type="Script" path="res://scripts/player/states/DashState.gd" id="9_ek2xh"]
-[ext_resource type="Script" path="res://scripts/player/states/DeathState.gd" id="10_1jogw"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iwv1m"]
 size = Vector2(15, 15)
@@ -47,6 +46,3 @@ script = ExtResource("8_6g2hb")
 
 [node name="DashState" type="Node" parent="StateMachine"]
 script = ExtResource("9_ek2xh")
-
-[node name="DeathState" type="Node" parent="StateMachine"]
-script = ExtResource("10_1jogw")
