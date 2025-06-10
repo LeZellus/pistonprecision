@@ -23,8 +23,15 @@ var piston_direction: PistonDirection = PistonDirection.DOWN
 # === PHYSICS STATE ===
 var was_grounded: bool = false
 var wall_jump_timer: float = 0.0
-
 const WALL_JUMP_GRACE_TIME: float = 0.15
+
+# === DEATH SYSTEM ===
+var is_dead: bool = false
+var death_immunity_timer: float = 0.0
+var transition_immunity_timer: float = 0.0
+
+const DEATH_IMMUNITY_TIME: float = 0.5
+const TRANSITION_IMMUNITY_TIME: float = 1.0
 
 func _ready():
 	world_space_state = get_world_2d().direct_space_state
@@ -85,3 +92,72 @@ func _on_rotate_right():
 
 func _on_push_requested():
 	actions_component.execute_push()
+	
+func trigger_death():
+	"""Déclenche la mort du joueur"""
+	if is_dead or has_death_immunity():
+		return
+	
+	print("Player: Mort déclenchée!")
+	is_dead = true
+	
+	# Arrêter le mouvement
+	velocity = Vector2.ZERO
+	set_physics_process(false)
+	
+	# Effet visuel de mort
+	_play_death_effect()
+	
+	# Respawn après délai
+	await get_tree().create_timer(1.5).timeout
+	respawn()
+
+func _play_death_effect():
+	"""Effet visuel de mort"""
+	# Particule de mort
+	ParticleManager.emit_death(global_position)
+	
+	# Camera shake
+	if camera and camera.has_method("shake"):
+		camera.shake(10.0, 0.8)
+	
+	# Son de mort
+	AudioManager.play_sfx("player/death", 0.8)
+	
+	# Rendre invisible
+	sprite.visible = false
+
+func respawn():
+	"""Fait respawn le joueur"""
+	print("Player: Respawn!")
+	
+	# Reset état
+	is_dead = false
+	sprite.visible = true
+	set_physics_process(true)
+	
+	# Position de respawn (simple pour test)
+	global_position = Vector2(0, 0)
+	velocity = Vector2.ZERO
+	
+	# Immunité temporaire
+	death_immunity_timer = DEATH_IMMUNITY_TIME
+	
+	# Reset state machine
+	state_machine.change_state(state_machine.get_node("IdleState"))
+
+func start_room_transition():
+	"""Appelé au début d'une transition de salle"""
+	transition_immunity_timer = TRANSITION_IMMUNITY_TIME
+
+func has_death_immunity() -> bool:
+	"""Vérifie si le joueur a une immunité"""
+	return death_immunity_timer > 0
+
+func has_transition_immunity() -> bool:
+	"""Vérifie si le joueur est en immunité de transition"""
+	return transition_immunity_timer > 0
+
+func is_player_dead() -> bool:
+	"""Vérifie si le joueur est mort"""
+	return is_dead

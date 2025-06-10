@@ -9,6 +9,7 @@ const PARTICLE_SCENES = {
 	"dust": preload("res://scenes/effects/particles/DustParticle.tscn"),
 	"jump": preload("res://scenes/effects/particles/JumpParticle.tscn"),
 	"run": preload("res://scenes/effects/particles/RunParticle.tscn"),
+	"death": preload("res://scenes/effects/particles/DeathParticle.tscn"),
 }
 
 # === POOL SETTINGS ===
@@ -16,6 +17,7 @@ const POOL_SIZES = {
 	"dust": 15,
 	"jump": 8,
 	"run": 10,
+	"death": 5,
 }
 
 func _ready():
@@ -105,3 +107,7 @@ func stop_all_particles():
 				particle.stop_effect()
 			particle.visible = false
 		active_particles[type].clear()
+		
+func emit_death(position: Vector2, intensity: float = 1.0):
+	var params = {"intensity": intensity}
+	_emit_particle("death", position, params)

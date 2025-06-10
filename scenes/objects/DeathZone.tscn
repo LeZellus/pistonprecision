@@ -60,7 +60,7 @@ func _on_body_exited(body: Node2D):
 
 func _notify_game_manager():
 	\"\"\"Notifie le GameManager de la mort du joueur pour les stats\"\"\"
-	var game_manager = get_node(\"/root/GameManager\")
+	var game_manager = get_node_or_null(\"/root/GameManager\")
 	if game_manager and game_manager.has_signal(\"player_died\"):
 		game_manager.player_died.emit()
 "
