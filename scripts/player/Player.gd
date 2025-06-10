@@ -6,15 +6,13 @@ class_name Player
 @onready var state_machine: StateMachine = $StateMachine
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
-# Components créés dynamiquement (plus propre)
-var ground_detector: GroundDetector
-var wall_detector: WallDetector
-var push_detector: PushDetector
+# Components simplifiés - UN SEUL détecteur au lieu de 3
+var detection_system: DetectionSystem
 var physics_component: PlayerPhysics
 var actions_component: PlayerActions
 var controller: PlayerController
 
-# === CACHED REFERENCES (simplifiées) ===
+# === CACHED REFERENCES ===
 var camera: Camera2D
 var world_space_state: PhysicsDirectSpaceState2D
 
@@ -29,7 +27,6 @@ var wall_jump_timer: float = 0.0
 const WALL_JUMP_GRACE_TIME: float = 0.15
 
 func _ready():
-	# Initialisation optimisée
 	world_space_state = get_world_2d().direct_space_state
 	camera = get_viewport().get_camera_2d()
 	
@@ -39,42 +36,47 @@ func _ready():
 	add_to_group("player")
 
 func _setup_components():
-	"""Création et setup des components en une fois"""
-	# Création
-	ground_detector = GroundDetector.new(self)
-	wall_detector = WallDetector.new(self) 
-	push_detector = PushDetector.new(self)
+	"""Setup simplifié avec un seul système de détection"""
+	# UN SEUL détecteur unifié
+	detection_system = DetectionSystem.new(self)
 	physics_component = PlayerPhysics.new(self)
 	actions_component = PlayerActions.new(self)
 	controller = PlayerController.new(self)
 	
-	# Ajout à la scène
-	var components = [ground_detector, wall_detector, push_detector, 
-					 physics_component, actions_component, controller]
-	
-	for component in components:
+	# Ajout optimisé
+	for component in [detection_system, physics_component, actions_component, controller]:
 		add_child(component)
 
 func _connect_signals():
 	"""Connexion des signaux simplifiée"""
-	var input_signals = [
+	var signals = [
 		[InputManager.rotate_left_requested, _on_rotate_left],
 		[InputManager.rotate_right_requested, _on_rotate_right],
 		[InputManager.push_requested, _on_push_requested]
 	]
 	
-	for signal_data in input_signals:
+	for signal_data in signals:
 		if not signal_data[0].is_connected(signal_data[1]):
 			signal_data[0].connect(signal_data[1])
 
 func _unhandled_input(event: InputEvent):
 	state_machine.process_input(event)
 
-# === WALL DETECTION ===
+# === API SIMPLIFIÉE ===
 func can_wall_slide() -> bool:
-	return wall_detector.is_touching_wall() and wall_jump_timer <= 0
+	return detection_system.is_touching_wall() and wall_jump_timer <= 0
 
-# === ROTATION & PUSH (inchangé) ===
+# === COMPATIBILITY PROPERTIES (pour garder le code existant) ===
+var wall_detector: DetectionSystem:
+	get: return detection_system
+
+var ground_detector: DetectionSystem:
+	get: return detection_system
+	
+var push_detector: DetectionSystem:
+	get: return detection_system
+
+# === ROTATION & PUSH ===
 func _on_rotate_left():
 	actions_component.rotate_piston(-1)
 
