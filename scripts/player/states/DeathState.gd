@@ -30,7 +30,7 @@ func process_frame(delta: float) -> State:
 	
 	return null
 
-func process_physics(delta: float) -> State:
+func process_physics(_delta: float) -> State:
 	# Garder le joueur immobile pendant la mort
 	parent.velocity = Vector2.ZERO
 	# PAS de move_and_slide() pendant la mort

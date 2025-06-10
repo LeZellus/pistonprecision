@@ -43,7 +43,7 @@ func _ready():
 	state_machine.init(self)
 	add_to_group("player")
 
-func _physics_process(delta: float):
+func _physics_process(_delta: float):
 	# IMPORTANT: Bloquer complètement la physique si mort
 	if is_player_dead():
 		return
