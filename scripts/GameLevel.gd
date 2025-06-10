@@ -77,6 +77,10 @@ func _start_game():
 	SceneManager.initialize_with_player(player_scene)
 	await SceneManager.load_world(starting_world, starting_room)
 	
+	# IMPORTANT: Connecter le GameManager au joueur créé
+	if game_manager:
+		game_manager._connect_player_signals()
+	
 	print("=== Initialisation terminée ===")
 
 # === GESTION DE LA PAUSE ===

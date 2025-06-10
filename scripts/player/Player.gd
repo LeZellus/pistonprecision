@@ -99,13 +99,38 @@ func _setup_detectors():
 func start_room_transition():
 	transition_immunity_timer = TRANSITION_IMMUNITY_TIME
 
-# === DEATH SYSTEM ===
 func trigger_death():
 	if is_player_dead():
 		return
 	
+	print("=== PLAYER: Déclenchement de la mort ===")
 	# Simple transition vers DeathState
 	state_machine.change_state(state_machine.get_node("DeathState"))
 
 func is_player_dead() -> bool:
 	return state_machine.current_state is DeathState
+	
+func reset_for_respawn():
+	"""Remet le joueur dans un état propre pour le respawn"""
+	print("=== PLAYER: Reset pour respawn ===")
+	
+	# Réactiver le joueur
+	set_physics_process(true)
+	collision_shape.disabled = false
+	is_dead = false
+	
+	# Reset visuel avec fade-in
+	sprite.visible = true
+	sprite.modulate.a = 0.0
+	
+	var tween = create_tween()
+	tween.tween_property(sprite, "modulate:a", 1.0, 0.3)
+	
+	# Reset states
+	velocity = Vector2.ZERO
+	piston_direction = PistonDirection.DOWN
+	sprite.rotation_degrees = 0
+	
+	# Transition vers IdleState
+	if state_machine and state_machine.has_node("IdleState"):
+		state_machine.change_state(state_machine.get_node("IdleState"))

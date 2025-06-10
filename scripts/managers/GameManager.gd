@@ -14,6 +14,7 @@ signal state_changed(new_state: GameState)
 signal level_completed(level_name: String)
 signal player_died
 signal checkpoint_reached(checkpoint_id: String)
+signal respawn_completed
 
 # === GAME DATA ===
 var current_state: GameState = GameState.MENU
@@ -23,10 +24,14 @@ var deaths_count: int = 0
 var level_time: float = 0.0
 var total_time: float = 0.0
 
+# === RESPAWN HANDLING ===
+var respawn_delay: float = 1.0
+var is_respawning: bool = false
+
 # === LEVEL PROGRESSION ===
 var completed_levels: Array[String] = []
-var collectibles_found: Dictionary = {} # level_name -> count
-var best_times: Dictionary = {} # level_name -> time
+var collectibles_found: Dictionary = {}
+var best_times: Dictionary = {}
 
 # === CONSTANTS ===
 const SAVE_FILE_PATH = "user://save_game.dat"
@@ -34,6 +39,19 @@ const SAVE_FILE_PATH = "user://save_game.dat"
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	load_game_data()
+	_connect_player_signals()
+
+func _connect_player_signals():
+	# Connecter aux signaux du joueur quand il est créé
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		_setup_player_connections(player)
+
+func _setup_player_connections(player: Node):
+	# Connecter au signal de mort du DeathState
+	var death_state = player.state_machine.get_node("DeathState")
+	if death_state and death_state.has_signal("death_animation_finished"):
+		death_state.death_animation_finished.connect(_on_player_death_animation_finished)
 
 func _process(delta):
 	if current_state == GameState.PLAYING:
@@ -46,12 +64,32 @@ func _process(delta):
 			debug_manager.add_custom_info("GAME", "Deaths", str(deaths_count))
 			debug_manager.add_custom_info("GAME", "Current Level", current_level)
 
+# === DEATH & RESPAWN HANDLING ===
+func _on_player_death_animation_finished():
+	print("=== GAMEMANAGER: Animation de mort terminée ===")
+	
+	if is_respawning:
+		return
+	
+	is_respawning = true
+	deaths_count += 1
+	player_died.emit()
+	
+	# Attendre le délai de respawn
+	await get_tree().create_timer(respawn_delay).timeout
+	
+	# Déclencher le respawn
+	print("=== GAMEMANAGER: Déclenchement du respawn ===")
+	SceneManager.respawn_player()
+	
+	is_respawning = false
+	respawn_completed.emit()
+
 # === STATE MANAGEMENT ===
 func change_state(new_state: GameState):
 	if current_state == new_state:
 		return
 	
-	# var old_state = current_state
 	current_state = new_state
 	state_changed.emit(new_state)
 	
@@ -68,6 +106,7 @@ func start_level(level_name: String):
 	current_level = level_name
 	current_checkpoint = ""
 	level_time = 0.0
+	deaths_count = 0  # Reset des morts pour le niveau
 	change_state(GameState.PLAYING)
 
 func complete_level():
@@ -120,13 +159,3 @@ func load_game_data():
 		collectibles_found = save_data.get("collectibles_found", {})
 		best_times = save_data.get("best_times", {})
 		total_time = save_data.get("total_time", 0.0)
-		
-func example_performance_measurement():
-	var start_time = Time.get_time_dict_from_system()
-	var start_ms = start_time.hour * 3600000 + start_time.minute * 60000 + start_time.second * 1000 + start_time.msec
-	
-	# ...  code à mesurer ...
-	
-	var debug_manager = get_node("/root/DebugManager")
-	if debug_manager:
-		debug_manager.log_performance("MonBloc", start_ms)

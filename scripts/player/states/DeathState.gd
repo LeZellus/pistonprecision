@@ -1,10 +1,12 @@
 class_name DeathState
 extends State
 
+signal death_animation_finished
+
 var death_explosion: Node = null
 
 func _ready() -> void:
-	animation_name = ""  # Pas d'animation par défaut
+	animation_name = ""
 
 func enter() -> void:
 	print("=== ENTREE DEATH STATE ===")
@@ -13,6 +15,7 @@ func enter() -> void:
 	parent.set_physics_process(false)
 	parent.collision_shape.disabled = true
 	parent.sprite.visible = false
+	parent.is_dead = true
 	
 	# Créer l'explosion
 	death_explosion = ParticleManager.emit_death(parent.global_position, 1.5)
@@ -36,29 +39,12 @@ func _on_explosion_finished():
 		if death_explosion.has_method("cleanup"):
 			death_explosion.cleanup()
 	
-	# Attendre un peu puis respawn
+	# Attendre un peu puis signaler la fin
 	await parent.get_tree().create_timer(0.5).timeout
 	
-	print("=== DEMANDE DE RESPAWN ===")
-	SceneManager.respawn_player()
+	# Signal que l'animation de mort est terminée
+	death_animation_finished.emit()
 
 func exit() -> void:
 	print("=== SORTIE DEATH STATE ===")
-	
-	# Réactiver le joueur
-	parent.set_physics_process(true)
-	parent.collision_shape.disabled = false
-	
-	# Reset visuel avec fade-in
-	parent.sprite.visible = true
-	parent.sprite.modulate.a = 0.0
-	
-	var tween = parent.create_tween()
-	tween.tween_property(parent.sprite, "modulate:a", 1.0, 0.3)
-	
-	# Reset states
-	parent.velocity = Vector2.ZERO
-	parent.piston_direction = Player.PistonDirection.DOWN
-	parent.sprite.rotation_degrees = 0
-	
 	death_explosion = null

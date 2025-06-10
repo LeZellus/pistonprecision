@@ -88,16 +88,17 @@ func respawn_player():
 		push_error("Aucun joueur à respawn")
 		return
 	
+	print("=== SCENEMANAGER: Début du respawn ===")
+	
+	# Reset du joueur
+	player.reset_for_respawn()
+	
 	# Repositionner au spawn par défaut
 	var spawn_pos = _get_spawn_position("default")
 	player.global_position = spawn_pos
 	player.velocity = Vector2.ZERO
 	
-	# Reset du joueur vers IdleState
-	if player.state_machine and player.state_machine.has_node("IdleState"):
-		player.state_machine.change_state(player.state_machine.get_node("IdleState"))
-	
-	print("Joueur respawn à : ", spawn_pos)
+	print("=== SCENEMANAGER: Joueur respawn à : ", spawn_pos, " ===")
 
 # === TRANSITIONS ===
 func transition_to_room(target_room_id: String, spawn_id: String = "default"):
