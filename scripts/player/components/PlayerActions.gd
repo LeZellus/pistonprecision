@@ -19,7 +19,7 @@ func use_dash():
 	dash_cooldown_timer = PlayerConstants.DASH_COOLDOWN
 
 func can_dash() -> bool:
-	return dash_cooldown_timer <= 0.0 and player.piston_direction != Player.PistonDirection.DOWN and not player.is_dead
+	return dash_cooldown_timer <= 0.0 and player.piston_direction != Player.PistonDirection.DOWN
 
 # === ROTATION ===
 func rotate_piston(direction: int):

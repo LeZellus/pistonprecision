@@ -1,8 +1,8 @@
+# scripts/GameLevel.gd
 extends Node2D
 
 @export var starting_world: WorldData
 @export var starting_room: String = ""
-@export var player_spawn_position: Vector2 = Vector2(10, 10)
 
 # === MENU REFERENCES ===
 @onready var menu_layer: CanvasLayer = $MenuLayer
@@ -28,9 +28,6 @@ func _ready():
 	
 	# Commencer par afficher le menu principal
 	_show_main_menu()
-	
-	# NE PLUS INITIALISER LE JEU ICI !
-	# L'initialisation se fait maintenant dans _start_game()
 
 func _input(event):
 	# Échap pendant le jeu = pause
@@ -62,10 +59,16 @@ func _start_game():
 	if menu_layer:
 		menu_layer.visible = false
 	
-	# S'assurer que le GameManager est en mode PLAYING
-	var game_manager = get_node("/root/GameManager")
-	if game_manager:
-		game_manager.change_state(GameManager.GameState.PLAYING)
+	# S'assurer que le GameManager est en mode PLAYING (avec vérification de sécurité)
+	var game_manager = get_node_or_null("/root/GameManager")
+	if game_manager and game_manager.has_method("change_state"):
+		# Vérifier que l'enum GameState existe
+		if "GameState" in game_manager:
+			game_manager.change_state(game_manager.GameState.PLAYING)
+		else:
+			print("GameManager trouvé mais sans enum GameState")
+	else:
+		print("GameManager non trouvé ou méthode change_state manquante")
 	
 	# MAINTENANT initialiser le jeu
 	if not starting_world:
@@ -76,10 +79,6 @@ func _start_game():
 	
 	SceneManager.initialize_with_player(player_scene)
 	await SceneManager.load_world(starting_world, starting_room)
-	
-	# IMPORTANT: Connecter le GameManager au joueur créé
-	if game_manager:
-		game_manager._connect_player_signals()
 	
 	print("=== Initialisation terminée ===")
 
@@ -116,9 +115,10 @@ func return_to_menu():
 	# Nettoyer proprement le SceneManager
 	SceneManager.cleanup_world()
 	
-	# Remettre le GameManager en état MENU
-	var game_manager = get_node("/root/GameManager")
-	if game_manager:
-		game_manager.change_state(GameManager.GameState.MENU)
+	# Remettre le GameManager en état MENU (avec vérification de sécurité)
+	var game_manager = get_node_or_null("/root/GameManager")
+	if game_manager and game_manager.has_method("change_state"):
+		if "GameState" in game_manager:
+			game_manager.change_state(game_manager.GameState.MENU)
 	
 	_show_main_menu()

@@ -29,16 +29,18 @@ var best_times: Dictionary = {}
 const SAVE_FILE_PATH = "user://save_game.dat"
 
 func _ready():
+	name = "GameManager"
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	load_game_data()
+	print("GameManager initialisé - État:", GameState.keys()[current_state])
 
 func _process(delta):
 	if current_state == GameState.PLAYING:
 		level_time += delta
 		total_time += delta
 		
-		var debug_manager = get_node("/root/DebugManager") if has_node("/root/DebugManager") else null
-		if debug_manager:
+		var debug_manager = get_node_or_null("/root/DebugManager")
+		if debug_manager and debug_manager.has_method("add_custom_info"):
 			debug_manager.add_custom_info("GAME", "Current Level", current_level)
 
 # === STATE MANAGEMENT ===
@@ -46,6 +48,7 @@ func change_state(new_state: GameState):
 	if current_state == new_state:
 		return
 	
+	print("GameManager: Changement d'état de ", GameState.keys()[current_state], " vers ", GameState.keys()[new_state])
 	current_state = new_state
 	state_changed.emit(new_state)
 	
@@ -94,10 +97,12 @@ func save_game_data():
 	if file:
 		file.store_string(JSON.stringify(save_data))
 		file.close()
+		print("Données sauvegardées")
 
 func load_game_data():
 	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
 	if not file:
+		print("Aucune sauvegarde trouvée, utilisation des valeurs par défaut")
 		return
 	
 	var json_string = file.get_as_text()
@@ -112,3 +117,10 @@ func load_game_data():
 		collectibles_found = save_data.get("collectibles_found", {})
 		best_times = save_data.get("best_times", {})
 		total_time = save_data.get("total_time", 0.0)
+		print("Données chargées avec succès")
+	else:
+		print("Erreur lors du parsing de la sauvegarde")
+
+# === DEBUG ===
+func get_state_name() -> String:
+	return GameState.keys()[current_state]

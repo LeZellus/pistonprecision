@@ -1,4 +1,4 @@
-# scripts/managers/SceneManager.gd - Version avec reset et mort
+# scripts/managers/SceneManager.gd
 extends Node
 
 # === REFERENCES ===
@@ -22,7 +22,7 @@ func _ready():
 
 # === INITIALIZATION ===
 func initialize_with_player(player_scene: PackedScene):
-	# FIX: Vérifier que le joueur existe ET qu'il est valide
+	# Vérifier que le joueur existe ET qu'il est valide
 	if player and is_instance_valid(player):
 		player.queue_free()
 		await player.tree_exited
@@ -76,8 +76,29 @@ func load_room(room_id: String, spawn_id: String = "default"):
 	# Positionner le joueur au bon spawn
 	if player and is_instance_valid(player):
 		world_container.move_child(player, -1)
-		
 		player.velocity = Vector2.ZERO
+		_spawn_player_at_point(spawn_id)
+
+func _spawn_player_at_point(spawn_id: String):
+	"""Positionne le joueur au spawn point demandé"""
+	if not player or not current_room_node:
+		return
+	
+	# Rechercher le spawn point
+	var spawn_points = current_room_node.get_tree().get_nodes_in_group("spawn_points")
+	
+	for spawn_point in spawn_points:
+		if spawn_point.spawn_id == spawn_id or (spawn_id == "default" and spawn_point.is_default_spawn):
+			player.global_position = spawn_point.global_position
+			print("Joueur spawné à: ", spawn_point.global_position, " (spawn: ", spawn_id, ")")
+			return
+	
+	# Si aucun spawn trouvé, utiliser le premier disponible
+	if not spawn_points.is_empty():
+		player.global_position = spawn_points[0].global_position
+		print("Spawn par défaut utilisé: ", spawn_points[0].global_position)
+	else:
+		print("Aucun spawn point trouvé dans la salle!")
 
 # === TRANSITIONS ===
 func transition_to_room(target_room_id: String, spawn_id: String = "default"):
@@ -86,9 +107,9 @@ func transition_to_room(target_room_id: String, spawn_id: String = "default"):
 		push_error("Aucun monde chargé")
 		return
 	
-	# Sauvegarder la vélocité seulement si le joueur n'est pas mort
+	# Sauvegarder la vélocité pour une transition fluide
 	var preserved_velocity = Vector2.ZERO
-	if player and is_instance_valid(player) and not player.is_player_dead():
+	if player and is_instance_valid(player):
 		preserved_velocity = player.velocity
 	
 	# Commencer la transition
@@ -98,8 +119,8 @@ func transition_to_room(target_room_id: String, spawn_id: String = "default"):
 	# Charger la nouvelle salle
 	await load_room(target_room_id, spawn_id)
 	
-	# Restaurer la vélocité si c'est une transition fluide (pas un reset de mort)
-	if player and is_instance_valid(player) and spawn_id != "default" and not player.is_player_dead():
+	# Restaurer la vélocité pour une transition fluide
+	if player and is_instance_valid(player) and spawn_id != "default":
 		player.velocity = preserved_velocity
 
 # === CLEANUP METHOD ===

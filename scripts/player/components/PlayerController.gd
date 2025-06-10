@@ -10,9 +10,6 @@ func _process(delta: float):
 	player.state_machine.process_frame(delta)
 
 func _physics_process(delta: float):
-	if player.is_player_dead():
-		return
-		
 	if player.transition_immunity_timer > 0:
 		player.transition_immunity_timer -= delta
 		# Pas de physique normale pendant l'immunité de respawn

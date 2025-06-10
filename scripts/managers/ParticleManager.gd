@@ -43,7 +43,7 @@ func emit_jump(position: Vector2, follow_target: Node2D = null, target_offset: V
 		params["target_offset"] = target_offset
 	_emit_particle("jump", position, params)
 
-func emit_dust(position: Vector2, direction: float = 0.0, follow_target: Node2D = null):
+func emit_dust(position: Vector2, direction: float = 0.0, _follow_target: Node2D = null):
 	var params = {"direction": direction}
 	_emit_particle("dust", position, params)
 
