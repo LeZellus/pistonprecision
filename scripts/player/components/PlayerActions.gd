@@ -78,6 +78,7 @@ func _attempt_push(direction: Vector2) -> bool:
 
 func _play_push_animation():
 	player.sprite.play("Push")
+	AudioManager.play_sfx("player/push", 0.5)
 	
 	# Déconnecter si déjà connecté
 	if player.sprite.animation_finished.is_connected(_on_push_animation_finished):

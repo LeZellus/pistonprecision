@@ -21,10 +21,10 @@ script = ExtResource("2_cwq7k")
 position = Vector2(51, 76)
 
 [node name="PushableObject2" parent="." instance=ExtResource("1_ku13x")]
-position = Vector2(-30, 76)
+position = Vector2(-101, 54)
 
 [node name="PushableObject3" parent="." instance=ExtResource("1_ku13x")]
-position = Vector2(18, 87)
+position = Vector2(105, 55)
 
 [node name="TileMapLayer" type="Node" parent="."]
 

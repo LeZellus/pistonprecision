@@ -2,7 +2,7 @@ class_name PushableObject
 extends CharacterBody2D
 
 # === PUSH SETTINGS ===
-@export var push_force: float = 2000.0
+@export var push_force: float = 4000.0
 @export var friction: float = 800.0
 @export var can_be_pushed: bool = true
 
@@ -67,7 +67,7 @@ func _trigger_wall_impact_shake(impact_velocity: float):
 	
 	# Son d'impact basé sur la vélocité
 	var impact_volume = clamp(impact_velocity * 0.002, 0.1, 0.3)
-	AudioManager.play_sfx("objects/wall_impact", impact_volume)
+	AudioManager.play_sfx("objects/wall_impact", 1)
 	
 	var camera = get_viewport().get_camera_2d()
 	if camera and camera.has_method("shake"):

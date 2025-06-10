@@ -12,15 +12,6 @@ collision_layer = 0
 script = ExtResource("1_pad6l")
 target_room_id = "room_02"
 
-[node name="ColorRect" type="ColorRect" parent="."]
-custom_minimum_size = Vector2(16, 32)
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(1.92523e-07, 0.517138, 0.794318, 1)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_j8tv8")
 
