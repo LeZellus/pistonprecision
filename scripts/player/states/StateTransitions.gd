@@ -29,7 +29,7 @@ static func _handle_ground_states(current_state: State, player: Player, _delta: 
 		return current_state.get_node("../JumpState") if player.velocity.y < 0 else current_state.get_node("../FallState")
 	
 	# Jump ?
-	if InputManager.consume_jump_buffer() and player.piston_direction == Player.PistonDirection.DOWN:
+	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
 		return current_state.get_node("../JumpState")
 	
 	# Dash ?
@@ -51,8 +51,8 @@ static func _handle_air_states(current_state: State, player: Player, _delta: flo
 		return current_state.get_node("../RunState") if InputManager.get_movement() != 0 else current_state.get_node("../IdleState")
 	
 	# Jump depuis l'air (coyote/wall jump) ?
-	if InputManager.consume_jump_buffer() and player.piston_direction == Player.PistonDirection.DOWN:
-		if InputManager.can_coyote_jump():
+	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
+		if InputManager.has_coyote_time():
 			return current_state.get_node("../JumpState")
 	
 	# Dash ?
