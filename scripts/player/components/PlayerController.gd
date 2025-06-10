@@ -7,9 +7,17 @@ func _init(player_ref: CharacterBody2D):
 	player = player_ref
 
 func _process(delta: float):
+	# Vérifier si le joueur est mort avant tout traitement
+	if player.is_dead:
+		return
+	
 	player.state_machine.process_frame(delta)
 
-func _physics_process(delta: float):		
+func _physics_process(delta: float):
+	# Vérifier si le joueur est mort avant tout traitement
+	if player.is_dead:
+		return
+		
 	delta = min(delta, 1.0/30.0)
 	_handle_grounding()
 	_update_wall_jump_timer(delta)

@@ -33,6 +33,16 @@ var transition_immunity_timer: float = 0.0
 const DEATH_IMMUNITY_TIME: float = 0.5
 const TRANSITION_IMMUNITY_TIME: float = 1.0
 
+func _process(delta: float):
+	# Mise à jour des timers d'immunité
+	if death_immunity_timer > 0:
+		death_immunity_timer -= delta
+	
+	if transition_immunity_timer > 0:
+		transition_immunity_timer -= delta
+	
+	# Le PlayerController a son propre _process, pas besoin de l'appeler
+
 func _ready():
 	world_space_state = get_world_2d().direct_space_state
 	camera = get_viewport().get_camera_2d()
@@ -41,6 +51,14 @@ func _ready():
 	_connect_signals()
 	state_machine.init(self)
 	add_to_group("player")
+
+func _physics_process(delta: float):
+	# IMPORTANT: Bloquer complètement la physique si mort
+	if is_dead:
+		return
+	
+	# Le PlayerController a son propre _physics_process, pas besoin de l'appeler
+	# Il s'exécute automatiquement car c'est un node enfant
 
 func _setup_components():
 	"""Setup simplifié avec un seul système de détection"""
@@ -67,6 +85,10 @@ func _connect_signals():
 			signal_data[0].connect(signal_data[1])
 
 func _unhandled_input(event: InputEvent):
+	# IMPORTANT: Bloquer les inputs si mort
+	if is_dead:
+		return
+	
 	state_machine.process_input(event)
 
 # === API SIMPLIFIÉE ===
@@ -96,14 +118,17 @@ func _on_push_requested():
 func trigger_death():
 	"""Déclenche la mort du joueur"""
 	if is_dead or has_death_immunity():
+		print("Player: Mort ignorée (déjà mort ou immunité)")
 		return
 	
 	print("Player: Mort déclenchée!")
 	is_dead = true
 	
-	# Arrêter le mouvement
+	# Arrêter COMPLÈTEMENT le mouvement
 	velocity = Vector2.ZERO
-	set_physics_process(false)
+	
+	# Désactiver la collision (optionnel, empêche autres interactions)
+	collision_shape.set_deferred("disabled", true)
 	
 	# Effet visuel de mort
 	_play_death_effect()
@@ -131,20 +156,29 @@ func respawn():
 	"""Fait respawn le joueur"""
 	print("Player: Respawn!")
 	
-	# Reset état
+	# IMPORTANT: Reset l'état de mort AVANT tout le reste
 	is_dead = false
-	sprite.visible = true
-	set_physics_process(true)
 	
-	# Position de respawn (simple pour test)
+	# Réactiver la collision
+	collision_shape.set_deferred("disabled", false)
+	
+	# Rendre visible
+	sprite.visible = true
+	
+	# Position de respawn (à adapter selon votre système)
 	global_position = Vector2(0, 0)
 	velocity = Vector2.ZERO
 	
-	# Immunité temporaire
+	# Immunité temporaire APRÈS le reset
 	death_immunity_timer = DEATH_IMMUNITY_TIME
 	
-	# Reset state machine
-	state_machine.change_state(state_machine.get_node("IdleState"))
+	# Reset state machine vers un état sûr
+	if state_machine and state_machine.has_method("change_state"):
+		var idle_state = state_machine.get_node_or_null("IdleState")
+		if idle_state:
+			state_machine.change_state(idle_state)
+	
+	print("Player: Respawn terminé, immunité active pour ", DEATH_IMMUNITY_TIME, "s")
 
 func start_room_transition():
 	"""Appelé au début d'une transition de salle"""

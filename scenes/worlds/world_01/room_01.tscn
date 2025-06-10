@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=4 uid="uid://ckw83swiwevhx"]
+[gd_scene load_steps=11 format=4 uid="uid://ckw83swiwevhx"]
 
 [ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableObject.tscn" id="1_ku13x"]
 [ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_r7ns6"]
 [ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_7sxm0"]
+[ext_resource type="Script" path="res://scripts/objects/DeathZone.gd" id="2_cwq7k"]
 [ext_resource type="PackedScene" uid="uid://dqimbr7lydigd" path="res://scenes/objects/LayerWalls.tscn" id="3_jblby"]
 [ext_resource type="TileSet" uid="uid://djdhs2mj0yrle" path="res://resources/level_data/TilesetGround2.tres" id="5_jdayx"]
 [ext_resource type="PackedScene" uid="uid://pu42l8l3bunb" path="res://scenes/objects/Door.tscn" id="6_eerqf"]
@@ -14,6 +15,7 @@
 
 [node name="DeathZone" parent="." instance=ExtResource("7_pnsws")]
 position = Vector2(-184, 86)
+script = ExtResource("2_cwq7k")
 
 [node name="PushableObject" parent="." instance=ExtResource("1_ku13x")]
 position = Vector2(51, 76)
