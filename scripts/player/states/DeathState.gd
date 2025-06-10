@@ -2,7 +2,6 @@ class_name DeathState
 extends State
 
 var death_explosion: Node = null
-var death_timer: float = 0.0
 
 func _ready() -> void:
 	animation_name = ""  # Pas d'animation par défaut
@@ -40,8 +39,8 @@ func _on_explosion_finished():
 	# Attendre un peu puis respawn
 	await parent.get_tree().create_timer(0.5).timeout
 	
-	print("=== DEMANDE DE RESET SALLE ===")
-	SceneManager.reset_current_room()
+	print("=== DEMANDE DE RESPAWN ===")
+	SceneManager.respawn_player()
 
 func exit() -> void:
 	print("=== SORTIE DEATH STATE ===")

@@ -80,38 +80,24 @@ func load_room(room_id: String, spawn_id: String = "default"):
 		var spawn_pos = _get_spawn_position(spawn_id)
 		player.global_position = spawn_pos
 		player.velocity = Vector2.ZERO
-		
-		# Reset du joueur si nécessaire (après une mort)
-		if player.has_method("on_room_reset"):
-			player.on_room_reset()
 
-# === RESET DE SALLE (pour la mort) ===
-func reset_current_room():
-	"""Reset complet de la salle actuelle après une mort"""
-	if not current_room:
-		push_error("Aucune salle à reset")
-		return
-	
-	# Sauvegarder l'ID de la salle courante
-	var current_room_id = current_room.room_id
-	
-	# Recharger la salle complètement
-	await load_room(current_room_id, "default")
-
-# === RESET LÉGER (optionnel) ===
-func soft_reset_player():
-	"""Reset uniquement le joueur à sa position de spawn sans recharger la salle"""
+# === RESPAWN SIMPLIFIÉ ===
+func respawn_player():
+	"""Respawn du joueur après une mort - méthode unique et claire"""
 	if not player or not is_instance_valid(player):
+		push_error("Aucun joueur à respawn")
 		return
 	
-	# Reset du joueur
-	if player.has_method("on_room_reset"):
-		player.on_room_reset()
-	
-	# Repositionner au spawn
+	# Repositionner au spawn par défaut
 	var spawn_pos = _get_spawn_position("default")
 	player.global_position = spawn_pos
 	player.velocity = Vector2.ZERO
+	
+	# Reset du joueur vers IdleState
+	if player.state_machine and player.state_machine.has_node("IdleState"):
+		player.state_machine.change_state(player.state_machine.get_node("IdleState"))
+	
+	print("Joueur respawn à : ", spawn_pos)
 
 # === TRANSITIONS ===
 func transition_to_room(target_room_id: String, spawn_id: String = "default"):
