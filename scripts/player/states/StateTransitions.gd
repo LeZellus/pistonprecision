@@ -8,6 +8,10 @@ static func get_next_state(current_state: State, player: Player, delta: float) -
 	if _state_cache.is_empty():
 		_cache_states(current_state)
 	
+	# IMPORTANT: Toujours vérifier la mort en premier
+	if _should_die(player):
+		return _get_state("DeathState")
+	
 	# Dispatch selon le type d'état
 	match current_state.get_script().get_global_name():
 		"IdleState", "RunState":
@@ -18,8 +22,25 @@ static func get_next_state(current_state: State, player: Player, delta: float) -
 			return _handle_wall_slide_state(current_state, player, delta)
 		"DashState":
 			return null  # DashState gère ses propres transitions
+		"DeathState":
+			return null  # DeathState gère sa propre logique
 	
 	return null
+
+static func _should_die(player: Player) -> bool:
+	"""Vérifie si le joueur devrait mourir (chute dans le vide, etc.)"""
+	# Exemple : mort par chute (à adapter selon ton niveau)
+	if player.global_position.y > 1000:  # Limite du niveau
+		return true
+	
+	# Déjà mort ou en immunité
+	if player.is_player_dead() or player.has_death_immunity():
+		return false
+	
+	# Ajoute ici d'autres conditions de mort automatique si nécessaire
+	# Par exemple : contact avec des ennemis, pièges, etc.
+	
+	return false
 
 static func _cache_states(reference_state: State):
 	"""Cache les références d'états une seule fois"""

@@ -8,14 +8,14 @@ func _init(player_ref: CharacterBody2D):
 
 func _process(delta: float):
 	# Vérifier si le joueur est mort avant tout traitement
-	if player.is_dead:
+	if player.is_player_dead():  # ← CORRIGÉ : utilise la méthode au lieu de la propriété
 		return
 	
 	player.state_machine.process_frame(delta)
 
 func _physics_process(delta: float):
 	# Vérifier si le joueur est mort avant tout traitement
-	if player.is_dead:
+	if player.is_player_dead():  # ← CORRIGÉ : utilise la méthode au lieu de la propriété
 		return
 		
 	delta = min(delta, 1.0/30.0)

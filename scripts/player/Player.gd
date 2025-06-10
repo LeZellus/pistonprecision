@@ -25,23 +25,14 @@ var was_grounded: bool = false
 var wall_jump_timer: float = 0.0
 const WALL_JUMP_GRACE_TIME: float = 0.15
 
-# === DEATH SYSTEM ===
-var is_dead: bool = false
-var death_immunity_timer: float = 0.0
-var transition_immunity_timer: float = 0.0
-
-const DEATH_IMMUNITY_TIME: float = 0.5
-const TRANSITION_IMMUNITY_TIME: float = 1.0
+# === DEATH SYSTEM SIMPLIFIÉ ===
+var respawn_immunity_timer: float = 0.0
+const RESPAWN_IMMUNITY_TIME: float = 1.0
 
 func _process(delta: float):
-	# Mise à jour des timers d'immunité
-	if death_immunity_timer > 0:
-		death_immunity_timer -= delta
-	
-	if transition_immunity_timer > 0:
-		transition_immunity_timer -= delta
-	
-	# Le PlayerController a son propre _process, pas besoin de l'appeler
+	# Seulement le timer d'immunité après respawn
+	if respawn_immunity_timer > 0:
+		respawn_immunity_timer -= delta
 
 func _ready():
 	world_space_state = get_world_2d().direct_space_state
@@ -54,11 +45,10 @@ func _ready():
 
 func _physics_process(delta: float):
 	# IMPORTANT: Bloquer complètement la physique si mort
-	if is_dead:
+	if is_player_dead():
 		return
 	
-	# Le PlayerController a son propre _physics_process, pas besoin de l'appeler
-	# Il s'exécute automatiquement car c'est un node enfant
+	# Le PlayerController a son propre _physics_process automatique
 
 func _setup_components():
 	"""Setup simplifié avec un seul système de détection"""
@@ -86,7 +76,7 @@ func _connect_signals():
 
 func _unhandled_input(event: InputEvent):
 	# IMPORTANT: Bloquer les inputs si mort
-	if is_dead:
+	if is_player_dead():
 		return
 	
 	state_machine.process_input(event)
@@ -114,84 +104,39 @@ func _on_rotate_right():
 
 func _on_push_requested():
 	actions_component.execute_push()
-	
+
+# === DEATH SYSTEM REFACTORISÉ ===
 func trigger_death():
-	"""Déclenche la mort du joueur"""
-	if is_dead or has_death_immunity():
+	"""Version simplifiée - délègue tout au DeathState"""
+	if is_player_dead() or has_death_immunity():
 		print("Player: Mort ignorée (déjà mort ou immunité)")
 		return
 	
-	print("Player: Mort déclenchée!")
-	is_dead = true
+	print("Player: Transition vers DeathState")
 	
-	# Arrêter COMPLÈTEMENT le mouvement
-	velocity = Vector2.ZERO
-	
-	# Désactiver la collision (optionnel, empêche autres interactions)
-	collision_shape.set_deferred("disabled", true)
-	
-	# Effet visuel de mort
-	_play_death_effect()
-	
-	# Respawn après délai
-	await get_tree().create_timer(1.5).timeout
-	respawn()
-
-func _play_death_effect():
-	"""Effet visuel de mort"""
-	# Particule de mort
-	ParticleManager.emit_death(global_position)
-	
-	# Camera shake
-	if camera and camera.has_method("shake"):
-		camera.shake(10.0, 0.8)
-	
-	# Son de mort
-	AudioManager.play_sfx("player/death", 0.8)
-	
-	# Rendre invisible
-	sprite.visible = false
-
-func respawn():
-	"""Fait respawn le joueur"""
-	print("Player: Respawn!")
-	
-	# IMPORTANT: Reset l'état de mort AVANT tout le reste
-	is_dead = false
-	
-	# Réactiver la collision
-	collision_shape.set_deferred("disabled", false)
-	
-	# Rendre visible
-	sprite.visible = true
-	
-	# Position de respawn (à adapter selon votre système)
-	global_position = Vector2(0, 0)
-	velocity = Vector2.ZERO
-	
-	# Immunité temporaire APRÈS le reset
-	death_immunity_timer = DEATH_IMMUNITY_TIME
-	
-	# Reset state machine vers un état sûr
-	if state_machine and state_machine.has_method("change_state"):
-		var idle_state = state_machine.get_node_or_null("IdleState")
-		if idle_state:
-			state_machine.change_state(idle_state)
-	
-	print("Player: Respawn terminé, immunité active pour ", DEATH_IMMUNITY_TIME, "s")
-
-func start_room_transition():
-	"""Appelé au début d'une transition de salle"""
-	transition_immunity_timer = TRANSITION_IMMUNITY_TIME
-
-func has_death_immunity() -> bool:
-	"""Vérifie si le joueur a une immunité"""
-	return death_immunity_timer > 0
-
-func has_transition_immunity() -> bool:
-	"""Vérifie si le joueur est en immunité de transition"""
-	return transition_immunity_timer > 0
+	# Simple transition vers l'état de mort
+	var death_state = state_machine.get_node_or_null("DeathState")
+	if death_state:
+		state_machine.change_state(death_state)
+	else:
+		push_error("DeathState non trouvé dans la StateMachine!")
 
 func is_player_dead() -> bool:
-	"""Vérifie si le joueur est mort"""
-	return is_dead
+	"""Vérifie si le joueur est dans l'état de mort"""
+	var current_state = state_machine.current_state
+	return current_state != null and current_state.get_script().get_global_name() == "DeathState"
+
+func has_death_immunity() -> bool:
+	"""Immunité après respawn"""
+	return respawn_immunity_timer > 0
+
+func start_respawn_immunity():
+	"""Appelé par le DeathState après respawn"""
+	respawn_immunity_timer = RESPAWN_IMMUNITY_TIME
+	print("Player: Immunité de respawn activée pour ", RESPAWN_IMMUNITY_TIME, "s")
+
+# === API POUR COMPATIBILITY (si nécessaire) ===
+func start_room_transition():
+	"""Pour compatibilité avec le SceneManager"""
+	# Plus besoin d'immunité de transition spéciale
+	pass
