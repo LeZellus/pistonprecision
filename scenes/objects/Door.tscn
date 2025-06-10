@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://pu42l8l3bunb"]
+[gd_scene load_steps=4 format=3 uid="uid://pu42l8l3bunb"]
 
 [ext_resource type="Script" path="res://scripts/objects/Door.gd" id="1_pad6l"]
+[ext_resource type="Texture2D" uid="uid://barpw2bs22niv" path="res://assets/sprites/objects/tileset_door_16x16.png" id="2_wvwiw"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j8tv8"]
 size = Vector2(16, 32)
@@ -22,3 +23,8 @@ color = Color(1.92523e-07, 0.517138, 0.794318, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_j8tv8")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_wvwiw")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 32)

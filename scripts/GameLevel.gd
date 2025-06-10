@@ -2,7 +2,7 @@
 extends Node2D
 
 @export var starting_world: WorldData
-@export var starting_room: String = ""
+@export var starting_room: String = "room_01"
 
 # === MENU REFERENCES ===
 @onready var menu_layer: CanvasLayer = $MenuLayer
@@ -78,7 +78,7 @@ func _start_game():
 	var player_scene = preload("res://scenes/player/Player.tscn")
 	
 	SceneManager.initialize_with_player(player_scene)
-	await SceneManager.load_world(starting_world, starting_room)
+	await SceneManager.load_world(starting_world)
 	
 	print("=== Initialisation terminée ===")
 

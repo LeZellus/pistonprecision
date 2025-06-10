@@ -58,7 +58,7 @@ func _on_body_entered(body: Node2D):
 	# Transition vers la salle cible
 	print("Transition vers: ", target_room_id, " (spawn: ", target_spawn_id, ")")
 	_open_door()
-	SceneManager.transition_to_room(target_room_id, target_spawn_id)
+	SceneManager.transition_to_room(target_room_id)
 
 func _open_door():
 	"""Animation d'ouverture de porte"""

@@ -21,8 +21,6 @@ var viewport_cache: Viewport
 enum PistonDirection { DOWN, LEFT, UP, RIGHT }
 var piston_direction: PistonDirection = PistonDirection.DOWN
 
-var transition_immunity_timer: float = 0.0
-
 # === PHYSICS CACHE ===
 var was_grounded: bool = false
 var wall_jump_timer: float = 0.0
@@ -86,12 +84,3 @@ func _setup_detectors():
 	add_child(physics_component)
 	add_child(actions_component)
 	add_child(controller)
-
-# === TRANSITION IMMUNITY (pour les changements de salle) ===
-func start_room_transition():
-	"""Démarre l'immunité lors d'une transition de salle"""
-	transition_immunity_timer = 0.5
-
-func has_transition_immunity() -> bool:
-	"""Vérifie si le joueur est en immunité de transition"""
-	return transition_immunity_timer > 0

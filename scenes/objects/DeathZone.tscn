@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://bkpe8mkw3epqq"]
+[gd_scene load_steps=3 format=3 uid="uid://cvi6m0d0bogvt"]
 
 [sub_resource type="GDScript" id="GDScript_ikqa8"]
 script/source = "# scripts/objects/DeathZone.gd

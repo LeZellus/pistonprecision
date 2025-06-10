@@ -1,8 +1,7 @@
-[gd_scene load_steps=10 format=4 uid="uid://ckw83swiwevhx"]
+[gd_scene load_steps=9 format=4 uid="uid://ckw83swiwevhx"]
 
 [ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableObject.tscn" id="1_ku13x"]
 [ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_r7ns6"]
-[ext_resource type="PackedScene" uid="uid://0hhkm4tctscq" path="res://scenes/objects/SpawnPoint.tscn" id="1_va5oy"]
 [ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_7sxm0"]
 [ext_resource type="PackedScene" uid="uid://dqimbr7lydigd" path="res://scenes/objects/LayerWalls.tscn" id="3_jblby"]
 [ext_resource type="TileSet" uid="uid://djdhs2mj0yrle" path="res://resources/level_data/TilesetGround2.tres" id="5_jdayx"]
@@ -11,9 +10,6 @@
 [ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="9_st4ct"]
 
 [node name="Room01" type="Node2D"]
-
-[node name="SpawnPoint" parent="." instance=ExtResource("1_va5oy")]
-position = Vector2(-191, -79)
 
 [node name="PushableObject" parent="." instance=ExtResource("1_ku13x")]
 position = Vector2(51, 76)

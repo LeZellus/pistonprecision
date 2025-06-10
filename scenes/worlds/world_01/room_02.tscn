@@ -1,11 +1,10 @@
-[gd_scene load_steps=7 format=4 uid="uid://c38acy50fcdcs"]
+[gd_scene load_steps=6 format=4 uid="uid://c38acy50fcdcs"]
 
 [ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_c20re"]
 [ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_abstl"]
 [ext_resource type="PackedScene" uid="uid://dqimbr7lydigd" path="res://scenes/objects/LayerWalls.tscn" id="3_dykpx"]
 [ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="4_rpvke"]
 [ext_resource type="PackedScene" uid="uid://pu42l8l3bunb" path="res://scenes/objects/Door.tscn" id="5_jwnet"]
-[ext_resource type="PackedScene" uid="uid://0hhkm4tctscq" path="res://scenes/objects/SpawnPoint.tscn" id="6_vdq8j"]
 
 [node name="Room02" type="Node2D"]
 
@@ -27,6 +26,3 @@ script = ExtResource("4_rpvke")
 [node name="Door" parent="." instance=ExtResource("5_jwnet")]
 position = Vector2(154, 23)
 target_room_id = "room_01"
-
-[node name="SpawnPoint" parent="." instance=ExtResource("6_vdq8j")]
-position = Vector2(-152, 81)

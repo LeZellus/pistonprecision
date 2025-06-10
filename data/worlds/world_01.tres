@@ -10,9 +10,6 @@ scene_path = "res://scenes/worlds/world_01/room_01.tscn"
 connections = {
 "right": "room_02"
 }
-spawn_points = {
-"default": Vector2(0, 5)
-}
 
 [sub_resource type="Resource" id="Resource_ggvit"]
 script = ExtResource("1_7kiyk")
@@ -21,11 +18,9 @@ scene_path = "res://scenes/worlds/world_01/room_02.tscn"
 connections = {
 "left": "room_01"
 }
-spawn_points = {}
 
 [resource]
 script = ExtResource("2_dqpew")
 world_id = "world_01"
 world_name = "First World"
 rooms = Array[ExtResource("1_7kiyk")]([SubResource("Resource_oa8co"), SubResource("Resource_ggvit")])
-spawn_room_id = "room_01"

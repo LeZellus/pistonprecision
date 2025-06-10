@@ -4,7 +4,6 @@ extends Resource
 @export var world_id: String
 @export var world_name: String
 @export var rooms: Array[RoomData] = []
-@export var spawn_room_id: String
 
 func get_room(room_id: String) -> RoomData:
 	for room in rooms:

@@ -38,11 +38,17 @@ func load_world(world_resource: WorldData, start_room_id: String = ""):
 		return
 	
 	current_world = world_resource
-	var room_id = start_room_id if start_room_id != "" else world_resource.spawn_room_id
 	
+	# Déterminer la salle à charger
+	var room_id = start_room_id
 	if room_id == "":
-		push_error("SceneManager: Aucune salle de spawn définie!")
-		return
+		# Prendre la première salle disponible par défaut
+		if current_world.rooms.size() > 0:
+			room_id = current_world.rooms[0].room_id
+			print("SceneManager: Utilisation de la première salle disponible: ", room_id)
+		else:
+			push_error("SceneManager: Aucune salle disponible dans le monde!")
+			return
 	
 	await load_room(room_id)
 
@@ -77,31 +83,10 @@ func load_room(room_id: String, spawn_id: String = "default"):
 	if player and is_instance_valid(player):
 		world_container.move_child(player, -1)
 		player.velocity = Vector2.ZERO
-		_spawn_player_at_point(spawn_id)
-
-func _spawn_player_at_point(spawn_id: String):
-	"""Positionne le joueur au spawn point demandé"""
-	if not player or not current_room_node:
-		return
-	
-	# Rechercher le spawn point
-	var spawn_points = current_room_node.get_tree().get_nodes_in_group("spawn_points")
-	
-	for spawn_point in spawn_points:
-		if spawn_point.spawn_id == spawn_id or (spawn_id == "default" and spawn_point.is_default_spawn):
-			player.global_position = spawn_point.global_position
-			print("Joueur spawné à: ", spawn_point.global_position, " (spawn: ", spawn_id, ")")
-			return
-	
-	# Si aucun spawn trouvé, utiliser le premier disponible
-	if not spawn_points.is_empty():
-		player.global_position = spawn_points[0].global_position
-		print("Spawn par défaut utilisé: ", spawn_points[0].global_position)
-	else:
-		print("Aucun spawn point trouvé dans la salle!")
+		player.global_position = Vector2(10, 10)
 
 # === TRANSITIONS ===
-func transition_to_room(target_room_id: String, spawn_id: String = "default"):
+func transition_to_room(target_room_id: String):
 	"""Transition vers une autre salle avec spawn spécifique"""
 	if not current_world:
 		push_error("Aucun monde chargé")
@@ -117,10 +102,10 @@ func transition_to_room(target_room_id: String, spawn_id: String = "default"):
 		player.start_room_transition()
 	
 	# Charger la nouvelle salle
-	await load_room(target_room_id, spawn_id)
+	await load_room(target_room_id)
 	
 	# Restaurer la vélocité pour une transition fluide
-	if player and is_instance_valid(player) and spawn_id != "default":
+	if player and is_instance_valid(player):
 		player.velocity = preserved_velocity
 
 # === CLEANUP METHOD ===
