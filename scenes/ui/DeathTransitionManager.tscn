@@ -1,29 +1,45 @@
-[gd_scene load_steps=3 format=3 uid="uid://dh0kjdyx1rdxi"]
+[gd_scene load_steps=4 format=3 uid="uid://dh0kjdyx1rdxi"]
 
 [ext_resource type="Texture2D" uid="uid://dinlvrewn057d" path="res://assets/sprites/transition/rock.png" id="1_uy727"]
 [ext_resource type="Texture2D" uid="uid://3qi11v6ifgy0" path="res://assets/sprites/transition/piston.png" id="2_n6i46"]
+[ext_resource type="Texture2D" uid="uid://de7nlyb8ylcsg" path="res://assets/sprites/ui/Icon_Tileset_16x16.png" id="2_wjg0y"]
 
 [node name="CanvasLayer" type="CanvasLayer"]
 
 [node name="RockSprite" type="Sprite2D" parent="."]
-visible = false
 texture = ExtResource("1_uy727")
 
-[node name="DeathCountLabel" type="Label" parent="RockSprite"]
+[node name="HBoxContainer" type="HBoxContainer" parent="RockSprite"]
+z_index = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 766.5
-offset_top = 500.5
-offset_right = 1152.5
-offset_bottom = 578.5
+offset_left = -1018.0
+offset_top = -579.0
+offset_right = -518.0
+offset_bottom = -501.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 32
+
+[node name="TextureRect" type="TextureRect" parent="RockSprite/HBoxContainer"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 4
+texture = ExtResource("2_wjg0y")
+expand_mode = 1
+stretch_mode = 2
+
+[node name="DeathCountLabel" type="Label" parent="RockSprite/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
 theme_override_font_sizes/font_size = 64
 text = "DEATHS : 1876"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="PistonSprite" type="Sprite2D" parent="."]
-visible = false
 texture = ExtResource("2_n6i46")

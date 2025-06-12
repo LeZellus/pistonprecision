@@ -1,9 +1,10 @@
-extends CanvasLayer
+extends Node
 
 # === RÉFÉRENCES AUX SPRITES ===
-@onready var rock_sprite: Sprite2D = $RockSprite
-@onready var piston_sprite: Sprite2D = $PistonSprite
-@onready var death_count_label: Label = $RockSprite/DeathCountLabel
+var rock_sprite: Sprite2D
+var piston_sprite: Sprite2D  
+var death_count_label: Label
+var canvas_layer: CanvasLayer
 
 # === ANIMATION ===
 var tween: Tween
@@ -23,8 +24,19 @@ const PISTON_SIZE = Vector2(1080, 1080) # 270 * 4, 270 * 4
 
 func _ready():
 	name = "DeathTransitionManager"
-	layer = 100  # Au-dessus de tout
-	# Attendre que les @onready soient prêts
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	
+	# Charger et instancier la scène UI
+	var ui_scene = preload("res://scenes/ui/DeathTransitionManager.tscn")
+	canvas_layer = ui_scene.instantiate()
+	add_child(canvas_layer)
+	
+	# Récupérer les références après ajout
+	rock_sprite = canvas_layer.get_node("RockSprite")
+	piston_sprite = canvas_layer.get_node("PistonSprite") 
+	death_count_label = canvas_layer.get_node("RockSprite/HBoxContainer/DeathCountLabel")
+	
+	# Initialiser
 	call_deferred("_init_sprites")
 
 func _init_sprites():
@@ -116,6 +128,11 @@ func _phase_1_rock_falls_and_piston_arrives():
 	fall_tween.tween_property(rock_sprite, "position:y", final_y - 60, 0.15)\
 		.set_ease(Tween.EASE_OUT)\
 		.set_trans(Tween.TRANS_BOUNCE)
+		
+	fall_tween.tween_callback(func(): 
+		print("🎵 Son d'impact du rocher")
+		AudioManager.play_sfx("ui/transition/impact", 1.0)
+	)
 	
 	# Retombée
 	fall_tween.tween_property(rock_sprite, "position:y", final_y, 0.1)\
@@ -127,10 +144,7 @@ func _phase_1_rock_falls_and_piston_arrives():
 	fall_tween.tween_property(rock_sprite, "position:y", final_y, 0.05)
 	
 	# Son d'impact
-	fall_tween.tween_callback(func(): 
-		print("🎵 Son d'impact du rocher")
-		# AudioManager.play_sfx("objects/wall_impact", 0.8)
-	)
+	
 	
 	# === ANIMATION DU PISTON EN PARALLÈLE ===
 	# Démarrer le slide du piston après 0.3s de chute du rocher
@@ -171,11 +185,11 @@ func _phase_2_piston_strikes():
 	var strike_tween = create_tween()
 	
 	var head_start_x = piston_sprite.position.x
-	var recoil_distance = 80  # Distance de recul avant frappe
+	var recoil_distance = 100  # Distance de recul avant frappe
 	var strike_position = head_start_x - 40  # Position de frappe
 	
 	# ÉTAPE 1: Recul pour prendre de l'élan (0.2s)
-	strike_tween.tween_property(piston_sprite, "position:x", head_start_x + recoil_distance, 0.2)\
+	strike_tween.tween_property(piston_sprite, "position:x", head_start_x + recoil_distance, 0.1)\
 		.set_ease(Tween.EASE_OUT)\
 		.set_trans(Tween.TRANS_BACK)
 	
@@ -186,8 +200,7 @@ func _phase_2_piston_strikes():
 	
 	# Son de frappe + effets au moment de l'impact
 	strike_tween.tween_callback(func(): 
-		AudioManager.play_sfx("player/dash", 1.0)
-		_screen_shake()
+		AudioManager.play_sfx("ui/transition/impact", 1.0)
 		# Lancer l'animation du rocher après l'impact
 		_animate_rock_exit()
 	)
@@ -216,12 +229,6 @@ func _phase_3_cleanup():
 		transition_complete.emit()
 		print("✅ Transition créative terminée")
 	)
-
-func _screen_shake():
-	"""Effet de shake lors de l'impact"""
-	var camera = get_viewport().get_camera_2d()
-	if camera and camera.has_method("shake"):
-		camera.shake(12.0, 0.4)
 
 func _hide_all_sprites():
 	"""Cache tous les sprites"""
