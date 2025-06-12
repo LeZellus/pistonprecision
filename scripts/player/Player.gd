@@ -27,7 +27,7 @@ const WALL_JUMP_GRACE_TIME: float = 0.15
 
 # === DEATH SYSTEM SIMPLIFIÉ ===
 var respawn_immunity_timer: float = 0.0
-const RESPAWN_IMMUNITY_TIME: float = 1.0
+const RESPAWN_IMMUNITY_TIME: float = 0.0
 
 func _process(delta: float):
 	# Seulement le timer d'immunité après respawn

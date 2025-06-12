@@ -11,6 +11,12 @@ const JUMP_VELOCITY = -415.0
 const JUMP_CUT_MULTIPLIER = 0.1
 const MAX_FALL_SPEED = 410.0
 
+# HORIZONTAL CONTROL
+const AIR_SPEED_MULTIPLIER = 1.4      # Vitesse max en l'air (140% de la vitesse sol)
+const AIR_ACCELERATION = 3500.0       # Accélération rapide en l'air
+const AIR_FRICTION = 800.0            # Friction réduite pour garder l'élan
+const AIR_DIRECTION_CHANGE_BOOST = 1.2 # Boost pour changer de direction rapidement
+
 # === PHYSICS ===
 const GRAVITY_MULTIPLIER = 2.5
 

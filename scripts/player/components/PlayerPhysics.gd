@@ -34,3 +34,26 @@ func apply_wall_slide(_delta: float):
 	if player.velocity.y > 0:
 		player.velocity.y *= PlayerConstants.WALL_SLIDE_MULTIPLIER
 		player.velocity.y = min(player.velocity.y, PlayerConstants.MAX_FALL_SPEED * PlayerConstants.WALL_SLIDE_MAX_SPEED_MULTIPLIER)
+		
+func apply_precise_air_movement(delta: float):
+	# Contrôle aérien fluide et réactif
+	var input_dir = InputManager.get_movement()
+	
+	if input_dir != 0:
+		# Vitesse cible plus élevée en l'air
+		var target_speed = input_dir * PlayerConstants.SPEED * PlayerConstants.AIR_SPEED_MULTIPLIER
+		
+		# Détection du changement de direction
+		var is_changing_direction = (sign(input_dir) != sign(player.velocity.x)) and abs(player.velocity.x) > 10.0
+		
+		# Accélération adaptative
+		var acceleration = PlayerConstants.AIR_ACCELERATION * delta
+		if is_changing_direction:
+			# Boost pour changer de direction rapidement (crucial pour éviter les piques)
+			acceleration *= PlayerConstants.AIR_DIRECTION_CHANGE_BOOST
+		
+		player.velocity.x = move_toward(player.velocity.x, target_speed, acceleration)
+	else:
+		# Friction très réduite quand pas d'input (conserve l'élan)
+		var friction = PlayerConstants.AIR_FRICTION * delta
+		player.velocity.x = move_toward(player.velocity.x, 0, friction)
