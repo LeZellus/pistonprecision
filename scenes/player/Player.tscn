@@ -24,7 +24,7 @@ shape = SubResource("RectangleShape2D_iwv1m")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = ExtResource("2_kqkg1")
-animation = &"Death"
+animation = &"Run"
 
 [node name="StateMachine" type="Node" parent="."]
 script = ExtResource("3_jbs4w")

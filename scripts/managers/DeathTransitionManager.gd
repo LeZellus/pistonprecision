@@ -60,7 +60,7 @@ func _init_sprites():
 	piston_sprite.position = Vector2(SCREEN_WIDTH + PISTON_TOTAL_WIDTH, SCREEN_HEIGHT / 2)
 	piston_sprite.visible = false
 	
-	# Initialiser le label si il existe
+	# Initialiser le label si il existe (sans toucher au layout)
 	if death_count_label:
 		death_count_label.visible = false
 		print("✅ DeathCountLabel trouvé et initialisé")
@@ -89,17 +89,17 @@ func start_death_transition(duration: float = 3.0, _delay_before_fade: float = 0
 	_phase_3_cleanup()
 
 func _update_death_count():
-	"""Met à jour l'affichage du compteur de morts"""
+	"""Met à jour SEULEMENT le texte du compteur de morts"""
 	if not death_count_label:
 		print("⚠️ DeathCountLabel non trouvé!")
 		return
 	
 	var game_manager = get_node_or_null("/root/GameManager")
 	if game_manager and "death_count" in game_manager:
-		death_count_label.text = str(game_manager.death_count)
+		death_count_label.text = "DEATHS : " + str(game_manager.death_count)
 		print("💀 Compteur mis à jour: ", game_manager.death_count)
 	else:
-		death_count_label.text = "42"  # Placeholder
+		death_count_label.text = "DEATHS : 42"  # Placeholder
 		print("💀 Placeholder utilisé: 42")
 
 func _phase_1_rock_falls_and_piston_arrives():
@@ -111,7 +111,7 @@ func _phase_1_rock_falls_and_piston_arrives():
 	rock_sprite.position.x = ROCK_SIZE.x / 2  # Centré horizontalement
 	rock_sprite.position.y = -ROCK_SIZE.y / 2  # Hors écran en haut
 	
-	# === AFFICHAGE DU COMPTEUR (suit automatiquement le rocher) ===
+	# === AFFICHAGE DU COMPTEUR (la scène gère le positionnement) ===
 	if death_count_label:
 		death_count_label.visible = true
 	
@@ -132,6 +132,8 @@ func _phase_1_rock_falls_and_piston_arrives():
 	fall_tween.tween_callback(func(): 
 		print("🎵 Son d'impact du rocher")
 		AudioManager.play_sfx("ui/transition/impact", 1.0)
+		# Particules GPU au bas de l'écran SEULEMENT à l'impact rocher
+		_create_ground_particles()
 	)
 	
 	# Retombée
@@ -142,9 +144,6 @@ func _phase_1_rock_falls_and_piston_arrives():
 	# Petit rebond final
 	fall_tween.tween_property(rock_sprite, "position:y", final_y - 15, 0.05)
 	fall_tween.tween_property(rock_sprite, "position:y", final_y, 0.05)
-	
-	# Son d'impact
-	
 	
 	# === ANIMATION DU PISTON EN PARALLÈLE ===
 	# Démarrer le slide du piston après 0.3s de chute du rocher
@@ -201,6 +200,7 @@ func _phase_2_piston_strikes():
 	# Son de frappe + effets au moment de l'impact
 	strike_tween.tween_callback(func(): 
 		AudioManager.play_sfx("ui/transition/impact", 1.0)
+		# PLUS de particules pour l'impact piston
 		# Lancer l'animation du rocher après l'impact
 		_animate_rock_exit()
 	)
@@ -257,3 +257,72 @@ func slow_death_transition():
 func start_death_transition_immediate():
 	"""Version sans délai (ancien comportement)"""
 	start_death_transition(3.0, 0.0)
+
+# === SYSTÈME DE PARTICULES GPU ===
+const SMOKE_PARTICLE_SCENE = preload("res://scenes/effects/particles/RockMenuParticle.tscn")
+
+func _create_ground_particles(explosive: bool = false):
+	"""Crée vos particules GPU au bas de l'écran UNIQUEMENT pour l'impact rocher"""
+	var particle_count = 5  # Seulement impact rocher
+	
+	# Position fixe au bas de l'écran, centrée sur la largeur du piston
+	var base_position = Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 20)  # Tout en bas
+	
+	print("🎆 Création de ", particle_count, " particules GPU à la position : ", base_position)
+	
+	for i in range(particle_count):
+		var particle_instance = SMOKE_PARTICLE_SCENE.instantiate()
+		
+		# Répartir uniformément sur la largeur du piston
+		var spread_ratio = float(i) / float(particle_count - 1)
+		var offset_x = (spread_ratio - 0.5) * PISTON_SIZE.x
+		particle_instance.position = base_position + Vector2(offset_x, 0)
+		
+		# Z-index élevé
+		particle_instance.z_index = 1000
+		
+		print("🎆 Particule ", i, " créée à la position : ", particle_instance.position)
+		
+		# Ajouter à la scène
+		canvas_layer.add_child(particle_instance)
+		
+		# Votre nœud racine EST le GPUParticles2D
+		if particle_instance is GPUParticles2D:
+			var gpu_particles = particle_instance as GPUParticles2D
+			print("✅ GPUParticles2D racine trouvé, démarrage...")
+			
+			# FORCER One Shot par code (même si coché dans l'éditeur)
+			gpu_particles.emitting = false
+			gpu_particles.one_shot = true
+			gpu_particles.amount = 50
+			gpu_particles.lifetime = 2.0
+			
+			# Méthode alternative pour forcer One Shot
+			await get_tree().process_frame
+			gpu_particles.emitting = true
+			
+			print("🎆 Émission One Shot démarrée pour particule ", i)
+		else:
+			print("❌ Le nœud racine n'est pas un GPUParticles2D")
+		
+		# Auto-destruction après la durée de vie des particules
+		var cleanup_timer = get_tree().create_timer(3.0)
+		cleanup_timer.timeout.connect(particle_instance.queue_free)
+
+func _start_particle(gpu_particles: GPUParticles2D):
+	"""Démarre une particule One Shot après la création"""
+	gpu_particles.emitting = false
+	gpu_particles.restart()
+	gpu_particles.emitting = true
+
+func _find_gpu_particles_recursive(node: Node) -> GPUParticles2D:
+	"""Recherche récursive d'un GPUParticles2D dans toute la hiérarchie"""
+	if node is GPUParticles2D:
+		return node as GPUParticles2D
+	
+	for child in node.get_children():
+		var result = _find_gpu_particles_recursive(child)
+		if result:
+			return result
+	
+	return null
