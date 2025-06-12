@@ -29,6 +29,9 @@ func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	load_game_data()
 	print("GameManager initialisé - État: ", GameState.keys()[current_state])
+	
+	var transition_manager = preload("res://scenes/ui/DeathTransitionManager.tscn").instantiate()
+	add_child(transition_manager)
 
 func _process(delta):
 	if current_state == GameState.PLAYING:
