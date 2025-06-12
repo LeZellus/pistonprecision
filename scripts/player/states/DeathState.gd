@@ -3,6 +3,7 @@ extends State
 
 var death_transition_manager: DeathTransitionManager
 var has_respawned: bool = false
+var transition_complete: bool = false  # NOUVEAU FLAG
 
 func _ready():
 	animation_name = "Death"
@@ -10,6 +11,7 @@ func _ready():
 func enter() -> void:
 	super.enter()
 	has_respawned = false
+	transition_complete = false  # Reset du flag
 	
 	print("DeathState: Entrée dans l'état de mort")
 	
@@ -32,6 +34,7 @@ func enter() -> void:
 		# Fallback sans transition
 		await get_tree().create_timer(1.0).timeout
 		_perform_respawn()
+		transition_complete = true  # Marquer comme terminé
 	
 	# Effets visuels/audio
 	_play_death_effects()
@@ -75,21 +78,21 @@ func _trigger_early_respawn():
 
 func _on_transition_middle():
 	"""Appelé au milieu de la transition (écran noir)"""
-	print("DeathState: Milieu de transition - Respawn du joueur")
+	print("DeathState: Milieu de transition - Preparation du respawn")
 	_perform_respawn()
 
 func _on_transition_complete():
 	"""Appelé à la fin de la transition (fade in terminé)"""
-	print("DeathState: Transition terminée")
-	# La transition vers IdleState se fait déjà dans _perform_respawn()
+	print("DeathState: Transition terminée - Joueur peut maintenant être actif")
+	transition_complete = true  # NOUVEAU : Marquer la transition comme terminée
 
 func _perform_respawn():
-	"""Effectue le respawn du joueur"""
+	"""Effectue le respawn du joueur (sans le rendre actif)"""
 	if has_respawned:
 		return
 	
 	has_respawned = true
-	print("DeathState: Début du respawn...")
+	print("DeathState: Préparation du respawn...")
 	
 	# Reset position - position sécurisée
 	parent.global_position = Vector2(-185, 30)
@@ -101,10 +104,14 @@ func _perform_respawn():
 	
 	# Activer l'immunité réduite
 	parent.start_respawn_immunity()
+	
+	# TODO: Ici vous pourrez ajouter votre animation de respawn
+	# parent.sprite.play("Respawn")
 
 func process_frame(_delta: float) -> State:
-	# Transition vers IdleState seulement après respawn
-	if has_respawned:
+	# MODIFIÉ : Transition vers IdleState seulement après la fin complète de la transition
+	if has_respawned and transition_complete:
+		print("DeathState: Transition vers IdleState")
 		return StateTransitions._get_state("IdleState")
 	
 	return null
