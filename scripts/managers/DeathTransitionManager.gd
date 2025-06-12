@@ -1,9 +1,9 @@
 extends CanvasLayer
-class_name DeathTransitionManager
 
-# === SPRITES ===
-var rock_sprite: Sprite2D
-var piston_head_sprite: Sprite2D
+# === RÉFÉRENCES AUX SPRITES ===
+@onready var rock_sprite: Sprite2D = $RockSprite
+@onready var piston_sprite: Sprite2D = $PistonSprite
+@onready var death_count_label: Label = $RockSprite/DeathCountLabel
 
 # === ANIMATION ===
 var tween: Tween
@@ -12,38 +12,48 @@ var tween: Tween
 signal transition_middle_reached
 signal transition_complete
 
-# === CONSTANTS ===
+# === CONSTANTS CALCULÉES ===
 const SCREEN_WIDTH = 1920
 const SCREEN_HEIGHT = 1080
-const PISTON_HEAD_WIDTH = 96 * 4      # 384px - largeur de la tête rouge
-const PISTON_TOTAL_WIDTH = 270 * 4    # 1080px - largeur totale du sprite
-const PISTON_HEAD_CENTER_OFFSET = 48 * 4  # 192px - distance du bord gauche au centre de la tête
-const ROCK_SIZE = Vector2(384 * 4, 270 * 4)  # Dimensions du rocher
-const PISTON_SIZE = Vector2(270 * 4, 270 * 4)  # Dimensions du piston
+const PISTON_HEAD_WIDTH = 384        # 96 * 4
+const PISTON_TOTAL_WIDTH = 1080      # 270 * 4  
+const PISTON_HEAD_CENTER_OFFSET = 192 # 48 * 4
+const ROCK_SIZE = Vector2(1536, 1080) # 384 * 4, 270 * 4
+const PISTON_SIZE = Vector2(1080, 1080) # 270 * 4, 270 * 4
 
 func _ready():
 	name = "DeathTransitionManager"
 	layer = 100  # Au-dessus de tout
-	_create_sprites()
+	# Attendre que les @onready soient prêts
+	call_deferred("_init_sprites")
 
-func _create_sprites():
-	"""Crée les sprites du rocher et du piston"""
+func _init_sprites():
+	"""Initialise les sprites (vérifications et positions initiales)"""
+	# Vérifications de sécurité
+	if not rock_sprite:
+		push_error("RockSprite non trouvé!")
+		return
+	if not piston_sprite:
+		push_error("PistonSprite non trouvé!")
+		return
+	if not death_count_label:
+		push_error("DeathCountLabel non trouvé dans RockSprite!")
+		# Continue même sans le label
 	
-	# === ROCHER ===
-	rock_sprite = Sprite2D.new()
-	rock_sprite.name = "RockSprite"
-	rock_sprite.texture = load("res://assets/sprites/transition/rock.png")
+	# Position initiale du rocher (hors écran en haut)
 	rock_sprite.position = Vector2(ROCK_SIZE.x / 2, -ROCK_SIZE.y / 2)
 	rock_sprite.visible = false
-	add_child(rock_sprite)
 	
-	# === TÊTE DU PISTON ===
-	piston_head_sprite = Sprite2D.new()
-	piston_head_sprite.name = "PistonHeadSprite"
-	piston_head_sprite.texture = load("res://assets/sprites/transition/piston.png")
-	piston_head_sprite.position = Vector2(SCREEN_WIDTH + PISTON_SIZE.x / 2, SCREEN_HEIGHT / 2)
-	piston_head_sprite.visible = false
-	add_child(piston_head_sprite)
+	# Position initiale du piston (hors écran à droite)
+	piston_sprite.position = Vector2(SCREEN_WIDTH + PISTON_TOTAL_WIDTH, SCREEN_HEIGHT / 2)
+	piston_sprite.visible = false
+	
+	# Initialiser le label si il existe
+	if death_count_label:
+		death_count_label.visible = false
+		print("✅ DeathCountLabel trouvé et initialisé")
+	
+	print("✅ Sprites initialisés avec succès")
 
 func start_death_transition(duration: float = 3.0, _delay_before_fade: float = 0.0):
 	"""Lance la transition créative avec piston"""
@@ -51,6 +61,9 @@ func start_death_transition(duration: float = 3.0, _delay_before_fade: float = 0
 		tween.kill()
 	
 	print("🎬 Début de la transition créative")
+	
+	# Mettre à jour le compteur AVANT de commencer l'animation
+	_update_death_count()
 	
 	# Phase 1: Chute du rocher ET arrivée du piston
 	_phase_1_rock_falls_and_piston_arrives()
@@ -63,6 +76,20 @@ func start_death_transition(duration: float = 3.0, _delay_before_fade: float = 0
 	await get_tree().create_timer(0.8).timeout
 	_phase_3_cleanup()
 
+func _update_death_count():
+	"""Met à jour l'affichage du compteur de morts"""
+	if not death_count_label:
+		print("⚠️ DeathCountLabel non trouvé!")
+		return
+	
+	var game_manager = get_node_or_null("/root/GameManager")
+	if game_manager and "death_count" in game_manager:
+		death_count_label.text = str(game_manager.death_count)
+		print("💀 Compteur mis à jour: ", game_manager.death_count)
+	else:
+		death_count_label.text = "42"  # Placeholder
+		print("💀 Placeholder utilisé: 42")
+
 func _phase_1_rock_falls_and_piston_arrives():
 	"""Phase 1: Le rocher tombe ET le piston arrive en slide"""
 	print("📉 Phase 1: Chute du rocher + slide du piston")
@@ -71,6 +98,10 @@ func _phase_1_rock_falls_and_piston_arrives():
 	rock_sprite.visible = true
 	rock_sprite.position.x = ROCK_SIZE.x / 2  # Centré horizontalement
 	rock_sprite.position.y = -ROCK_SIZE.y / 2  # Hors écran en haut
+	
+	# === AFFICHAGE DU COMPTEUR (suit automatiquement le rocher) ===
+	if death_count_label:
+		death_count_label.visible = true
 	
 	# Animation de chute avec rebond
 	var fall_tween = create_tween()
@@ -111,24 +142,18 @@ func _start_piston_slide():
 	print("🎬 Début du slide du piston")
 	
 	# === CALCUL DE LA POSITION FINALE ===
-	var rock_right_edge = (ROCK_SIZE.x / 2) + (ROCK_SIZE.x / 2)  # = 1536px
+	var rock_right_edge = ROCK_SIZE.x  # 1536px
 	var head_center_x = rock_right_edge + (PISTON_HEAD_WIDTH / 2)  # 1536 + 192 = 1728px
 	var sprite_center_offset = (PISTON_TOTAL_WIDTH / 2) - PISTON_HEAD_CENTER_OFFSET  # 540 - 192 = 348px
 	var final_piston_x = head_center_x + sprite_center_offset  # 1728 + 348 = 2076px
 	
-	# === POSITION DE DÉPART (HORS ÉCRAN À DROITE) ===
-	piston_head_sprite.visible = true
-	piston_head_sprite.position.x = SCREEN_WIDTH + PISTON_TOTAL_WIDTH  # Complètement hors écran
-	piston_head_sprite.position.y = SCREEN_HEIGHT / 2
+	# === ANIMATION DE SLIDE ===
+	piston_sprite.visible = true
 	
-	print("Position départ piston: ", piston_head_sprite.position.x)
-	print("Position finale piston: ", final_piston_x)
-	
-	# === ANIMATION DE SLIDE SIMPLE ===
 	var slide_tween = create_tween()
-	slide_tween.tween_property(piston_head_sprite, "position:x", final_piston_x, 0.8)\
+	slide_tween.tween_property(piston_sprite, "position:x", final_piston_x, 0.8)\
 		.set_ease(Tween.EASE_OUT)\
-		.set_trans(Tween.TRANS_QUART)  # Slide simple et propre
+		.set_trans(Tween.TRANS_QUART)
 	
 	# Son de glissement
 	slide_tween.tween_callback(func(): 
@@ -145,17 +170,17 @@ func _phase_2_piston_strikes():
 	
 	var strike_tween = create_tween()
 	
-	var head_start_x = piston_head_sprite.position.x
+	var head_start_x = piston_sprite.position.x
 	var recoil_distance = 80  # Distance de recul avant frappe
 	var strike_position = head_start_x - 40  # Position de frappe
 	
 	# ÉTAPE 1: Recul pour prendre de l'élan (0.2s)
-	strike_tween.tween_property(piston_head_sprite, "position:x", head_start_x + recoil_distance, 0.2)\
+	strike_tween.tween_property(piston_sprite, "position:x", head_start_x + recoil_distance, 0.2)\
 		.set_ease(Tween.EASE_OUT)\
 		.set_trans(Tween.TRANS_BACK)
 	
 	# ÉTAPE 2: Frappe rapide et puissante (0.08s)
-	strike_tween.tween_property(piston_head_sprite, "position:x", strike_position, 0.08)\
+	strike_tween.tween_property(piston_sprite, "position:x", strike_position, 0.08)\
 		.set_ease(Tween.EASE_IN)\
 		.set_trans(Tween.TRANS_QUART)
 	
@@ -168,12 +193,12 @@ func _phase_2_piston_strikes():
 	)
 	
 	# ÉTAPE 3: Rétraction rapide du piston (0.4s)
-	strike_tween.tween_property(piston_head_sprite, "position:x", SCREEN_WIDTH + PISTON_SIZE.x, 0.4)\
+	strike_tween.tween_property(piston_sprite, "position:x", SCREEN_WIDTH + PISTON_SIZE.x, 0.4)\
 		.set_ease(Tween.EASE_IN)\
 		.set_trans(Tween.TRANS_QUART)
 
 func _animate_rock_exit():
-	"""Animation séparée pour la sortie du rocher"""
+	"""Animation séparée pour la sortie du rocher (le label suit automatiquement)"""
 	var rock_tween = create_tween()
 	rock_tween.tween_property(rock_sprite, "position:x", -ROCK_SIZE.x, 0.5)\
 		.set_ease(Tween.EASE_IN)\
@@ -201,7 +226,9 @@ func _screen_shake():
 func _hide_all_sprites():
 	"""Cache tous les sprites"""
 	rock_sprite.visible = false
-	piston_head_sprite.visible = false
+	piston_sprite.visible = false
+	if death_count_label:
+		death_count_label.visible = false
 
 # === MÉTHODES DE COMPATIBILITY ===
 func instant_black():

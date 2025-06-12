@@ -40,22 +40,8 @@ func enter() -> void:
 	_play_death_effects()
 
 func _get_transition_manager() -> DeathTransitionManager:
-	"""Trouve ou crée le gestionnaire de transition"""
-	# Chercher dans les autoloads/singletons
-	var manager = get_node_or_null("/root/DeathTransitionManager")
-	if manager:
-		return manager
-	
-	# Chercher dans la scène actuelle
-	manager = get_tree().get_first_node_in_group("death_transition")
-	if manager:
-		return manager
-	
-	# Créer un manager temporaire si aucun n'existe
-	manager = preload("res://scripts/managers/DeathTransitionManager.gd").new()
-	get_tree().current_scene.add_child(manager)
-	manager.add_to_group("death_transition")
-	return manager
+	 # Retourne le DeathTransitionManager
+	return DeathTransitionManager
 
 func process_physics(_delta: float) -> State:
 	# Pas de mouvement pendant la mort
