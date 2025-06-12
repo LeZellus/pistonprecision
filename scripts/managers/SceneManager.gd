@@ -111,7 +111,7 @@ func _setup_player_in_room():
 	# S'assurer que le joueur est au-dessus de la salle
 	world_container.move_child(player, -1)
 	player.velocity = Vector2.ZERO
-	player.global_position = Vector2(10, 10)
+	player.global_position = Vector2(-185, 30)
 
 # === TRANSITIONS OPTIMISÉES ===
 func transition_to_room(target_room_id: String):

@@ -3,7 +3,7 @@ class_name DeathState
 extends State
 
 var death_timer: float = 0.0
-const DEATH_DURATION: float = 2.0
+const DEATH_DURATION: float = 0.5
 
 func _ready():
 	animation_name = "Death"
@@ -65,7 +65,7 @@ func _respawn() -> State:
 	print("DeathState: Début du respawn...")
 	
 	# Reset position - position sécurisée
-	parent.global_position = Vector2(0, -50)  # Un peu au-dessus pour éviter de re-trigger
+	parent.global_position = Vector2(-185, 30)  # Un peu au-dessus pour éviter de re-trigger
 	parent.velocity = Vector2.ZERO
 	
 	# Reset visuel

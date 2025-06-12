@@ -10,7 +10,7 @@ func enter() -> void:
 
 func process_physics(delta: float) -> State:
 	parent.physics_component.apply_gravity(delta)
-	parent.physics_component.apply_movement(delta, 0.8)  # 80% efficacité en l'air
+	parent.physics_component.apply_movement(delta, 1.0)  # 100% de contrôle en l'air
 	
 	if parent.velocity.y < 0 and InputManager.was_jump_released():
 		parent.velocity.y *= PlayerConstants.JUMP_CUT_MULTIPLIER
@@ -20,5 +20,8 @@ func process_physics(delta: float) -> State:
 
 func _perform_jump():
 	parent.velocity.y = PlayerConstants.JUMP_VELOCITY
-	AudioManager.play_sfx("player/jump", 1)
+	
+	# Son avec cooldown de 150ms pour éviter les doublons
+	AudioManager.play_sfx_with_cooldown("player/jump", 150, 1.0)
+	
 	ParticleManager.emit_jump(parent.global_position)
