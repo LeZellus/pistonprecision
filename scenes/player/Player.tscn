@@ -20,7 +20,9 @@ collision_mask = 6
 script = ExtResource("1_0orsa")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+z_index = 51
 shape = SubResource("RectangleShape2D_iwv1m")
+debug_color = Color(0.837746, 0.321109, 0.556698, 0.42)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = ExtResource("2_kqkg1")
