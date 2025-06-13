@@ -33,7 +33,7 @@ func process_physics(delta: float) -> State:
 	
 	return null
 
-func _perform_dash():
+func _perform_dash() -> void:
 	dash_direction = _get_dash_direction()
 	
 	if dash_direction == Vector2.ZERO:
@@ -103,7 +103,7 @@ func _create_dash_fade_effect():
 	fade_tween.tween_interval(PlayerConstants.DASH_DURATION - 0.1)
 	fade_tween.tween_property(parent.sprite, "modulate:a", 1.0, 0.05)
 
-func _create_afterimage():
+func _create_afterimage() -> void:
 	"""Afterimage optimisée"""
 	if not parent.sprite.sprite_frames:
 		return

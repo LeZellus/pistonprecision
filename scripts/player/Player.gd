@@ -43,7 +43,7 @@ func _ready():
 	state_machine.init(self)
 	add_to_group("player")
 
-func _physics_process(_delta: float):
+func _physics_process(_delta: float) -> void:
 	# IMPORTANT: Bloquer complètement la physique si mort
 	if is_player_dead():
 		return
@@ -64,7 +64,7 @@ func _setup_components():
 
 func _connect_signals():
 	"""Connexion des signaux simplifiée"""
-	var signals = [
+	var signals: Array[Variant] = [
 		[InputManager.rotate_left_requested, _on_rotate_left],
 		[InputManager.rotate_right_requested, _on_rotate_right],
 		[InputManager.push_requested, _on_push_requested]
@@ -74,7 +74,7 @@ func _connect_signals():
 		if not signal_data[0].is_connected(signal_data[1]):
 			signal_data[0].connect(signal_data[1])
 
-func _unhandled_input(event: InputEvent):
+func _unhandled_input(event: InputEvent) -> void:
 	# IMPORTANT: Bloquer les inputs si mort
 	if is_player_dead():
 		return
@@ -115,7 +115,7 @@ func trigger_death():
 	print("Player: Transition vers DeathState")
 	
 	# Simple transition vers l'état de mort
-	var death_state = state_machine.get_node_or_null("DeathState")
+	var death_state: Node = state_machine.get_node_or_null("DeathState")
 	if death_state:
 		state_machine.change_state(death_state)
 	else:
@@ -123,7 +123,7 @@ func trigger_death():
 
 func is_player_dead() -> bool:
 	"""Vérifie si le joueur est dans l'état de mort"""
-	var current_state = state_machine.current_state
+	var current_state: State = state_machine.current_state
 	return current_state != null and current_state.get_script().get_global_name() == "DeathState"
 
 func has_death_immunity() -> bool:
