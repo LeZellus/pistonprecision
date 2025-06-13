@@ -140,3 +140,16 @@ func start_room_transition():
 	"""Pour compatibilité avec le SceneManager"""
 	# Plus besoin d'immunité de transition spéciale
 	pass
+	
+# === COLLECTIBLES (nouveau) ===
+var collectibles_count: int = 0
+
+# Méthode à ajouter :
+func add_collectible():
+	"""Incrémente le compteur de collectibles"""
+	collectibles_count += 1
+	print("Collectibles: ", collectibles_count)
+
+func get_collectibles_count() -> int:
+	"""Retourne le nombre de collectibles"""
+	return collectibles_count

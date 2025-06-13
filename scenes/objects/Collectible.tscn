@@ -1,0 +1,84 @@
+[gd_scene load_steps=13 format=3 uid="uid://47cqcbhg1xqr"]
+
+[ext_resource type="Texture2D" uid="uid://ko6kxiilqmes" path="res://assets/sprites/objects/screw_16x16.png" id="1_1bt3i"]
+[ext_resource type="Script" path="res://scripts/objects/Collectible.gd" id="2_j2glr"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dota5"]
+atlas = ExtResource("1_1bt3i")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ydjsa"]
+atlas = ExtResource("1_1bt3i")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kvuuv"]
+atlas = ExtResource("1_1bt3i")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7kg3x"]
+atlas = ExtResource("1_1bt3i")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vufgh"]
+atlas = ExtResource("1_1bt3i")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bod65"]
+atlas = ExtResource("1_1bt3i")
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ubosb"]
+atlas = ExtResource("1_1bt3i")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qar4v"]
+atlas = ExtResource("1_1bt3i")
+region = Rect2(224, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_givh0"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dota5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ydjsa")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kvuuv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7kg3x")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vufgh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bod65")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ubosb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qar4v")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 10.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_u784j"]
+radius = 6.0
+
+[node name="Collectible" type="Area2D"]
+z_index = 51
+script = ExtResource("2_j2glr")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_givh0")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.211886
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_u784j")

@@ -1,7 +1,8 @@
-[gd_scene load_steps=13 format=4 uid="uid://ckw83swiwevhx"]
+[gd_scene load_steps=14 format=4 uid="uid://ckw83swiwevhx"]
 
 [ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableObject.tscn" id="1_ku13x"]
 [ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_r7ns6"]
+[ext_resource type="PackedScene" uid="uid://47cqcbhg1xqr" path="res://scenes/objects/Collectible.tscn" id="1_v0gvo"]
 [ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_7sxm0"]
 [ext_resource type="PackedScene" uid="uid://dqimbr7lydigd" path="res://scenes/objects/LayerWalls.tscn" id="3_jblby"]
 [ext_resource type="PackedScene" uid="uid://pu42l8l3bunb" path="res://scenes/objects/Door.tscn" id="6_eerqf"]
@@ -23,6 +24,9 @@ size = Vector2(4, 80)
 
 [node name="Room01" type="Node2D"]
 
+[node name="Collectible2" parent="." instance=ExtResource("1_v0gvo")]
+position = Vector2(-102, 49)
+
 [node name="DeathZones" type="Node" parent="."]
 
 [node name="DeathZone7" parent="DeathZones" instance=ExtResource("7_pnsws")]
@@ -32,7 +36,7 @@ position = Vector2(-159, -34)
 shape = SubResource("RectangleShape2D_keb82")
 
 [node name="DeathZone3" parent="DeathZones" instance=ExtResource("7_pnsws")]
-position = Vector2(-125, -24)
+position = Vector2(-126, -24)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DeathZones/DeathZone3"]
 shape = SubResource("RectangleShape2D_o6bm6")
