@@ -161,8 +161,7 @@ func _perform_respawn():
 	print("  ├─ Velocity après respawn: ", parent.velocity)
 	
 	parent.move_and_slide()
-	await get_tree().process_frame  # Attendre 1 frame pour mise à jour collision
-
+	await get_tree().process_frame
 	
 	# Reset visuel
 	parent.sprite.modulate.a = 1.0
@@ -192,12 +191,10 @@ func process_frame(_delta: float) -> State:
 		print("  │   └─ Immunité: ", parent.has_death_immunity() if parent else "NULL")
 		print("  └─ TRANSITION VERS IdleState")
 		
-		var fall_state = StateTransitions._get_state("FallState")
+		var fall_state = StateTransitions._get_state("IdleState")
 		if fall_state:
-			print("      ├─ IdleState trouvé: ", fall_state.name)
 			return fall_state
 		else:
-			print("      └─ ERREUR: IdleState non trouvé!")
 			return null
 	
 	return null
