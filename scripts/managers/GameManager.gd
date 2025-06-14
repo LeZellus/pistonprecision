@@ -34,6 +34,12 @@ func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	load_game_data()
 	print("GameManager: Chargé avec %d morts totales" % death_count)
+	
+func _input(event):
+	# Appuyer sur F12 pour simuler 3000 morts
+	if Input.is_key_pressed(KEY_F12):
+		death_count = 3000
+		print("Debug: Death count mis à 3000")
 
 func _process(delta):
 	if current_state == GameState.PLAYING:

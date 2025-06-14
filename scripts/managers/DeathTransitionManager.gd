@@ -82,18 +82,19 @@ func _update_death_count():
 	
 	if game_manager and "death_count" in game_manager:
 		var death_count = game_manager.death_count
-		var previous_count = max(0, death_count - 1)
 		
 		# Transformer le label en DeathCounterAnimation
 		death_count_label.set_script(preload("res://scripts/ui/DeathCounterAnimation.gd"))
 		death_count_label.visible = true
-		death_count_label.set_number_instantly(previous_count)
+		# ✅ CORRECTION : Toujours partir de 0
+		death_count_label.set_number_instantly(0)
 		
 		# Lancer l'animation après un délai
 		await get_tree().create_timer(0.8).timeout
-		death_count_label.animate_to_number(death_count, previous_count)
+		# ✅ CORRECTION : Partir de 0 vers le nombre final
+		death_count_label.animate_to_number(death_count, 0)
 	else:
-		death_count_label.text = "DEATHS : 42"
+		death_count_label.text = "PROBLEM"
 
 # === ANIMATIONS VISUELLES ===
 func _phase_1_rock_falls_and_piston_arrives():
