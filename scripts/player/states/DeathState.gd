@@ -1,10 +1,11 @@
-# scripts/player/states/DeathState.gd - Version nettoyée
+# scripts/player/states/DeathState.gd - Version avec compteur de morts
 class_name DeathState
 extends State
 
 var death_transition_manager: DeathTransitionManager
 var has_respawned: bool = false
 var transition_complete: bool = false
+var death_registered: bool = false  # ✅ NOUVEAU : éviter les doublons
 
 func _ready():
 	animation_name = "Death"
@@ -13,6 +14,10 @@ func enter() -> void:
 	super.enter()
 	has_respawned = false
 	transition_complete = false
+	death_registered = false
+	
+	# ✅ NOUVEAU : Enregistrer la mort une seule fois
+	_register_death()
 	
 	# Arrêter le mouvement
 	parent.velocity = Vector2.ZERO
@@ -38,6 +43,24 @@ func enter() -> void:
 	
 	_play_death_effects()
 
+func _register_death():
+	"""✅ NOUVEAU : Enregistre la mort dans le GameManager"""
+	if death_registered:
+		return
+	
+	death_registered = true
+	
+	# Utilise la même logique que ton DeathTransitionManager existant
+	var game_manager = get_tree().get_first_node_in_group("managers")
+	if not game_manager:
+		game_manager = get_node_or_null("/root/GameManager")
+	
+	if game_manager and game_manager.has_method("register_player_death"):
+		game_manager.register_player_death()
+		print("DeathState: Mort enregistrée - Total: %d" % game_manager.death_count)
+	else:
+		print("DeathState: GameManager non trouvé")
+
 func process_physics(_delta: float) -> State:
 	if parent:
 		parent.velocity = Vector2.ZERO
@@ -50,7 +73,7 @@ func process_input(event: InputEvent) -> State:
 
 func process_frame(_delta: float) -> State:
 	if has_respawned and transition_complete:
-		# ✅ Transition directe vers Idle après respawn
+		# Transition directe vers Fall après respawn
 		return StateTransitions.get_instance()._get_state("FallState")
 	return null
 

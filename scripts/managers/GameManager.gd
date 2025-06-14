@@ -1,4 +1,4 @@
-# scripts/managers/GameManager.gd - Version nettoyée
+# scripts/managers/GameManager.gd - Version avec système de mort
 extends Node
 
 # === GAME STATES ===
@@ -8,6 +8,7 @@ enum GameState { MENU, PLAYING, PAUSED, LEVEL_TRANSITION }
 signal state_changed(new_state: GameState)
 signal level_completed(level_name: String)
 signal checkpoint_reached(checkpoint_id: String)
+signal player_died(death_count: int)
 
 # === GAME DATA ===
 var current_state: GameState = GameState.MENU
@@ -15,6 +16,10 @@ var current_level: String = ""
 var current_checkpoint: String = ""
 var level_time: float = 0.0
 var total_time: float = 0.0
+
+# === DEATH SYSTEM ===
+var death_count: int = 0
+var session_deaths: int = 0  # Morts de la session actuelle
 
 # === LEVEL PROGRESSION ===
 var completed_levels: Array[String] = []
@@ -28,11 +33,37 @@ func _ready():
 	name = "GameManager"
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	load_game_data()
+	print("GameManager: Chargé avec %d morts totales" % death_count)
 
 func _process(delta):
 	if current_state == GameState.PLAYING:
 		level_time += delta
 		total_time += delta
+
+# === DEATH SYSTEM ===
+func register_player_death():
+	"""Appelé quand le joueur meurt"""
+	death_count += 1
+	session_deaths += 1
+	
+	print("GameManager: Mort #%d (session: %d)" % [death_count, session_deaths])
+	
+	# Émettre le signal
+	player_died.emit(death_count)
+	
+	# Sauvegarde automatique du compteur de morts
+	save_death_data()
+
+func save_death_data():
+	"""Sauvegarde rapide uniquement des données de mort"""
+	var save_data = _create_save_data()
+	
+	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(save_data))
+		file.close()
+	else:
+		push_error("Impossible de sauvegarder les morts: " + SAVE_FILE_PATH)
 
 # === STATE MANAGEMENT ===
 func change_state(new_state: GameState):
@@ -63,6 +94,7 @@ func start_level(level_name: String):
 	current_level = level_name
 	current_checkpoint = ""
 	level_time = 0.0
+	session_deaths = 0  # Reset des morts de session
 	change_state(GameState.PLAYING)
 
 func complete_level():
@@ -85,14 +117,18 @@ func set_checkpoint(checkpoint_id: String):
 	checkpoint_reached.emit(checkpoint_id)
 
 # === SAVE/LOAD ===
-func save_game_data():
-	var save_data = {
+func _create_save_data() -> Dictionary:
+	return {
+		"death_count": death_count,
 		"completed_levels": completed_levels,
 		"collectibles_found": collectibles_found,
 		"best_times": best_times,
 		"total_time": total_time,
 		"version": "1.0"
 	}
+
+func save_game_data():
+	var save_data = _create_save_data()
 	
 	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
 	if file:
@@ -104,6 +140,7 @@ func save_game_data():
 func load_game_data():
 	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
 	if not file:
+		print("GameManager: Aucune sauvegarde trouvée, utilisation des valeurs par défaut")
 		return
 	
 	var json_string = file.get_as_text()
@@ -117,10 +154,20 @@ func load_game_data():
 		return
 	
 	var save_data = json.data
-	completed_levels = save_data.get("completed_levels", [])
+	death_count = save_data.get("death_count", 0)
+	
+	# Conversion sécurisée pour les arrays typés
+	var loaded_levels = save_data.get("completed_levels", [])
+	completed_levels.clear()
+	for level in loaded_levels:
+		if level is String:
+			completed_levels.append(level)
+	
 	collectibles_found = save_data.get("collectibles_found", {})
 	best_times = save_data.get("best_times", {})
 	total_time = save_data.get("total_time", 0.0)
+	
+	print("GameManager: Sauvegarde chargée - %d morts totales" % death_count)
 
 # === UTILITIES ===
 func get_state_name() -> String:
@@ -131,3 +178,17 @@ func is_level_completed(level_name: String) -> bool:
 
 func get_best_time(level_name: String) -> float:
 	return best_times.get(level_name, -1.0)
+
+func get_total_deaths() -> int:
+	return death_count
+
+func get_session_deaths() -> int:
+	return session_deaths
+
+# === DEBUG ===
+func reset_death_count():
+	"""Pour les tests - remet le compteur à zéro"""
+	death_count = 0
+	session_deaths = 0
+	save_death_data()
+	print("GameManager: Compteur de morts remis à zéro")

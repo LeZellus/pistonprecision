@@ -1,4 +1,4 @@
-# scripts/managers/DeathTransitionManager.gd - Version nettoyée
+# scripts/managers/DeathTransitionManager.gd - Version avec affichage des morts
 extends Node
 
 # === RÉFÉRENCES AUX SPRITES ===
@@ -71,14 +71,23 @@ func start_death_transition(duration: float = 3.0, _delay_before_fade: float = 0
 	_phase_3_cleanup()
 
 func _update_death_count():
+	"""✅ NOUVEAU : Récupère le vrai compteur de morts du GameManager"""
 	if not death_count_label:
 		return
 	
-	var game_manager = get_node_or_null("/root/GameManager")
+	# Utilise la même méthode que ton code existant
+	var game_manager = get_tree().get_first_node_in_group("managers") 
+	if not game_manager:
+		game_manager = get_node_or_null("/root/GameManager")
+	
 	if game_manager and "death_count" in game_manager:
-		death_count_label.text = "DEATHS : " + str(game_manager.death_count)
+		var death_count = game_manager.death_count
+		death_count_label.text = "DEATHS : " + str(death_count)
+		print("DeathTransitionManager: Affichage de %d morts" % death_count)
 	else:
+		# Fallback - utilise l'ancienne logique que tu avais
 		death_count_label.text = "DEATHS : 42"
+		print("DeathTransitionManager: Utilisation fallback")
 
 func _phase_1_rock_falls_and_piston_arrives():
 	# Animation du rocher
