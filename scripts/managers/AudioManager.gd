@@ -1,4 +1,4 @@
-# Version simplifiée avec Time.get_ticks_msec()
+# scripts/managers/AudioManager.gd - Version nettoyée
 extends Node
 
 # === AUDIO PLAYERS POOL ===
@@ -15,60 +15,11 @@ var sfx_volume: float = 0.7
 var music_volume: float = 0.5
 var category_volumes: Dictionary = {}
 
-# === COOLDOWN SYSTEM SIMPLIFIÉ ===
-var sound_cooldowns: Dictionary = {}  # "category" -> timestamp en ms
-const DEFAULT_COOLDOWN_MS: int = 100  # 100ms par défaut
-
+# === COOLDOWN SYSTEM ===
+var sound_cooldowns: Dictionary = {}
+const DEFAULT_COOLDOWN_MS: int = 100
 const POOL_SIZE: int = 20
 
-func play_sfx(category: String, volume_override: float = -1.0, random_selection: bool = true, cooldown_ms: int = -1):
-	# Vérification du cooldown
-	if _is_on_cooldown(category, cooldown_ms):
-		return
-	
-	# Vérification rapide
-	if not audio_collections.has(category):
-		return
-	
-	var sounds = audio_collections[category]
-	if sounds.is_empty():
-		return
-	
-	var audio_player = _get_available_player()
-	
-	# Sélection de l'audio
-	audio_player.stream = sounds.pick_random() if random_selection and sounds.size() > 1 else sounds[0]
-	
-	# Volume final
-	var final_volume = (volume_override if volume_override >= 0 else sfx_volume * category_volumes.get(category, 1.0)) * master_volume
-	audio_player.volume_db = linear_to_db(final_volume)
-	
-	audio_player.play()
-	
-	# Enregistrer le cooldown
-	_set_cooldown(category)
-
-func _is_on_cooldown(category: String, custom_cooldown_ms: int) -> bool:
-	"""Vérifie si le son est en cooldown"""
-	if not sound_cooldowns.has(category):
-		return false
-	
-	var current_time = Time.get_ticks_msec()
-	var last_played = sound_cooldowns[category]
-	var cooldown_duration = custom_cooldown_ms if custom_cooldown_ms > 0 else DEFAULT_COOLDOWN_MS
-	
-	return (current_time - last_played) < cooldown_duration
-
-func _set_cooldown(category: String):
-	"""Enregistre le timestamp du son joué"""
-	sound_cooldowns[category] = Time.get_ticks_msec()
-
-# === MÉTHODE PRATIQUE POUR LES SONS CRITIQUES ===
-func play_sfx_with_cooldown(category: String, cooldown_ms: int, volume_override: float = -1.0):
-	"""Version explicite avec cooldown personnalisé"""
-	play_sfx(category, volume_override, true, cooldown_ms)
-
-# === RESTE DU CODE INCHANGÉ ===
 func _ready():
 	name = "AudioManager"
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -125,6 +76,37 @@ func _add_to_collection(category: String, file_path: String):
 	if stream:
 		audio_collections[category].append(stream)
 
+func play_sfx(category: String, volume_override: float = -1.0, random_selection: bool = true, cooldown_ms: int = -1):
+	if _is_on_cooldown(category, cooldown_ms):
+		return
+	
+	if not audio_collections.has(category) or audio_collections[category].is_empty():
+		return
+	
+	var audio_player = _get_available_player()
+	var sounds = audio_collections[category]
+	
+	audio_player.stream = sounds.pick_random() if random_selection and sounds.size() > 1 else sounds[0]
+	
+	var final_volume = (volume_override if volume_override >= 0 else sfx_volume * category_volumes.get(category, 1.0)) * master_volume
+	audio_player.volume_db = linear_to_db(final_volume)
+	
+	audio_player.play()
+	_set_cooldown(category)
+
+func _is_on_cooldown(category: String, custom_cooldown_ms: int) -> bool:
+	if not sound_cooldowns.has(category):
+		return false
+	
+	var current_time = Time.get_ticks_msec()
+	var last_played = sound_cooldowns[category]
+	var cooldown_duration = custom_cooldown_ms if custom_cooldown_ms > 0 else DEFAULT_COOLDOWN_MS
+	
+	return (current_time - last_played) < cooldown_duration
+
+func _set_cooldown(category: String):
+	sound_cooldowns[category] = Time.get_ticks_msec()
+
 func _get_available_player() -> AudioStreamPlayer:
 	var audio_player = sfx_players_pool[next_pool_index]
 	next_pool_index = (next_pool_index + 1) % POOL_SIZE
@@ -134,10 +116,8 @@ func _get_available_player() -> AudioStreamPlayer:
 	
 	return audio_player
 
-# === AUTRES MÉTHODES ===
-func play_multi_sfx(categories: Array[String], volume_override: float = -1.0):
-	for category in categories:
-		play_sfx(category, volume_override)
+func play_sfx_with_cooldown(category: String, cooldown_ms: int, volume_override: float = -1.0):
+	play_sfx(category, volume_override, true, cooldown_ms)
 
 func play_music(music_name: String):
 	var base_path = "res://audio/music/" + music_name
@@ -165,23 +145,7 @@ func set_music_volume(volume: float):
 func set_category_volume(category: String, volume: float):
 	category_volumes[category] = clamp(volume, 0.0, 1.0)
 
-func get_category_volume(category: String) -> float:
-	return category_volumes.get(category, 1.0)
-
 func stop_all_sfx():
 	for player in sfx_players_pool:
 		if player.playing:
 			player.stop()
-
-func get_pool_status() -> Dictionary:
-	var active_count = 0
-	for player in sfx_players_pool:
-		if player.playing:
-			active_count += 1
-	
-	return {
-		"total": POOL_SIZE,
-		"active": active_count,
-		"available": POOL_SIZE - active_count,
-		"next_index": next_pool_index
-	}

@@ -53,15 +53,9 @@ func _setup_components():
 		add_child(component)
 
 func _connect_signals():
-	var signals: Array[Variant] = [
-		[InputManager.rotate_left_requested, _on_rotate_left],
-		[InputManager.rotate_right_requested, _on_rotate_right],
-		[InputManager.push_requested, _on_push_requested]
-	]
-	
-	for signal_data in signals:
-		if not signal_data[0].is_connected(signal_data[1]):
-			signal_data[0].connect(signal_data[1])
+	InputManager.rotate_left_requested.connect(_on_rotate_left)
+	InputManager.rotate_right_requested.connect(_on_rotate_right)
+	InputManager.push_requested.connect(_on_push_requested)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if is_player_dead():

@@ -1,4 +1,4 @@
-# scripts/managers/GameManager.gd - Version optimisée
+# scripts/managers/GameManager.gd - Version nettoyée
 extends Node
 
 # === GAME STATES ===
@@ -28,53 +28,28 @@ func _ready():
 	name = "GameManager"
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	load_game_data()
-	print("GameManager initialisé - État: ", GameState.keys()[current_state])
 
 func _process(delta):
 	if current_state == GameState.PLAYING:
 		level_time += delta
 		total_time += delta
-		
-		# Debug info optimisé
-		_update_debug_info()
 
-func _update_debug_info():
-	"""Mise à jour des infos debug de façon optimisée"""
-	var debug_manager = get_node_or_null("/root/DebugManager")
-	if debug_manager and debug_manager.has_method("add_custom_info"):
-		debug_manager.add_custom_info("GAME", "Current Level", current_level)
-		debug_manager.add_custom_info("GAME", "Level Time", "%.1fs" % level_time)
-
-# === STATE MANAGEMENT OPTIMISÉ ===
+# === STATE MANAGEMENT ===
 func change_state(new_state: GameState):
 	if current_state == new_state:
 		return
 	
-	var old_state_name = GameState.keys()[current_state]
-	var new_state_name = GameState.keys()[new_state]
-	
-	print("GameManager: %s → %s" % [old_state_name, new_state_name])
-	
-	# Actions de sortie
 	_exit_state(current_state)
-	
-	# Changement d'état
 	current_state = new_state
 	state_changed.emit(new_state)
-	
-	# Actions d'entrée
 	_enter_state(new_state)
 
 func _exit_state(state: GameState):
-	"""Actions lors de la sortie d'un état"""
 	match state:
-		GameState.PLAYING:
-			pass  # Rien de spécial
 		GameState.PAUSED:
 			get_tree().paused = false
 
 func _enter_state(state: GameState):
-	"""Actions lors de l'entrée dans un état"""
 	match state:
 		GameState.PAUSED:
 			get_tree().paused = true
@@ -83,7 +58,7 @@ func _enter_state(state: GameState):
 		GameState.PLAYING:
 			get_tree().paused = false
 
-# === LEVEL MANAGEMENT OPTIMISÉ ===
+# === LEVEL MANAGEMENT ===
 func start_level(level_name: String):
 	current_level = level_name
 	current_checkpoint = ""
@@ -97,7 +72,6 @@ func complete_level():
 	# Mise à jour du meilleur temps
 	if not current_level in best_times or level_time < best_times[current_level]:
 		best_times[current_level] = level_time
-		print("Nouveau record pour %s: %.2fs" % [current_level, level_time])
 	
 	# Marquer comme complété
 	if not current_level in completed_levels:
@@ -109,30 +83,27 @@ func complete_level():
 func set_checkpoint(checkpoint_id: String):
 	current_checkpoint = checkpoint_id
 	checkpoint_reached.emit(checkpoint_id)
-	print("Checkpoint atteint: ", checkpoint_id)
 
-# === SAVE/LOAD OPTIMISÉ ===
+# === SAVE/LOAD ===
 func save_game_data():
 	var save_data = {
 		"completed_levels": completed_levels,
 		"collectibles_found": collectibles_found,
 		"best_times": best_times,
 		"total_time": total_time,
-		"version": "1.0"  # Pour la compatibilité future
+		"version": "1.0"
 	}
 	
 	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(save_data))
 		file.close()
-		print("Données sauvegardées (%d niveaux complétés)" % completed_levels.size())
 	else:
 		push_error("Impossible de sauvegarder: " + SAVE_FILE_PATH)
 
 func load_game_data():
 	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
 	if not file:
-		print("Nouvelle partie - aucune sauvegarde trouvée")
 		return
 	
 	var json_string = file.get_as_text()
@@ -142,7 +113,7 @@ func load_game_data():
 	var parse_result = json.parse(json_string)
 	
 	if parse_result != OK:
-		push_error("Sauvegarde corrompue - utilisation des valeurs par défaut")
+		push_error("Sauvegarde corrompue")
 		return
 	
 	var save_data = json.data
@@ -150,8 +121,6 @@ func load_game_data():
 	collectibles_found = save_data.get("collectibles_found", {})
 	best_times = save_data.get("best_times", {})
 	total_time = save_data.get("total_time", 0.0)
-	
-	print("Données chargées: %d niveaux, %.1fs de jeu total" % [completed_levels.size(), total_time])
 
 # === UTILITIES ===
 func get_state_name() -> String:

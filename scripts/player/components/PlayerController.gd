@@ -1,3 +1,4 @@
+# scripts/player/components/PlayerController.gd - Version nettoyée
 class_name PlayerController
 extends Node
 
@@ -7,13 +8,10 @@ func _init(player_ref: CharacterBody2D):
 	player = player_ref
 
 func _process(delta: float):
-	# TOUJOURS traiter les frames pour permettre au DeathState de fonctionner
 	player.state_machine.process_frame(delta)
 
 func _physics_process(delta: float):
-	# Bloquer SEULEMENT la physique si mort, pas les transitions d'état
 	if player.is_player_dead():
-		# Le DeathState gère sa propre physique (ou absence de physique)
 		player.state_machine.process_physics(delta)
 		return
 		
