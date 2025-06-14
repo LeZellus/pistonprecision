@@ -50,9 +50,8 @@ func process_input(event: InputEvent) -> State:
 
 func process_frame(_delta: float) -> State:
 	if has_respawned and transition_complete:
-		# Solution la plus directe : récupérer l'état depuis la StateMachine
-		var state_machine = get_parent()
-		return state_machine.get_node("IdleState")
+		# ✅ Transition directe vers Idle après respawn
+		return StateTransitions.get_instance()._get_state("FallState")
 	return null
 
 func _trigger_early_respawn():

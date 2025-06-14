@@ -17,10 +17,7 @@ func process_physics(delta: float) -> State:
 	
 	parent.move_and_slide()
 	
-	# CORRECTION: Utiliser preload
-	var StateTransitionsClass = preload("res://scripts/player/states/StateTransitions.gd")
-	var state_transitions = StateTransitionsClass.new()
-	return state_transitions.get_next_state(self, parent, delta)
+	return StateTransitions.get_instance().get_next_state(self, parent, delta)
 
 func _perform_jump():
 	parent.velocity.y = PlayerConstants.JUMP_VELOCITY

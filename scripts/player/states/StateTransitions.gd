@@ -1,7 +1,12 @@
 class_name StateTransitions
 
-# Cache des références d'états pour éviter get_node() répétés
+static var _instance: StateTransitions
 var _state_cache: Dictionary = {}
+
+static func get_instance() -> StateTransitions:
+	if not _instance:
+		_instance = StateTransitions.new()
+	return _instance
 
 func get_next_state(current_state: State, player: Player, delta: float) -> State:
 	# Cache des états au premier appel
