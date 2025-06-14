@@ -1,3 +1,4 @@
+# scripts/objects/PushableObject.gd - Version nettoyée
 class_name PushableObject
 extends CharacterBody2D
 
@@ -10,8 +11,7 @@ extends CharacterBody2D
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var push_velocity: Vector2 = Vector2.ZERO
 
-# === WALL COLLISION DETECTION ===
-var previous_position: Vector2
+# === WALL COLLISION ===
 var wall_impact_threshold: float = 50.0
 var has_impacted: bool = false
 
@@ -28,11 +28,8 @@ func _ready():
 	set_collision_mask_value(2, true)
 	set_collision_mask_value(3, true)
 	
-	previous_position = global_position
-	
 func _physics_process(delta):
 	var old_push_velocity = push_velocity.x
-	previous_position = global_position
 	
 	# Appliquer la gravité
 	if not is_on_floor():
@@ -46,18 +43,17 @@ func _physics_process(delta):
 	move_and_slide()
 	var stopped_by_collision = was_moving and abs(velocity.x) < 10.0 and is_on_wall()
 	
-	# Détecter l'impact immédiat après move_and_slide()
+	# Détecter l'impact
 	if not has_impacted and stopped_by_collision:
 		_trigger_wall_impact_shake(abs(old_push_velocity))
 		push_velocity.x = 0
 		has_impacted = true
-		print("COLLISION BRUTALE détectée! Vitesse avant:", abs(old_push_velocity))
 	
-	# Appliquer la friction seulement si pas d'impact
+	# Appliquer la friction si pas d'impact
 	if not stopped_by_collision:
 		push_velocity.x = move_toward(push_velocity.x, 0, friction * delta)
 	
-	# Reset du flag quand l'objet s'arrête complètement
+	# Reset du flag quand l'objet s'arrête
 	if abs(push_velocity.x) < 10.0:
 		has_impacted = false
 
@@ -65,9 +61,9 @@ func _trigger_wall_impact_shake(impact_velocity: float):
 	var shake_intensity = clamp(impact_velocity * 0.01, 2.0, 5.0)
 	var shake_duration = 0.5
 	
-	# Son d'impact basé sur la vélocité
+	# Son d'impact
 	var impact_volume = clamp(impact_velocity * 0.002, 0.1, 0.3)
-	AudioManager.play_sfx("objects/wall_impact", 1)
+	AudioManager.play_sfx("objects/wall_impact", impact_volume)
 	
 	var camera = get_viewport().get_camera_2d()
 	if camera and camera.has_method("shake"):
@@ -82,9 +78,7 @@ func push(direction: Vector2, force: float) -> bool:
 	
 	# Vérifier si l'objet n'est pas déjà bloqué
 	if abs(push_velocity.x) > wall_impact_threshold * 0.1:
-		print("Objet déjà en mouvement")
 		return false
 	
 	push_velocity = direction * force
-	print("Push réussi! Vitesse appliquée: ", push_velocity)
 	return true

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://47cqcbhg1xqr"]
+[gd_scene load_steps=15 format=3 uid="uid://47cqcbhg1xqr"]
 
 [ext_resource type="Texture2D" uid="uid://ko6kxiilqmes" path="res://assets/sprites/objects/screw_16x16.png" id="1_1bt3i"]
 [ext_resource type="Script" path="res://scripts/objects/Collectible.gd" id="2_j2glr"]
@@ -67,6 +67,16 @@ animations = [{
 "speed": 10.0
 }]
 
+[sub_resource type="Gradient" id="Gradient_0cwm2"]
+offsets = PackedFloat32Array(0, 0.689119)
+colors = PackedColorArray(0.45098, 0.745098, 0.827451, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_yr8x3"]
+gradient = SubResource("Gradient_0cwm2")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.820513, 0.166667)
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_u784j"]
 radius = 6.0
 
@@ -79,6 +89,9 @@ sprite_frames = SubResource("SpriteFrames_givh0")
 animation = &"idle"
 autoplay = "idle"
 frame_progress = 0.211886
+
+[node name="PointLight2D" type="PointLight2D" parent="AnimatedSprite2D"]
+texture = SubResource("GradientTexture2D_yr8x3")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_u784j")

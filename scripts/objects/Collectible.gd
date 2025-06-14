@@ -48,7 +48,7 @@ func _collect(player: Player):
 	
 	# Désactiver collision et effets
 	collision.set_deferred("disabled", true)
-	AudioManager.play_sfx("collectibles/pickup", 0.8)
+	AudioManager.play_sfx("objects/collectibles/pickup", 0.8)
 	_play_collection_animation()
 	
 	# Notifier le joueur

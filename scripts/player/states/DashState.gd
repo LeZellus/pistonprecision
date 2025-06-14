@@ -1,12 +1,10 @@
-# scripts/player/states/DashState.gd - Version optimisée
+# scripts/player/states/DashState.gd - Version corrigée
 class_name DashState
 extends State
 
 var dash_direction: Vector2
 var dash_timer: float = 0.0
 var fade_tween: Tween
-
-# Cache pour éviter les calculs répétés
 var afterimage_counter: int = 0
 
 func enter() -> void:
@@ -45,11 +43,10 @@ func _perform_dash() -> void:
 	# Activer le cooldown
 	parent.actions_component.use_dash()
 	
-	# Effets en une fois
+	# Effets
 	_apply_dash_effects()
 
 func _get_dash_direction() -> Vector2:
-	# Table de lookup plus claire
 	match parent.piston_direction:
 		Player.PistonDirection.LEFT: return Vector2.RIGHT
 		Player.PistonDirection.RIGHT: return Vector2.LEFT  
@@ -58,12 +55,11 @@ func _get_dash_direction() -> Vector2:
 		_: return Vector2.ZERO
 
 func _should_end_dash() -> bool:
-	"""Conditions d'arrêt du dash"""
 	return (parent.is_on_wall() or 
 			(dash_direction.y > 0 and parent.is_on_floor()))
 
 func _get_end_dash_state() -> State:
-	"""Détermine l'état suivant après le dash"""
+	"""Détermine l'état suivant après le dash - VERSION CORRIGÉE"""
 	# Restaurer vélocité appropriée
 	if dash_direction.y > 0:  # Dash vers le bas
 		parent.velocity.y = PlayerConstants.DASH_SPEED * 0.3
@@ -72,14 +68,17 @@ func _get_end_dash_state() -> State:
 		parent.velocity.x = dash_direction.x * PlayerConstants.DASH_SPEED * 0.2
 		parent.velocity.y = 0
 	
-	# Transition logique
+	# Transition logique - UTILISE LA NOUVELLE API
+	var state_machine = get_parent()
 	if parent.is_on_floor():
-		return StateTransitions._get_state("RunState") if InputManager.get_movement() != 0 else StateTransitions._get_state("IdleState")
+		if InputManager.get_movement() != 0:
+			return state_machine.get_node("RunState")
+		else:
+			return state_machine.get_node("IdleState")
 	else:
-		return StateTransitions._get_state("FallState")
+		return state_machine.get_node("FallState")
 
 func _apply_dash_effects():
-	"""Applique tous les effets du dash"""
 	# Audio
 	AudioManager.play_sfx("player/dash", 0.2)
 	
@@ -91,10 +90,8 @@ func _apply_dash_effects():
 	_create_dash_fade_effect()
 
 func _create_dash_fade_effect():
-	"""Effet de disparition optimisé"""
 	_create_afterimage()
 	
-	# Cleanup du tween précédent
 	if fade_tween and fade_tween.is_valid():
 		fade_tween.kill()
 	
@@ -104,7 +101,6 @@ func _create_dash_fade_effect():
 	fade_tween.tween_property(parent.sprite, "modulate:a", 1.0, 0.05)
 
 func _create_afterimage() -> void:
-	"""Afterimage optimisée"""
 	if not parent.sprite.sprite_frames:
 		return
 	
@@ -114,10 +110,10 @@ func _create_afterimage() -> void:
 		parent.sprite.frame
 	)
 	
-	# Configuration en une fois (avec rotation conservée)
+	# Configuration
 	afterimage.global_position = parent.global_position
 	afterimage.flip_h = parent.sprite.flip_h
-	afterimage.rotation = parent.sprite.rotation  # 🔧 AJOUTÉ
+	afterimage.rotation = parent.sprite.rotation
 	afterimage.z_index = parent.z_index - 1
 	afterimage.modulate = Color(0.5, 0.7, 1.0, 0.6)
 	

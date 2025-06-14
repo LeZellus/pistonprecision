@@ -1,9 +1,5 @@
-# scripts/managers/InputManager.gd - Cache optimisé
+# scripts/managers/InputManager.gd - Version simplifiée
 extends Node
-
-# === INPUT CACHE OPTIMISÉ ===
-var _cache: Dictionary = {}
-var _last_frame: int = -1
 
 # === TIMERS ===
 var jump_buffer_timer: float = 0.0
@@ -21,14 +17,14 @@ func _ready():
 
 func _process(delta):
 	_update_timers(delta)
-	_read_action_inputs()  # Seulement les actions instantanées
+	_read_action_inputs()
 
 func _update_timers(delta):
 	jump_buffer_timer = maxf(0.0, jump_buffer_timer - delta)
 	coyote_timer = maxf(0.0, coyote_timer - delta)
 
 func _read_action_inputs():
-	"""Actions qui ne nécessitent pas de cache"""
+	"""Actions instantanées"""
 	if Input.is_action_just_pressed("rotate_left"):
 		rotate_left_requested.emit()
 	if Input.is_action_just_pressed("rotate_right"):
@@ -37,27 +33,14 @@ func _read_action_inputs():
 		push_requested.emit()
 	if Input.is_action_just_pressed("dash"):
 		dash_requested.emit()
-
-func _ensure_cache_fresh():
-	"""Met à jour le cache seulement si nécessaire"""
-	var current_frame = Engine.get_process_frames()
-	if _last_frame == current_frame:
-		return  # Cache déjà frais
-	
-	_last_frame = current_frame
-	_cache.movement = Input.get_axis("move_left", "move_right")
-	_cache.jump_pressed = Input.is_action_just_pressed("jump")
-	_cache.jump_held = Input.is_action_pressed("jump")
-	_cache.jump_released = Input.is_action_just_released("jump")
 	
 	# Auto-buffer du jump
-	if _cache.jump_pressed:
+	if Input.is_action_just_pressed("jump"):
 		jump_buffer_timer = PlayerConstants.JUMP_BUFFER_TIME
 
-# === API PUBLIQUE ===
+# === API PUBLIQUE (accès direct, pas de cache) ===
 func get_movement() -> float:
-	_ensure_cache_fresh()
-	return _cache.movement
+	return Input.get_axis("move_left", "move_right")
 
 func wants_to_jump() -> bool:
 	return jump_buffer_timer > 0.0
@@ -72,15 +55,13 @@ func has_coyote_time() -> bool:
 	return coyote_timer > 0.0 and not is_grounded
 
 func is_jump_held() -> bool:
-	_ensure_cache_fresh()
-	return _cache.jump_held
+	return Input.is_action_pressed("jump")
 
 func was_jump_released() -> bool:
-	_ensure_cache_fresh()
-	return _cache.jump_released
+	return Input.is_action_just_released("jump")
 
 func was_dash_pressed() -> bool:
-	return Input.is_action_just_pressed("dash")  # Direct, pas de cache nécessaire
+	return Input.is_action_just_pressed("dash")
 
 func set_grounded(grounded: bool):
 	var was_grounded = is_grounded

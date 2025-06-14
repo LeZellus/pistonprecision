@@ -1,14 +1,9 @@
-# scripts/player/components/DetectionSystem.gd - Version avec pool
+# scripts/player/components/DetectionSystem.gd - Version simplifiée
 class_name DetectionSystem
 extends Node2D
 
 var player: CharacterBody2D
 var space_state: PhysicsDirectSpaceState2D
-
-# === RAYCAST QUERY POOL (évite les allocations) ===
-var _query_pool: Array[PhysicsRayQueryParameters2D] = []
-var _pool_index: int = 0
-const POOL_SIZE: int = 8
 
 # === CONSTANTES ===
 const WALL_LEFT_RAYS: Array[Vector2] = [Vector2(-9, -7), Vector2(-9, 0), Vector2(-9, 7)]
@@ -31,25 +26,14 @@ func _init(player_ref: CharacterBody2D):
 func _ready():
 	space_state = player.get_world_2d().direct_space_state
 	_all_wall_rays = WALL_LEFT_RAYS + WALL_RIGHT_RAYS
-	_create_query_pool()
-
-func _create_query_pool():
-	"""Crée un pool de queries pour éviter les allocations"""
-	for i in POOL_SIZE:
-		_query_pool.append(PhysicsRayQueryParameters2D.new())
-
-func _get_pooled_query() -> PhysicsRayQueryParameters2D:
-	"""Récupère une query du pool"""
-	var query = _query_pool[_pool_index]
-	_pool_index = (_pool_index + 1) % POOL_SIZE
-	return query
 
 func raycast(offset: Vector2, mask: int) -> Dictionary:
-	"""Raycast optimisé avec pool"""
-	var query = _get_pooled_query()
-	query.from = player.global_position
-	query.to = player.global_position + offset
-	query.collision_mask = mask
+	"""Raycast simple sans pool inutile"""
+	var query = PhysicsRayQueryParameters2D.create(
+		player.global_position,
+		player.global_position + offset,
+		mask
+	)
 	query.exclude = [player]
 	return space_state.intersect_ray(query)
 

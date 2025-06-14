@@ -1,9 +1,9 @@
-@tool  # Pour que ça marche dans l'éditeur
+# scripts/objects/Door.gd - Version nettoyée
 extends Area2D
 class_name Door
 
 # === CONFIGURATION ===
-@export var target_room_id: String = "" : set = _set_target_room_id
+@export var target_room_id: String = ""
 @export var target_spawn_id: String = "default"
 @export var is_locked: bool = false
 
@@ -15,7 +15,6 @@ class_name Door
 var is_open: bool = false
 
 func _ready():
-	# Connexions
 	body_entered.connect(_on_body_entered)
 	
 	# Configuration des layers
@@ -25,49 +24,39 @@ func _ready():
 	# État initial
 	_update_door_visual()
 
-func _set_target_room_id(value: String):
-	target_room_id = value
-	if is_inside_tree():
-		_update_door_visual()
-
 func _update_door_visual():
-	"""Met à jour l'apparence de la porte selon son état"""
 	if not sprite:
 		return
 	
 	if is_locked:
-		sprite.modulate = Color.RED  # Porte fermée/verrouillée
+		sprite.modulate = Color.RED
 	elif target_room_id == "":
-		sprite.modulate = Color.GRAY  # Porte non configurée
+		sprite.modulate = Color.GRAY
 	else:
-		sprite.modulate = Color.WHITE  # Porte normale
+		sprite.modulate = Color.WHITE
 
 func _on_body_entered(body: Node2D):
 	if not body.is_in_group("player"):
 		return
 	
 	if is_locked:
-		print("Porte verrouillée!")
 		# TODO: Son de porte verrouillée
 		return
 	
 	if target_room_id == "":
-		print("Porte non configurée!")
 		return
 	
 	# Transition vers la salle cible
-	print("Transition vers: ", target_room_id, " (spawn: ", target_spawn_id, ")")
 	_open_door()
 	SceneManager.transition_to_room(target_room_id)
 
 func _open_door():
-	"""Animation d'ouverture de porte"""
 	if is_open:
 		return
 	
 	is_open = true
 	
-	# Animation simple (tu peux l'améliorer plus tard)
+	# Animation simple
 	var tween = create_tween()
 	tween.tween_property(sprite, "modulate:a", 0.5, 0.2)
 	
@@ -76,11 +65,9 @@ func _open_door():
 
 # === API PUBLIQUE ===
 func unlock():
-	"""Déverrouille la porte"""
 	is_locked = false
 	_update_door_visual()
 
 func lock():
-	"""Verrouille la porte"""
 	is_locked = true
 	_update_door_visual()
