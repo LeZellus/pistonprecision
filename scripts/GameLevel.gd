@@ -26,96 +26,110 @@ func _ready():
 		pause_menu.settings_requested.connect(_show_settings_from_pause)
 		pause_menu.menu_requested.connect(_return_to_main_menu)
 	
-	# Commencer par afficher le menu principal
+	# Commencer par le menu principal
 	_show_main_menu()
 
 func _input(event):
 	# Échap pendant le jeu = pause
-	if event.is_action_pressed("ui_cancel") and game_started and menu_layer and not menu_layer.visible:
+	if event.is_action_pressed("ui_cancel") and game_started and not _any_menu_visible():
 		_pause_game()
 
+func _any_menu_visible() -> bool:
+	return (main_menu and main_menu.visible) or \
+		   (settings_menu and settings_menu.visible) or \
+		   (pause_menu and pause_menu.visible)
+
 func _show_main_menu():
-	"""Affiche le menu principal et cache les autres"""
+	game_started = false
 	if menu_layer:
 		menu_layer.visible = true
 	if main_menu:
 		main_menu.visible = true
 	if settings_menu:
 		settings_menu.visible = false
+	if pause_menu:
+		pause_menu.visible = false
+	
+	var game_manager = get_node_or_null("/root/GameManager")
+	if game_manager and game_manager.has_method("change_state"):
+		if "GameState" in game_manager:
+			game_manager.change_state(game_manager.GameState.MENU)
 
 func _show_settings():
-	"""Affiche le menu paramètres et cache le menu principal"""
 	if main_menu:
 		main_menu.visible = false
 	if settings_menu:
 		settings_menu.visible = true
 
 func _start_game():
-	"""Lance le jeu et cache tous les menus"""
+	"""Lance le jeu - le joueur sera créé par le SceneManager"""
 	print("Démarrage du jeu...")
 	game_started = true
 	
-	# Cacher les menus AVANT d'initialiser le jeu
-	if menu_layer:
-		menu_layer.visible = false
+	# Cache tous les menus
+	_hide_all_menus()
 	
-	# S'assurer que le GameManager est en mode PLAYING (avec vérification de sécurité)
+	# Changer l'état du GameManager
 	var game_manager = get_node_or_null("/root/GameManager")
 	if game_manager and game_manager.has_method("change_state"):
-		# Vérifier que l'enum GameState existe
 		if "GameState" in game_manager:
 			game_manager.change_state(game_manager.GameState.PLAYING)
-		else:
-			print("GameManager trouvé mais sans enum GameState")
-	else:
-		print("GameManager non trouvé ou méthode change_state manquante")
 	
-	# MAINTENANT initialiser le jeu
+	# Vérifier les dépendances
 	if not starting_world:
 		push_error("Aucun monde de départ défini!")
 		return
 	
-	var player_scene = preload("res://scenes/player/Player.tscn")
+	# NOUVEAU: Charger le monde qui créera automatiquement le joueur
+	await SceneManager.load_world_with_player(starting_world, starting_room)
 	
-	SceneManager.initialize_with_player(player_scene)
-	await SceneManager.load_world(starting_world)
-	
-	print("=== Initialisation terminée ===")
+	print("=== Jeu initialisé et prêt ===")
+
+func _hide_all_menus():
+	if menu_layer:
+		menu_layer.visible = false
+	if main_menu:
+		main_menu.visible = false
+	if settings_menu:
+		settings_menu.visible = false
+	if pause_menu:
+		pause_menu.visible = false
 
 # === GESTION DE LA PAUSE ===
 func _pause_game():
-	"""Met le jeu en pause"""
+	if not game_started:
+		return
+		
 	if pause_menu:
 		pause_menu.show_pause()
+		if menu_layer:
+			menu_layer.visible = true
 
 func _resume_game():
-	"""Reprend le jeu"""
 	if pause_menu:
 		pause_menu.hide_pause()
+	if not _any_menu_visible():
+		if menu_layer:
+			menu_layer.visible = false
 
 func _show_settings_from_pause():
-	"""Affiche les paramètres depuis la pause"""
 	if pause_menu:
 		pause_menu.visible = false
 	if settings_menu:
 		settings_menu.visible = true
 
 func _return_to_main_menu():
-	"""Retourne au menu principal depuis la pause"""
 	if pause_menu:
 		pause_menu.hide_pause()
 	return_to_menu()
 
-# === API POUR RETOURNER AU MENU DEPUIS LE JEU ===
 func return_to_menu():
-	"""Retourne au menu principal depuis le jeu"""
 	print("Retour au menu...")
 	game_started = false
 	
-	# Nettoyer proprement le SceneManager
+	# Nettoyer le SceneManager (qui détruira aussi le joueur)
 	SceneManager.cleanup_world()
 	
-	# Remettre le GameManager en état MENU (avec vérification de sécurité)
 	var game_manager = get_node_or_null("/root/GameManager")
 	if game_manager and game_manager.has_method("change_state"):
 		if "GameState" in game_manager:

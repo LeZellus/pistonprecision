@@ -9,4 +9,8 @@ func process_physics(delta: float) -> State:
 	parent.physics_component.apply_precise_air_movement(delta)
 	
 	parent.move_and_slide()
-	return StateTransitions.get_next_state(self, parent, delta)
+	
+	# CORRECTION: Utiliser preload
+	var StateTransitionsClass = preload("res://scripts/player/states/StateTransitions.gd")
+	var state_transitions = StateTransitionsClass.new()
+	return state_transitions.get_next_state(self, parent, delta)

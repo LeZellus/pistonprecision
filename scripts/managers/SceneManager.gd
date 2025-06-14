@@ -1,4 +1,4 @@
-# scripts/managers/SceneManager.gd - Version optimisée
+# scripts/managers/SceneManager.gd
 extends Node
 
 # === REFERENCES ===
@@ -11,6 +11,7 @@ var current_room: RoomData
 # === CONSTANTS ===
 const ROOM_SIZE = Vector2(1320, 240)
 const TRANSITION_BUFFER = 16
+const PLAYER_SCENE = preload("res://scenes/player/Player.tscn")
 
 func _ready():
 	name = "SceneManager"
@@ -20,29 +21,17 @@ func _ready():
 	world_container.name = "WorldContainer"
 	add_child(world_container)
 
-# === INITIALIZATION OPTIMISÉE ===
-func initialize_with_player(player_scene: PackedScene):
-	# Cleanup sécurisé du joueur existant
-	_cleanup_player()
-	
-	player = player_scene.instantiate()
-	world_container.add_child(player)
-
-func _cleanup_player():
-	"""Nettoyage sécurisé du joueur"""
-	if not player or not is_instance_valid(player):
-		return
-	
-	player.queue_free()
-	player = null
-
-# === WORLD LOADING OPTIMISÉ ===
-func load_world(world_resource: WorldData, start_room_id: String = ""):
+# === NOUVELLE API PRINCIPALE ===
+func load_world_with_player(world_resource: WorldData, start_room_id: String = ""):
+	"""Point d'entrée principal : charge le monde ET crée le joueur"""
 	if not world_resource:
 		push_error("SceneManager: Ressource monde null!")
 		return
 	
 	current_world = world_resource
+	
+	# Créer le joueur en premier
+	_create_player()
 	
 	# Déterminer la salle avec fallback intelligent
 	var room_id = _get_valid_room_id(start_room_id)
@@ -52,13 +41,36 @@ func load_world(world_resource: WorldData, start_room_id: String = ""):
 	
 	await load_room(room_id)
 
+func _create_player():
+	"""Crée le joueur dans le monde"""
+	# Cleanup sécurisé du joueur existant
+	_cleanup_player()
+	
+	player = PLAYER_SCENE.instantiate()
+	world_container.add_child(player)
+	print("SceneManager: Joueur créé et ajouté au monde")
+
+# === METHODES LEGACY (pour compatibilité) ===
+func initialize_with_player(player_scene: PackedScene):
+	"""Méthode legacy - dépréciée, utilisez load_world_with_player"""
+	push_warning("initialize_with_player est déprécié, utilisez load_world_with_player")
+	_create_player()
+
+func load_world(world_resource: WorldData, start_room_id: String = ""):
+	await load_world_with_player(world_resource, start_room_id)
+
+# === RESTE DU CODE IDENTIQUE ===
+func _cleanup_player():
+	if not player or not is_instance_valid(player):
+		return
+	
+	player.queue_free()
+	player = null
+
 func _get_valid_room_id(requested_id: String) -> String:
-	"""Retourne un room_id valide avec fallback"""
-	# Si une salle spécifique est demandée et existe
 	if not requested_id.is_empty() and current_world.get_room(requested_id):
 		return requested_id
 	
-	# Fallback sur la première salle disponible
 	if current_world.rooms.size() > 0:
 		var fallback_id = current_world.rooms[0].room_id
 		if not requested_id.is_empty():
@@ -67,7 +79,6 @@ func _get_valid_room_id(requested_id: String) -> String:
 	
 	return ""
 
-# === ROOM LOADING OPTIMISÉ ===
 func load_room(room_id: String, _spawn_id: String = "default"):
 	if not current_world:
 		push_error("Aucun monde chargé")
@@ -87,13 +98,10 @@ func load_room(room_id: String, _spawn_id: String = "default"):
 	_setup_player_in_room()
 
 func _load_new_room(room_data: RoomData):
-	"""Charge une nouvelle salle avec cleanup sécurisé"""
-	# Supprimer l'ancienne salle
 	if current_room_node and is_instance_valid(current_room_node):
 		current_room_node.queue_free()
 		await current_room_node.tree_exited
 	
-	# Charger la nouvelle salle
 	var room_scene = load(room_data.scene_path)
 	if not room_scene:
 		push_error("Impossible de charger: " + room_data.scene_path)
@@ -104,7 +112,6 @@ func _load_new_room(room_data: RoomData):
 	world_container.add_child(current_room_node)
 
 func _setup_player_in_room():
-	"""Configure le joueur dans la salle"""
 	if not player or not is_instance_valid(player):
 		return
 	
@@ -113,48 +120,38 @@ func _setup_player_in_room():
 	player.velocity = Vector2.ZERO
 	player.global_position = Vector2(-185, 30)
 
-# === TRANSITIONS OPTIMISÉES ===
 func transition_to_room(target_room_id: String):
-	"""Transition vers une autre salle avec preservation de vélocité"""
 	if not current_world:
 		push_error("Aucun monde chargé")
 		return
 	
-	# Préserver la vélocité pour transition fluide
 	var preserved_velocity = Vector2.ZERO
 	if player and is_instance_valid(player):
 		preserved_velocity = player.velocity
 		
-		# Démarrer la transition côté joueur
 		if player.has_method("start_room_transition"):
 			player.start_room_transition()
 	
-	# Charger la nouvelle salle
 	await load_room(target_room_id)
 	
-	# Restaurer la vélocité
 	if player and is_instance_valid(player):
 		player.velocity = preserved_velocity
 
-# === CLEANUP OPTIMISÉ ===
 func cleanup_world():
-	"""Nettoie tout le contenu du monde"""
 	_cleanup_player()
 	_cleanup_room()
 	_cleanup_world_data()
 
 func _cleanup_room():
-	"""Nettoie la salle actuelle"""
 	if current_room_node and is_instance_valid(current_room_node):
 		current_room_node.queue_free()
 		current_room_node = null
 
 func _cleanup_world_data():
-	"""Nettoie les données du monde"""
 	current_world = null
 	current_room = null
 
-# === GETTERS SÉCURISÉS ===
+# === GETTERS ===
 func get_current_room_id() -> String:
 	return current_room.room_id if current_room else ""
 

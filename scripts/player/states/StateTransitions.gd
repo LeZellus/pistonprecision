@@ -1,9 +1,9 @@
 class_name StateTransitions
 
 # Cache des références d'états pour éviter get_node() répétés
-static var _state_cache: Dictionary = {}
+var _state_cache: Dictionary = {}
 
-static func get_next_state(current_state: State, player: Player, delta: float) -> State:
+func get_next_state(current_state: State, player: Player, delta: float) -> State:
 	# Cache des états au premier appel
 	if _state_cache.is_empty():
 		_cache_states(current_state)
@@ -27,7 +27,7 @@ static func get_next_state(current_state: State, player: Player, delta: float) -
 	
 	return null
 
-static func _should_die(player: Player) -> bool:
+func _should_die(player: Player) -> bool:
 	"""Vérifie si le joueur devrait mourir (chute dans le vide, etc.)"""
 	# Exemple : mort par chute (à adapter selon ton niveau)
 	if player.global_position.y > 1000:  # Limite du niveau
@@ -42,7 +42,7 @@ static func _should_die(player: Player) -> bool:
 	
 	return false
 
-static func _cache_states(reference_state: State):
+func _cache_states(reference_state: State):
 	"""Cache les références d'états une seule fois"""
 	var state_machine = reference_state.get_parent()
 	
@@ -50,11 +50,11 @@ static func _cache_states(reference_state: State):
 		if child is State:
 			_state_cache[child.get_script().get_global_name()] = child
 
-static func _get_state(state_name: String) -> State:
+func _get_state(state_name: String) -> State:
 	"""Récupère un état depuis le cache"""
 	return _state_cache.get(state_name)
 
-static func _handle_ground_states(current_state: State, player: Player, _delta: float) -> State:
+func _handle_ground_states(current_state: State, player: Player, _delta: float) -> State:
 	# Quitter le sol ?
 	if not player.is_on_floor():
 		return _get_state("JumpState") if player.velocity.y < 0 else _get_state("FallState")
@@ -78,7 +78,7 @@ static func _handle_ground_states(current_state: State, player: Player, _delta: 
 	
 	return null
 
-static func _handle_air_states(current_state: State, player: Player, _delta: float) -> State:
+func _handle_air_states(current_state: State, player: Player, _delta: float) -> State:
 	# Atterrir ?
 	if player.is_on_floor():
 		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
@@ -104,7 +104,7 @@ static func _handle_air_states(current_state: State, player: Player, _delta: flo
 	
 	return null
 
-static func _handle_wall_slide_state(_current_state: State, player: Player, _delta: float) -> State:
+func _handle_wall_slide_state(_current_state: State, player: Player, _delta: float) -> State:
 	# Atterrir ?
 	if player.is_on_floor():
 		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")

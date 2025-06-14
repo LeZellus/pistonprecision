@@ -8,7 +8,6 @@ func process_physics(delta: float) -> State:
 	parent.physics_component.apply_gravity(delta)
 	parent.physics_component.apply_wall_slide(delta)
 	
-	# Physique spéciale du wall slide
 	var input_dir = InputManager.get_movement()
 	var wall_side = parent.wall_detector.get_wall_side()
 	
@@ -19,4 +18,7 @@ func process_physics(delta: float) -> State:
 	
 	parent.move_and_slide()
 	
-	return StateTransitions.get_next_state(self, parent, delta)
+	# CORRECTION: Utiliser preload
+	var StateTransitionsClass = preload("res://scripts/player/states/StateTransitions.gd")
+	var state_transitions = StateTransitionsClass.new()
+	return state_transitions.get_next_state(self, parent, delta)
