@@ -38,7 +38,8 @@ func _ready():
 func _input(event):
 	# Appuyer sur F12 pour simuler 3000 morts
 	if Input.is_key_pressed(KEY_F12):
-		death_count = 3000
+		reset_death_count()
+		death_count = 60
 		print("Debug: Death count mis à 3000")
 
 func _process(delta):

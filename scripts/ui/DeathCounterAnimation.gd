@@ -1,106 +1,85 @@
-# scripts/ui/DeathCounterAnimation.gd - Version nettoyée
+# scripts/ui/DeathCounterAnimation.gd - Version simplifiée
 extends Label
 class_name DeathCounterAnimation
 
-var target_number: int = 0
-var current_number: int = 0
-var animation_tween: Tween
+var target_value: int = 0
+var current_value: int = 0
 var is_animating: bool = false
 
-func animate_to_number(new_number: int, start_from: int = 0):
-	"""Lance l'animation depuis start_from vers new_number"""
+func animate_to(new_value: int):
+	"""Lance l'animation vers le nouveau nombre"""
 	if is_animating:
-		stop_animation()
+		_stop_animation()
 	
-	current_number = start_from
-	target_number = new_number
+	target_value = new_value
 	is_animating = true
 	
-	print("DeathCounterAnimation: Animation de %d vers %d" % [current_number, target_number])
+	var tween = create_tween()
+	var duration = min(1.0, target_value * 0.05)  # Max 1 seconde
 	
-	var diff = target_number - current_number
-	if diff <= 0:
-		set_number_instantly(target_number)
-		return
-	
-	_start_counting_animation(diff)
+	tween.tween_method(_update_display, current_value, target_value, duration)
+	tween.tween_callback(_on_animation_complete)
 
-func _start_counting_animation(total_steps: int):
-	"""Animation de comptage adaptée à la distance"""
-	animation_tween = create_tween()
-	
-	var current = current_number
-	
-	# Calcul de délai adaptatif selon le nombre total
-	for step in range(total_steps):
-		current += 1
-		var progress = float(step + 1) / float(total_steps)
-		
-		# Démarrage rapide puis ralentissement progressif
-		var delay = _get_step_delay(progress, total_steps)
-		
-		animation_tween.tween_callback(_update_display.bind(current))
-		animation_tween.tween_interval(delay)
-	
-	# Finaliser
-	animation_tween.tween_callback(_finish_animation)
-
-func _get_step_delay(progress: float, total_steps: int) -> float:
-	"""Calcule le délai pour chaque étape selon la progression"""
-	var current_step = int(progress * total_steps)
-	var remaining_steps = total_steps - current_step
-	
-	# Ralentissement sur les 5 derniers
-	if remaining_steps <= 5:
-		match remaining_steps:
-			5: return 0.2
-			4: return 0.25
-			3: return 0.3
-			2: return 0.35
-			1: return 0.4
-			_: return 0.5
-	
-	# Pour le reste : calculer pour que ça prenne max 2s (3s - 1s pour les 5 derniers)
-	var fast_steps = total_steps - 5
-	var time_for_fast = 2.0  # 2 secondes pour tout sauf les 5 derniers
-	
-	return time_for_fast / fast_steps if fast_steps > 0 else 0.01
-
-func _update_display(number: int):
-	"""Met à jour l'affichage du nombre"""
-	current_number = number
-	text = str(number)
-	
-	AudioManager.play_sfx("ui/counter_tick", 0.2)
-
-func _finish_animation():
-	"""Termine l'animation avec effet final"""
-	is_animating = false
-	current_number = target_number
-	text = str(target_number)
-	
-	print("DeathCounterAnimation: Animation terminée sur %d" % target_number)
-	
-	# Effet final
-	var final_tween = create_tween()
-	final_tween.parallel().tween_property(self, "scale", Vector2(1.1, 1.1), 0.1)
-	final_tween.parallel().tween_property(self, "scale", Vector2(1.0, 1.0), 0.2)
-
-func stop_animation():
-	"""Arrête l'animation en cours"""
-	if animation_tween:
-		animation_tween.kill()
+func set_number_instantly(value: int):
+	"""Met le nombre instantanément sans animation"""
+	current_value = value
+	target_value = value
+	text = str(value)
 	is_animating = false
 
-func set_number_instantly(number: int):
-	"""Définit le nombre sans animation"""
-	target_number = number
-	current_number = number
-	text = str(number)
-	is_animating = false
+func animate_to_number(new_value: int, start_from: int = 0):
+	"""Méthode de compatibilité avec l'ancien code"""
+	current_value = start_from
+	text = str(start_from)
+	animate_to(new_value)
 
-func get_current_number() -> int:
-	return target_number
+func animate_to_number_with_custom_timing(final_count: int, start_from: int, fast_phase_time: float):
+	"""Nouvelle méthode pour animation personnalisée avec timing rapide"""
+	if is_animating:
+		_stop_animation()
+	
+	current_value = start_from
+	target_value = final_count
+	is_animating = true
+	
+	# Animation simple mais rapide
+	var tween = create_tween()
+	var total_duration = fast_phase_time + 1.0  # Phase rapide + ralentissement
+	
+	tween.tween_method(_update_display, current_value, target_value, total_duration)
+	tween.tween_callback(_on_animation_complete)
 
 func is_animation_playing() -> bool:
 	return is_animating
+
+func stop_animation():
+	"""Arrête l'animation en cours (alias pour _stop_animation)"""
+	_stop_animation()
+
+func _update_display(value: int):
+	"""Met à jour l'affichage pendant l'animation"""
+	current_value = int(value)
+	text = str(current_value)
+	
+	# Son léger tous les 5 nombres
+	if current_value % 5 == 0:
+		AudioManager.play_sfx("ui/counter_tick", 0.1)
+
+func _on_animation_complete():
+	"""Appelé à la fin de l'animation"""
+	is_animating = false
+	current_value = target_value
+	text = str(target_value)
+	
+	# Petit effet de fin
+	var bounce_tween = create_tween()
+	bounce_tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.1)
+	bounce_tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
+
+func _stop_animation():
+	"""Arrête l'animation en cours"""
+	var tweens = get_tree().get_tween_instances()
+	for tween in tweens:
+		if tween.is_valid():
+			tween.kill()
+	is_animating = false
