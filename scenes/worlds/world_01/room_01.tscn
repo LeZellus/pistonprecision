@@ -54,12 +54,6 @@ tile_map_data = PackedByteArray("AADs/wsAAQAAAAAAAADt/wsAAQAAAAAAAADu/wsAAQAAAAA
 [node name="LayerTraps" parent="TileMapLayer" instance=ExtResource("7_3dmaq")]
 tile_map_data = PackedByteArray("AAD4////AAAAAAAAAAD5////AAAAAAAAAADw////AAAAAAAAAADx////AAAAAAAAAADy////AAAAAAAAAADt/woAAAAAAAAAAADu/woAAAAAAAAAAADv/woAAAAAAAAAAADw/woAAAAAAAAAAAA=")
 
-[node name="Door" parent="." instance=ExtResource("6_eerqf")]
-position = Vector2(296, 160)
-door_id = "room_01_right"
-target_door_id = "room_02_left"
-is_default_spawn = true
-
 [node name="Camera2D2" type="Camera2D" parent="."]
 z_index = 1000
 zoom = Vector2(3, 3)
@@ -68,3 +62,17 @@ script = ExtResource("9_st4ct")
 [node name="DirectionalLight2D" type="DirectionalLight2D" parent="."]
 energy = 0.2
 blend_mode = 1
+
+[node name="Doors" type="Node" parent="."]
+
+[node name="Door" parent="Doors" instance=ExtResource("6_eerqf")]
+position = Vector2(296, 160)
+door_id = "room_01_right"
+target_door_id = "room_02_left"
+is_default_spawn = true
+
+[node name="Door2" parent="Doors" instance=ExtResource("6_eerqf")]
+position = Vector2(-92, 160)
+door_id = "room_01_left"
+target_door_id = "room_02_right"
+spawn_side = 1

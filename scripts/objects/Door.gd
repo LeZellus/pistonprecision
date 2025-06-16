@@ -66,6 +66,7 @@ func _on_body_entered(body: Node2D):
 	
 	print("Door '%s' utilisée par le joueur" % door_id)
 	_open_door()
+	SceneManager.transition_to_room(target_room_id)
 
 func _open_door():
 	if is_open:
@@ -115,10 +116,10 @@ func get_spawn_position() -> Vector2:
 	match spawn_side:
 		SpawnSide.LEFT:
 			# Bord gauche de la door (-8) - distance de spawn, au niveau du sol (+16)
-			offset = Vector2(-8 - spawn_distance, 16)
+			offset = Vector2(-8 - spawn_distance, 18)
 		SpawnSide.RIGHT:
 			# Bord droit de la door (+8) + distance de spawn, au niveau du sol (+16)
-			offset = Vector2(8 + spawn_distance, 16)
+			offset = Vector2(8 + spawn_distance, 18)
 	
 	var final_pos = base_position + offset
 	print("Door '%s': spawn %s à %v (door=%v + offset=%v)" % [door_id, SpawnSide.keys()[spawn_side], final_pos, base_position, offset])

@@ -33,3 +33,9 @@ door_id = "room_02_left"
 target_door_id = "room_01_right"
 is_default_spawn = true
 spawn_side = 1
+
+[node name="Door2" parent="Doors" instance=ExtResource("5_jwnet")]
+position = Vector2(-24, 112)
+target_room_id = "room_01"
+door_id = "room_02_Right"
+target_door_id = "room_01_left"
