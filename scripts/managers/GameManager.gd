@@ -1,4 +1,4 @@
-# scripts/managers/GameManager.gd - Version avec système de mort
+# scripts/managers/GameManager.gd - Ajout système checkpoint doors
 extends Node
 
 # === GAME STATES ===
@@ -19,7 +19,11 @@ var total_time: float = 0.0
 
 # === DEATH SYSTEM ===
 var death_count: int = 0
-var session_deaths: int = 0  # Morts de la session actuelle
+var session_deaths: int = 0
+
+# === NOUVEAU : DOOR CHECKPOINT SYSTEM ===
+var last_door_id: String = ""
+var last_room_id: String = ""
 
 # === LEVEL PROGRESSION ===
 var completed_levels: Array[String] = []
@@ -34,6 +38,7 @@ func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	load_game_data()
 	print("GameManager: Chargé avec %d morts totales" % death_count)
+	print("GameManager: Dernier checkpoint - door: '%s' dans room: '%s'" % [last_door_id, last_room_id])
 	
 func _input(event):
 	# Appuyer sur F12 pour simuler 3000 morts
@@ -46,6 +51,47 @@ func _process(delta):
 	if current_state == GameState.PLAYING:
 		level_time += delta
 		total_time += delta
+
+# === NOUVEAU : DOOR CHECKPOINT SYSTEM ===
+func set_last_door(door_id: String, room_id: String):
+	"""Sauvegarde la dernière door traversée comme checkpoint"""
+	last_door_id = door_id
+	last_room_id = room_id
+	
+	print("GameManager: Nouveau checkpoint - door '%s' dans room '%s'" % [door_id, room_id])
+	
+	# Sauvegarde automatique
+	save_checkpoint_data()
+
+func get_last_door_id() -> String:
+	"""Retourne l'ID de la dernière door traversée"""
+	return last_door_id
+
+func get_last_room_id() -> String:
+	"""Retourne l'ID de la dernière room"""
+	return last_room_id
+
+func has_checkpoint() -> bool:
+	"""Vérifie s'il y a un checkpoint sauvegardé"""
+	return not last_door_id.is_empty() and not last_room_id.is_empty()
+
+func clear_checkpoint():
+	"""Efface le checkpoint (pour nouveau jeu)"""
+	last_door_id = ""
+	last_room_id = ""
+	print("GameManager: Checkpoint effacé")
+
+func save_checkpoint_data():
+	"""Sauvegarde rapide du checkpoint uniquement"""
+	var save_data = _create_save_data()
+	
+	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(save_data))
+		file.close()
+		print("GameManager: Checkpoint sauvegardé")
+	else:
+		push_error("Impossible de sauvegarder le checkpoint: " + SAVE_FILE_PATH)
 
 # === DEATH SYSTEM ===
 func register_player_death():
@@ -101,18 +147,16 @@ func start_level(level_name: String):
 	current_level = level_name
 	current_checkpoint = ""
 	level_time = 0.0
-	session_deaths = 0  # Reset des morts de session
+	session_deaths = 0
 	change_state(GameState.PLAYING)
 
 func complete_level():
 	if current_level.is_empty():
 		return
 	
-	# Mise à jour du meilleur temps
 	if not current_level in best_times or level_time < best_times[current_level]:
 		best_times[current_level] = level_time
 	
-	# Marquer comme complété
 	if not current_level in completed_levels:
 		completed_levels.append(current_level)
 	
@@ -127,6 +171,8 @@ func set_checkpoint(checkpoint_id: String):
 func _create_save_data() -> Dictionary:
 	return {
 		"death_count": death_count,
+		"last_door_id": last_door_id,        # NOUVEAU
+		"last_room_id": last_room_id,        # NOUVEAU
 		"completed_levels": completed_levels,
 		"collectibles_found": collectibles_found,
 		"best_times": best_times,
@@ -162,8 +208,9 @@ func load_game_data():
 	
 	var save_data = json.data
 	death_count = save_data.get("death_count", 0)
+	last_door_id = save_data.get("last_door_id", "")        # NOUVEAU
+	last_room_id = save_data.get("last_room_id", "")        # NOUVEAU
 	
-	# Conversion sécurisée pour les arrays typés
 	var loaded_levels = save_data.get("completed_levels", [])
 	completed_levels.clear()
 	for level in loaded_levels:
