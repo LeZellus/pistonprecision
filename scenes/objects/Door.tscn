@@ -19,6 +19,3 @@ shape = SubResource("RectangleShape2D_j8tv8")
 texture = ExtResource("2_wvwiw")
 region_enabled = true
 region_rect = Rect2(0, 0, 16, 32)
-
-[node name="SpawnPoint" type="Marker2D" parent="."]
-position = Vector2(-30, 0)

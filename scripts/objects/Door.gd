@@ -11,10 +11,14 @@ class_name Door
 @export var target_door_id: String = ""
 @export var is_default_spawn: bool = false
 
+# === SPAWN POSITION ===
+enum SpawnSide { LEFT, RIGHT }
+@export var spawn_side: SpawnSide = SpawnSide.LEFT
+@export var spawn_distance: float = 24.0  # Distance du bord de la door
+
 # === COMPONENTS ===
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision: CollisionShape2D = $CollisionShape2D
-@onready var spawn_point: Marker2D = $SpawnPoint  # Point de spawn
 
 # === DOOR STATES ===
 var is_open: bool = false
@@ -32,14 +36,10 @@ func _ready():
 		door_id = name.to_lower()
 		print("Door: Auto-generated door_id = %s" % door_id)
 	
-	# Vérifier que le SpawnPoint existe
-	if not spawn_point:
-		print("ATTENTION: Door '%s' n'a pas de SpawnPoint enfant!" % door_id)
-	
 	# État initial
 	_update_door_visual()
 	
-	print("Door '%s' initialisée - target_room: %s, target_door: %s, default: %s" % [door_id, target_room_id, target_door_id, is_default_spawn])
+	print("Door '%s' initialisée - target_room: %s, target_door: %s, default: %s, spawn: %s" % [door_id, target_room_id, target_door_id, is_default_spawn, SpawnSide.keys()[spawn_side]])
 
 func _update_door_visual():
 	if not sprite:
@@ -105,16 +105,24 @@ func _save_as_checkpoint():
 
 # === SPAWN POSITION ===
 func get_spawn_position() -> Vector2:
-	"""Retourne la position du SpawnPoint"""
-	if spawn_point:
-		var pos = spawn_point.global_position
-		print("Door '%s': spawn à la position du SpawnPoint %v" % [door_id, pos])
-		return pos
-	else:
-		# Fallback si pas de SpawnPoint
-		var fallback_pos = global_position
-		print("Door '%s': ATTENTION - Pas de SpawnPoint, utilisation position door %v" % [door_id, fallback_pos])
-		return fallback_pos
+	"""Calcule la position de spawn selon le côté choisi"""
+	var base_position = global_position
+	
+	# Calculer l'offset selon le côté
+	# Door = 16px large, 32px haute, origine au centre
+	# Bords: gauche=-8, droite=+8, bas=+16
+	var offset = Vector2.ZERO
+	match spawn_side:
+		SpawnSide.LEFT:
+			# Bord gauche de la door (-8) - distance de spawn, au niveau du sol (+16)
+			offset = Vector2(-8 - spawn_distance, 16)
+		SpawnSide.RIGHT:
+			# Bord droit de la door (+8) + distance de spawn, au niveau du sol (+16)
+			offset = Vector2(8 + spawn_distance, 16)
+	
+	var final_pos = base_position + offset
+	print("Door '%s': spawn %s à %v (door=%v + offset=%v)" % [door_id, SpawnSide.keys()[spawn_side], final_pos, base_position, offset])
+	return final_pos
 
 # === API PUBLIQUE ===
 func unlock():

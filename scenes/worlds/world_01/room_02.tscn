@@ -27,8 +27,9 @@ shape = SubResource("RectangleShape2D_sn25p")
 [node name="Doors" type="Node" parent="."]
 
 [node name="Door" parent="Doors" instance=ExtResource("5_jwnet")]
-position = Vector2(-102, 112)
+position = Vector2(-215, 112)
 target_room_id = "room_01"
 door_id = "room_02_left"
 target_door_id = "room_01_right"
 is_default_spawn = true
+spawn_side = 1

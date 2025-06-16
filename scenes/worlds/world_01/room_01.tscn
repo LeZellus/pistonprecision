@@ -33,13 +33,13 @@ position = Vector2(179, 40)
 position = Vector2(161, 40)
 
 [node name="PushableObject" parent="." instance=ExtResource("1_ku13x")]
-position = Vector2(293, 51)
+position = Vector2(41, 49)
 
 [node name="PushableObject2" parent="." instance=ExtResource("1_ku13x")]
-position = Vector2(267, 51)
+position = Vector2(65, 99)
 
 [node name="PushableObject3" parent="." instance=ExtResource("1_ku13x")]
-position = Vector2(240, 50)
+position = Vector2(43, 111)
 
 [node name="TileMapLayer" type="Node" parent="."]
 
@@ -55,7 +55,7 @@ tile_map_data = PackedByteArray("AADs/wsAAQAAAAAAAADt/wsAAQAAAAAAAADu/wsAAQAAAAA
 tile_map_data = PackedByteArray("AAD4////AAAAAAAAAAD5////AAAAAAAAAADw////AAAAAAAAAADx////AAAAAAAAAADy////AAAAAAAAAADt/woAAAAAAAAAAADu/woAAAAAAAAAAADv/woAAAAAAAAAAADw/woAAAAAAAAAAAA=")
 
 [node name="Door" parent="." instance=ExtResource("6_eerqf")]
-position = Vector2(152, 160)
+position = Vector2(296, 160)
 door_id = "room_01_right"
 target_door_id = "room_02_left"
 is_default_spawn = true
