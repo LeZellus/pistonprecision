@@ -1,4 +1,4 @@
-# scripts/managers/SceneManager.gd - Fix universel physique
+# scripts/managers/SceneManager.gd - Système spawn simple
 extends Node
 
 # === REFERENCES ===
@@ -9,8 +9,6 @@ var current_world: WorldData
 var current_room: RoomData
 
 # === CONSTANTS ===
-const ROOM_SIZE = Vector2(1320, 240)
-const TRANSITION_BUFFER = 16
 const PLAYER_SCENE = preload("res://scenes/player/Player.tscn")
 
 func _ready():
@@ -42,17 +40,8 @@ func _create_player():
 	
 	player = PLAYER_SCENE.instantiate()
 	world_container.add_child(player)
-	print("SceneManager: Joueur créé et ajouté au monde")
+	print("SceneManager: Joueur créé")
 
-# === MÉTHODES LEGACY ===
-func initialize_with_player(player_scene: PackedScene):
-	push_warning("initialize_with_player est déprécié, utilisez load_world_with_player")
-	_create_player()
-
-func load_world(world_resource: WorldData, start_room_id: String = ""):
-	await load_world_with_player(world_resource, start_room_id)
-
-# === UTILITAIRES ===
 func _cleanup_player():
 	if not player or not is_instance_valid(player):
 		return
@@ -65,14 +54,11 @@ func _get_valid_room_id(requested_id: String) -> String:
 		return requested_id
 	
 	if current_world.rooms.size() > 0:
-		var fallback_id = current_world.rooms[0].room_id
-		if not requested_id.is_empty():
-			print("SceneManager: Salle '%s' introuvable, utilisation de '%s'" % [requested_id, fallback_id])
-		return fallback_id
+		return current_world.rooms[0].room_id
 	
 	return ""
 
-func load_room(room_id: String, _spawn_id: String = "default"):
+func load_room(room_id: String):
 	if not current_world:
 		push_error("Aucun monde chargé")
 		return
@@ -100,44 +86,36 @@ func _load_new_room(room_data: RoomData):
 	current_room_node.name = "CurrentRoom"
 	world_container.add_child(current_room_node)
 
-# === FIX UNIVERSEL : COLLISION SHAPE TEMPORAIRE ===
 func _setup_player_in_room():
 	if not player or not is_instance_valid(player):
 		return
 	
-	# S'assurer que le joueur est au-dessus de la salle
 	world_container.move_child(player, -1)
+	player.velocity = Vector2.ZERO
+	player.global_position = Vector2(-185, 30)
 	
-	await _safe_spawn_player(Vector2(-185, 30))
+	await _safe_spawn_player()
 
-func _safe_spawn_player(spawn_pos: Vector2):
-	"""Fix universel pour le spawn - fonctionne avec tous les niveaux"""
+func _safe_spawn_player():
+	"""Fix universel spawn"""
 	if not player:
 		return
 	
-	# 1. DÉSACTIVER temporairement la collision du joueur
 	var collision_shape = player.get_node("CollisionShape2D")
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
 	
-	# 2. Arrêter toute vélocité et positionner
-	player.velocity = Vector2.ZERO
-	player.global_position = spawn_pos
-	
-	# 3. Attendre que la physique se stabilise
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
-	# 4. RÉACTIVER la collision
 	if collision_shape:
 		collision_shape.set_deferred("disabled", false)
 	
-	# 5. Attendre encore 1 frame pour validation
 	await get_tree().process_frame
-	
-	print("SceneManager: Joueur positionné en %s" % player.global_position)
 
-func transition_to_room(target_room_id: String):
+# === TRANSITION AVEC SPAWN ID ===
+func transition_to_room_with_spawn(target_room_id: String, target_spawn_id: String):
+	"""Transition vers une salle et spawn sur la porte avec l'ID donné"""
 	if not current_world:
 		push_error("Aucun monde chargé")
 		return
@@ -153,6 +131,52 @@ func transition_to_room(target_room_id: String):
 	
 	if player and is_instance_valid(player):
 		player.velocity = preserved_velocity
+		await _spawn_at_door(target_spawn_id)
+
+func _spawn_at_door(door_id: String):
+	"""Trouve la porte avec l'ID et spawne le joueur à côté"""
+	if not current_room_node:
+		return
+	
+	# Chercher la porte dans la scène actuelle
+	var target_door = _find_door_by_id(door_id)
+	if not target_door:
+		print("SceneManager: Porte '%s' introuvable, spawn par défaut" % door_id)
+		await _safe_spawn_player()
+		return
+	
+	# Spawner à la position de la porte
+	var spawn_pos = target_door.get_spawn_position()
+	player.global_position = spawn_pos
+	await _safe_spawn_player()
+	
+	print("SceneManager: Spawn sur porte '%s' en %s" % [door_id, spawn_pos])
+
+func _find_door_by_id(door_id: String) -> Door:
+	"""Trouve une porte par son ID dans la scène actuelle"""
+	if not current_room_node:
+		return null
+	
+	# Chercher récursivement dans tous les enfants
+	return _search_door_recursive(current_room_node, door_id)
+
+func _search_door_recursive(node: Node, door_id: String) -> Door:
+	"""Recherche récursive d'une porte"""
+	# Vérifier le nœud actuel
+	if node is Door and node.door_id == door_id:
+		return node
+	
+	# Chercher dans les enfants
+	for child in node.get_children():
+		var result = _search_door_recursive(child, door_id)
+		if result:
+			return result
+	
+	return null
+
+# === LEGACY ===
+func transition_to_room(target_room_id: String):
+	await load_room(target_room_id)
 
 func cleanup_world():
 	_cleanup_player()
