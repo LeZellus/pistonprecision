@@ -1,6 +1,7 @@
-[gd_scene load_steps=11 format=4 uid="uid://ckw83swiwevhx"]
+[gd_scene load_steps=12 format=4 uid="uid://ckw83swiwevhx"]
 
 [ext_resource type="PackedScene" uid="uid://dg646574o66h8" path="res://scenes/objects/PushableObject.tscn" id="1_ku13x"]
+[ext_resource type="PackedScene" uid="uid://b2amkaoiymjxq" path="res://scenes/worlds/SpawnPoint.tscn" id="1_qtbxb"]
 [ext_resource type="PackedScene" uid="uid://dyecypjdxwrmg" path="res://scenes/objects/LayerBackground.tscn" id="1_r7ns6"]
 [ext_resource type="PackedScene" uid="uid://47cqcbhg1xqr" path="res://scenes/objects/Collectible.tscn" id="1_v0gvo"]
 [ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_7sxm0"]
@@ -13,6 +14,10 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_b4ryo"]
 
 [node name="Room01" type="Node2D"]
+
+[node name="SpawnPoint" parent="." instance=ExtResource("1_qtbxb")]
+position = Vector2(-183, 150)
+is_default_spawn = true
 
 [node name="DeathZone" parent="." instance=ExtResource("7_pnsws")]
 position = Vector2(-250, 166)

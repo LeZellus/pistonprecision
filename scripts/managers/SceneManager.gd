@@ -1,4 +1,4 @@
-# scripts/managers/SceneManager.gd - Système spawn simple
+# scripts/managers/SceneManager.gd - Version avec SpawnManager
 extends Node
 
 # === REFERENCES ===
@@ -34,6 +34,8 @@ func load_world_with_player(world_resource: WorldData, start_room_id: String = "
 		return
 	
 	await load_room(room_id)
+	# Premier spawn : utilise le spawn par défaut de la room
+	await _spawn_player_at_default()
 
 func _create_player():
 	_cleanup_player()
@@ -70,7 +72,9 @@ func load_room(room_id: String):
 	
 	current_room = room_data
 	await _load_new_room(room_data)
-	await _setup_player_in_room()
+	
+	# Enregistrer les spawns de la nouvelle room
+	_register_room_spawns()
 
 func _load_new_room(room_data: RoomData):
 	if current_room_node and is_instance_valid(current_room_node):
@@ -86,15 +90,29 @@ func _load_new_room(room_data: RoomData):
 	current_room_node.name = "CurrentRoom"
 	world_container.add_child(current_room_node)
 
-func _setup_player_in_room():
+func _register_room_spawns():
+	"""Enregistre tous les spawns de la room actuelle"""
+	var spawn_manager = get_node_or_null("/root/SpawnManager")
+	if spawn_manager:
+		spawn_manager.find_spawns_in_scene()
+
+# === SPAWN SYSTEM ===
+func _spawn_player_at_default():
+	"""Spawn au point par défaut de la room"""
 	if not player or not is_instance_valid(player):
+		return
+	
+	var spawn_manager = get_node_or_null("/root/SpawnManager")
+	if not spawn_manager:
+		push_error("SceneManager: SpawnManager introuvable!")
 		return
 	
 	world_container.move_child(player, -1)
 	player.velocity = Vector2.ZERO
-	player.global_position = Vector2(-185, 30)
+	player.global_position = spawn_manager.get_default_spawn_position()
 	
 	await _safe_spawn_player()
+	print("SceneManager: Joueur spawné à la position par défaut")
 
 func _safe_spawn_player():
 	"""Fix universel spawn"""
@@ -113,9 +131,9 @@ func _safe_spawn_player():
 	
 	await get_tree().process_frame
 
-# === TRANSITION AVEC SPAWN ID ===
+# === TRANSITION AVEC SPAWN DOOR ===
 func transition_to_room_with_spawn(target_room_id: String, target_spawn_id: String):
-	"""Transition vers une salle et spawn sur la porte avec l'ID donné"""
+	"""Transition vers une salle et spawn sur la door avec l'ID donné"""
 	if not current_world:
 		push_error("Aucun monde chargé")
 		return
@@ -134,39 +152,37 @@ func transition_to_room_with_spawn(target_room_id: String, target_spawn_id: Stri
 		await _spawn_at_door(target_spawn_id)
 
 func _spawn_at_door(door_id: String):
-	"""Trouve la porte avec l'ID et spawne le joueur à côté"""
+	"""Trouve la door avec l'ID et spawne le joueur à côté"""
 	if not current_room_node:
+		print("SceneManager: Pas de room chargée pour spawn door")
 		return
 	
-	# Chercher la porte dans la scène actuelle
+	# Chercher la door dans la scène actuelle
 	var target_door = _find_door_by_id(door_id)
 	if not target_door:
-		print("SceneManager: Porte '%s' introuvable, spawn par défaut" % door_id)
-		await _safe_spawn_player()
+		print("SceneManager: Door '%s' introuvable, spawn par défaut" % door_id)
+		await _spawn_player_at_default()
 		return
 	
-	# Spawner à la position de la porte
+	# Spawner à la position de la door
 	var spawn_pos = target_door.get_spawn_position()
 	player.global_position = spawn_pos
 	await _safe_spawn_player()
 	
-	print("SceneManager: Spawn sur porte '%s' en %s" % [door_id, spawn_pos])
+	print("SceneManager: Spawn sur door '%s' en %s" % [door_id, spawn_pos])
 
 func _find_door_by_id(door_id: String) -> Door:
-	"""Trouve une porte par son ID dans la scène actuelle"""
+	"""Trouve une door par son ID dans la scène actuelle"""
 	if not current_room_node:
 		return null
 	
-	# Chercher récursivement dans tous les enfants
 	return _search_door_recursive(current_room_node, door_id)
 
 func _search_door_recursive(node: Node, door_id: String) -> Door:
-	"""Recherche récursive d'une porte"""
-	# Vérifier le nœud actuel
+	"""Recherche récursive d'une door"""
 	if node is Door and node.door_id == door_id:
 		return node
 	
-	# Chercher dans les enfants
 	for child in node.get_children():
 		var result = _search_door_recursive(child, door_id)
 		if result:
@@ -176,7 +192,14 @@ func _search_door_recursive(node: Node, door_id: String) -> Door:
 
 # === LEGACY ===
 func transition_to_room(target_room_id: String):
+	"""Transition simple sans spawn spécifique"""
 	await load_room(target_room_id)
+	await _spawn_player_at_default()
+
+# === RESPAWN POUR DEATH STATE ===
+func load_room_for_respawn(room_id: String):
+	"""Charge une room pour respawn (sans changer position joueur)"""
+	await load_room(room_id)
 
 func cleanup_world():
 	_cleanup_player()
