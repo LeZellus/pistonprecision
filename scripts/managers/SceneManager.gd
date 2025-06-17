@@ -1,4 +1,4 @@
-# scripts/managers/SceneManager.gd - Version sans positions hardcodées
+# scripts/managers/SceneManager.gd - CORRECTION: Méthodes asynchrones pour Door
 extends Node
 
 # === REFERENCES ===
@@ -96,7 +96,7 @@ func _register_room_spawns():
 	if spawn_manager:
 		spawn_manager.find_spawns_in_scene()
 
-# === SPAWN SYSTEM - SUPPRIME TOUTES LES POSITIONS HARDCODÉES ===
+# === SPAWN SYSTEM ===
 func _spawn_player_at_default():
 	"""Spawn au point par défaut de la room"""
 	if not player or not is_instance_valid(player):
@@ -131,9 +131,9 @@ func _safe_spawn_player():
 	
 	await get_tree().process_frame
 
-# === TRANSITION AVEC SPAWN DOOR ===
+# === TRANSITION AVEC SPAWN DOOR (CORRIGÉ) ===
 func transition_to_room_with_spawn(target_room_id: String, target_spawn_id: String):
-	"""Transition vers une salle et spawn sur la door avec l'ID donné"""
+	"""CORRECTION: Méthode asynchrone pour Door"""
 	if not current_world:
 		push_error("Aucun monde chargé")
 		return

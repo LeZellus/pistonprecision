@@ -1,12 +1,12 @@
-# scripts/objects/Door.gd - Intégration complète avec CheckpointManager
+# scripts/objects/Door.gd - CORRECTION SIMPLE: Une seule source de vérité
 extends Area2D
 class_name Door
 
 # === CONFIGURATION ===
-@export var door_id: String = ""  # ID de cette porte (ex: "room_01_left")
-@export var target_room_id: String = ""  # Salle cible (ex: "room_02")
-@export var target_spawn_id: String = ""  # ID de la porte cible (ex: "room_02_right")
-@export_enum("left", "right") var spawn_side: String = "left"  # Côté où spawner
+@export var door_id: String = ""  
+@export var target_room_id: String = ""  
+@export var target_spawn_id: String = ""  
+@export_enum("left", "right") var spawn_side: String = "left"  
 @export var is_locked: bool = false
 
 # === COMPONENTS ===
@@ -16,9 +16,7 @@ class_name Door
 var is_open: bool = false
 
 func _ready():
-	# Ajouter au groupe pour recherche facile
 	add_to_group("doors")
-	
 	body_entered.connect(_on_body_entered)
 	collision_layer = 0
 	collision_mask = 1
@@ -42,35 +40,23 @@ func _on_body_entered(body: Node2D):
 	if is_locked or target_room_id == "" or target_spawn_id == "":
 		return
 	
-	# IMPORTANT: Sauvegarder le checkpoint AVANT la transition
-	_save_checkpoint()
-	
 	_open_door()
+	
+	# Effectuer la transition
 	SceneManager.transition_to_room_with_spawn(target_room_id, target_spawn_id)
+	
+	# CORRECTION: Sauvegarder IMMÉDIATEMENT la destination 
+	# (pas besoin d'attendre que la door destination existe)
+	_save_destination_as_checkpoint()
 
-func _save_checkpoint():
-	"""Sauvegarde cette door comme checkpoint dans TOUS les managers"""
-	var current_room_id = get_current_room_id()
-	var spawn_position = get_spawn_position()
+func _save_destination_as_checkpoint():
+	"""SIMPLIFIÉ: Sauvegarde directement les infos de destination"""
+	print("Door: Sauvegarde checkpoint - door '%s' dans room '%s'" % [target_spawn_id, target_room_id])
 	
-	# 1. CheckpointManager (pour la logique de respawn)
-	var checkpoint_manager = get_node_or_null("/root/CheckpointManager")
-	if checkpoint_manager:
-		checkpoint_manager.set_door_checkpoint(door_id, current_room_id, spawn_position)
-	
-	# 2. GameManager (pour la sauvegarde persistante)
+	# Une seule source de vérité : GameManager
 	var game_manager = get_node_or_null("/root/GameManager")
 	if game_manager and game_manager.has_method("set_last_door"):
-		game_manager.set_last_door(door_id, current_room_id)
-	
-	print("Door: Checkpoint complet sauvegardé - door '%s' room '%s' pos %v" % [door_id, current_room_id, spawn_position])
-
-func get_current_room_id() -> String:
-	"""Récupère l'ID de la room actuelle depuis SceneManager"""
-	var scene_manager = get_node_or_null("/root/SceneManager")
-	if scene_manager and scene_manager.has_method("get_current_room_id"):
-		return scene_manager.get_current_room_id()
-	return ""
+		game_manager.set_last_door(target_spawn_id, target_room_id)
 
 func get_spawn_position() -> Vector2:
 	"""Retourne la position de spawn selon le côté"""

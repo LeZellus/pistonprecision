@@ -1,4 +1,4 @@
-# scripts/managers/GameManager.gd - Ajout système checkpoint doors
+# scripts/managers/GameManager.gd - DEBUG SAUVEGARDE
 extends Node
 
 # === GAME STATES ===
@@ -21,7 +21,7 @@ var total_time: float = 0.0
 var death_count: int = 0
 var session_deaths: int = 0
 
-# === NOUVEAU : DOOR CHECKPOINT SYSTEM ===
+# === DOOR CHECKPOINT SYSTEM ===
 var last_door_id: String = ""
 var last_room_id: String = ""
 
@@ -36,62 +36,143 @@ const SAVE_FILE_PATH = "user://save_game.dat"
 func _ready():
 	name = "GameManager"
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	
+	# DEBUG: Vérifier les permissions d'écriture
+	print("=== GAMEMANAGER DEBUG SAUVEGARDE ===")
+	print("Chemin de sauvegarde: ", SAVE_FILE_PATH)
+	print("Répertoire user:// = ", OS.get_user_data_dir())
+	
 	load_game_data()
 	print("GameManager: Chargé avec %d morts totales" % death_count)
-	print("GameManager: Dernier checkpoint - door: '%s' dans room: '%s'" % [last_door_id, last_room_id])
+	_debug_current_checkpoint()
+	
+	# TEST: Sauvegarder immédiatement pour vérifier
+	_test_save_system()
 	
 func _input(event):
-	# Appuyer sur F12 pour simuler 3000 morts
+	# Debug: F12 pour simuler morts, F11 pour clear checkpoint, F10 pour test save
 	if Input.is_key_pressed(KEY_F12):
 		reset_death_count()
 		death_count = 6000
-		print("Debug: Death count mis à 3000")
+		print("Debug: Death count mis à 6000")
+	elif Input.is_key_pressed(KEY_F11):
+		clear_checkpoint()
+		print("Debug: Checkpoint effacé")
+	elif Input.is_key_pressed(KEY_F10):
+		_test_save_system()
+
+func _test_save_system():
+	"""TEST: Vérifier que la sauvegarde fonctionne"""
+	print("\n=== TEST SYSTÈME DE SAUVEGARDE ===")
+	
+	# Test écriture
+	var test_data = {"test": "valeur_test", "timestamp": Time.get_unix_time_from_system()}
+	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
+	
+	if not file:
+		print("ERREUR: Impossible d'ouvrir le fichier en écriture!")
+		print("Code d'erreur: ", FileAccess.get_open_error())
+		return
+	
+	file.store_string(JSON.stringify(test_data))
+	file.close()
+	print("✅ Test écriture: OK")
+	
+	# Test lecture
+	file = FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
+	if not file:
+		print("ERREUR: Impossible de lire le fichier!")
+		return
+	
+	var content = file.get_as_text()
+	file.close()
+	print("✅ Test lecture: OK")
+	print("Contenu lu: ", content)
+	
+	# Restaurer vraies données
+	save_game_data()
+	print("✅ Données restaurées")
 
 func _process(delta):
 	if current_state == GameState.PLAYING:
 		level_time += delta
 		total_time += delta
 
-# === NOUVEAU : DOOR CHECKPOINT SYSTEM ===
+# === DOOR CHECKPOINT SYSTEM ===
 func set_last_door(door_id: String, room_id: String):
-	"""Sauvegarde la dernière door traversée comme checkpoint"""
+	"""CORRECTION: Remplace toujours l'ancien checkpoint"""
+	print("\n=== SET_LAST_DOOR APPELÉ ===")
+	print("Anciens: door='%s', room='%s'" % [last_door_id, last_room_id])
+	print("Nouveaux: door='%s', room='%s'" % [door_id, room_id])
+	
+	# DEBUG: Vérifier que les paramètres ne sont pas vides
+	if door_id.is_empty():
+		print("ERREUR: door_id est vide!")
+		return
+	if room_id.is_empty():
+		print("ERREUR: room_id est vide!")
+		return
+	
+	# Remplacer l'ancien checkpoint
 	last_door_id = door_id
 	last_room_id = room_id
 	
-	print("GameManager: Nouveau checkpoint - door '%s' dans room '%s'" % [door_id, room_id])
+	print("✅ Checkpoint mis à jour en mémoire")
 	
-	# Sauvegarde automatique
-	save_checkpoint_data()
+	# Sauvegarde automatique AVEC DEBUG
+	var success = save_checkpoint_data()
+	if success:
+		print("✅ Sauvegarde sur disque réussie")
+	else:
+		print("❌ ÉCHEC sauvegarde sur disque")
+	
+	_debug_current_checkpoint()
 
 func get_last_door_id() -> String:
-	"""Retourne l'ID de la dernière door traversée"""
 	return last_door_id
 
 func get_last_room_id() -> String:
-	"""Retourne l'ID de la dernière room"""
 	return last_room_id
 
 func has_checkpoint() -> bool:
-	"""Vérifie s'il y a un checkpoint sauvegardé"""
 	return not last_door_id.is_empty() and not last_room_id.is_empty()
 
 func clear_checkpoint():
-	"""Efface le checkpoint (pour nouveau jeu)"""
+	"""Efface le checkpoint"""
+	print("GameManager: Effacement checkpoint '%s' (room '%s')" % [last_door_id, last_room_id])
 	last_door_id = ""
 	last_room_id = ""
-	print("GameManager: Checkpoint effacé")
+	save_checkpoint_data()
 
-func save_checkpoint_data():
-	"""Sauvegarde rapide du checkpoint uniquement"""
+func _debug_current_checkpoint():
+	"""Affiche le checkpoint actuel"""
+	print("--- CHECKPOINT ACTUEL ---")
+	if has_checkpoint():
+		print("Door: '%s'" % last_door_id)
+		print("Room: '%s'" % last_room_id)
+	else:
+		print("Aucun checkpoint door")
+	print("------------------------")
+
+func save_checkpoint_data() -> bool:
+	"""Sauvegarde rapide du checkpoint uniquement - AVEC DEBUG"""
+	print("save_checkpoint_data() appelé...")
+	
 	var save_data = _create_save_data()
+	print("Données à sauvegarder: ", save_data)
 	
 	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
-	if file:
-		file.store_string(JSON.stringify(save_data))
-		file.close()
-		print("GameManager: Checkpoint sauvegardé")
-	else:
-		push_error("Impossible de sauvegarder le checkpoint: " + SAVE_FILE_PATH)
+	if not file:
+		print("ERREUR: Impossible d'ouvrir fichier pour sauvegarde!")
+		print("Code d'erreur: ", FileAccess.get_open_error())
+		return false
+	
+	var json_string = JSON.stringify(save_data)
+	file.store_string(json_string)
+	file.close()
+	
+	print("✅ Fichier sauvegardé: %d caractères" % json_string.length())
+	return true
 
 # === DEATH SYSTEM ===
 func register_player_death():
@@ -100,6 +181,7 @@ func register_player_death():
 	session_deaths += 1
 	
 	print("GameManager: Mort #%d (session: %d)" % [death_count, session_deaths])
+	_debug_current_checkpoint()
 	
 	# Émettre le signal
 	player_died.emit(death_count)
@@ -107,16 +189,9 @@ func register_player_death():
 	# Sauvegarde automatique du compteur de morts
 	save_death_data()
 
-func save_death_data():
+func save_death_data() -> bool:
 	"""Sauvegarde rapide uniquement des données de mort"""
-	var save_data = _create_save_data()
-	
-	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
-	if file:
-		file.store_string(JSON.stringify(save_data))
-		file.close()
-	else:
-		push_error("Impossible de sauvegarder les morts: " + SAVE_FILE_PATH)
+	return save_checkpoint_data()  # Même fonction maintenant
 
 # === STATE MANAGEMENT ===
 func change_state(new_state: GameState):
@@ -142,37 +217,12 @@ func _enter_state(state: GameState):
 		GameState.PLAYING:
 			get_tree().paused = false
 
-# === LEVEL MANAGEMENT ===
-func start_level(level_name: String):
-	current_level = level_name
-	current_checkpoint = ""
-	level_time = 0.0
-	session_deaths = 0
-	change_state(GameState.PLAYING)
-
-func complete_level():
-	if current_level.is_empty():
-		return
-	
-	if not current_level in best_times or level_time < best_times[current_level]:
-		best_times[current_level] = level_time
-	
-	if not current_level in completed_levels:
-		completed_levels.append(current_level)
-	
-	level_completed.emit(current_level)
-	save_game_data()
-
-func set_checkpoint(checkpoint_id: String):
-	current_checkpoint = checkpoint_id
-	checkpoint_reached.emit(checkpoint_id)
-
 # === SAVE/LOAD ===
 func _create_save_data() -> Dictionary:
 	return {
 		"death_count": death_count,
-		"last_door_id": last_door_id,        # NOUVEAU
-		"last_room_id": last_room_id,        # NOUVEAU
+		"last_door_id": last_door_id,        
+		"last_room_id": last_room_id,        
 		"completed_levels": completed_levels,
 		"collectibles_found": collectibles_found,
 		"best_times": best_times,
@@ -180,36 +230,39 @@ func _create_save_data() -> Dictionary:
 		"version": "1.0"
 	}
 
-func save_game_data():
-	var save_data = _create_save_data()
-	
-	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
-	if file:
-		file.store_string(JSON.stringify(save_data))
-		file.close()
-	else:
-		push_error("Impossible de sauvegarder: " + SAVE_FILE_PATH)
+func save_game_data() -> bool:
+	print("save_game_data() appelé...")
+	return save_checkpoint_data()
 
 func load_game_data():
+	print("=== CHARGEMENT SAUVEGARDE ===")
+	
 	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
 	if not file:
-		print("GameManager: Aucune sauvegarde trouvée, utilisation des valeurs par défaut")
+		print("❌ Aucune sauvegarde trouvée à: ", SAVE_FILE_PATH)
+		print("Utilisation des valeurs par défaut")
 		return
 	
 	var json_string = file.get_as_text()
 	file.close()
 	
+	print("✅ Fichier lu: %d caractères" % json_string.length())
+	print("Contenu brut: ", json_string)
+	
 	var json = JSON.new()
 	var parse_result = json.parse(json_string)
 	
 	if parse_result != OK:
-		push_error("Sauvegarde corrompue")
+		print("❌ Sauvegarde corrompue!")
+		print("Erreur: ", json.get_error_message())
 		return
 	
 	var save_data = json.data
+	print("✅ JSON parsé: ", save_data)
+	
 	death_count = save_data.get("death_count", 0)
-	last_door_id = save_data.get("last_door_id", "")        # NOUVEAU
-	last_room_id = save_data.get("last_room_id", "")        # NOUVEAU
+	last_door_id = save_data.get("last_door_id", "")        
+	last_room_id = save_data.get("last_room_id", "")        
 	
 	var loaded_levels = save_data.get("completed_levels", [])
 	completed_levels.clear()
@@ -221,7 +274,10 @@ func load_game_data():
 	best_times = save_data.get("best_times", {})
 	total_time = save_data.get("total_time", 0.0)
 	
-	print("GameManager: Sauvegarde chargée - %d morts totales" % death_count)
+	print("✅ Données chargées:")
+	print("  - Deaths: %d" % death_count)
+	print("  - Last door: '%s'" % last_door_id)
+	print("  - Last room: '%s'" % last_room_id)
 
 # === UTILITIES ===
 func get_state_name() -> String:

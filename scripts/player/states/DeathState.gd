@@ -1,4 +1,4 @@
-# scripts/player/states/DeathState.gd - Version avec SpawnPoint par défaut
+# scripts/player/states/DeathState.gd - CORRECTION: Une seule source de vérité
 class_name DeathState
 extends State
 
@@ -86,51 +86,19 @@ func _perform_respawn():
 	
 	print("DeathState: Début du respawn...")
 	
-	# NOUVEAU: Utiliser CheckpointManager en priorité
-	var checkpoint_manager = get_node_or_null("/root/CheckpointManager")
-	if checkpoint_manager and checkpoint_manager.has_door_checkpoint():
-		print("DeathState: Checkpoint door trouvé dans CheckpointManager")
-		await _respawn_at_checkpoint_manager()
-		return
-	
-	# Fallback GameManager (pour compatibilité sauvegarde)
+	# SIMPLIFIÉ: Une seule source de checkpoint
 	var game_manager = get_node_or_null("/root/GameManager")
-	if game_manager:
+	if game_manager and game_manager.has_checkpoint():
 		var checkpoint_door_id = game_manager.get_last_door_id()
 		var checkpoint_room_id = game_manager.get_last_room_id()
 		
-		if not checkpoint_door_id.is_empty() and not checkpoint_room_id.is_empty():
-			print("DeathState: Checkpoint trouvé dans GameManager - door '%s' dans room '%s'" % [checkpoint_door_id, checkpoint_room_id])
-			await _respawn_at_checkpoint(checkpoint_door_id, checkpoint_room_id)
-			return
-	
-	# Aucun checkpoint door, utiliser SpawnPoint par défaut
-	print("DeathState: Pas de checkpoint door, utilisation du SpawnPoint par défaut")
-	await _respawn_at_default_spawn()
-
-func _respawn_at_checkpoint_manager():
-	"""NOUVEAU: Respawn utilisant CheckpointManager"""
-	var checkpoint_manager = get_node_or_null("/root/CheckpointManager")
-	if not checkpoint_manager:
-		await _respawn_at_default_spawn()
+		print("DeathState: Checkpoint trouvé - door '%s' dans room '%s'" % [checkpoint_door_id, checkpoint_room_id])
+		await _respawn_at_checkpoint(checkpoint_door_id, checkpoint_room_id)
 		return
 	
-	var checkpoint_room_id = checkpoint_manager.get_checkpoint_room_id()
-	var checkpoint_door_id = checkpoint_manager.get_checkpoint_door_id()
-	
-	# Changer de room si nécessaire
-	var scene_manager = get_node_or_null("/root/SceneManager")
-	if scene_manager:
-		var current_room = scene_manager.get_current_room_id()
-		if current_room != checkpoint_room_id:
-			print("DeathState: Changement de room vers '%s'" % checkpoint_room_id)
-			await scene_manager.load_room_for_respawn(checkpoint_room_id)
-	
-	# Utiliser la position sauvegardée
-	var spawn_position = checkpoint_manager.get_checkpoint_position()
-	print("DeathState: Respawn au checkpoint: %v (door '%s')" % [spawn_position, checkpoint_door_id])
-	
-	_apply_respawn_position(spawn_position)
+	# Pas de checkpoint door, utiliser SpawnPoint par défaut
+	print("DeathState: Pas de checkpoint door, utilisation du SpawnPoint par défaut")
+	await _respawn_at_default_spawn()
 
 func _respawn_at_checkpoint(door_id: String, room_id: String):
 	"""Respawn à la door checkpoint spécifiée"""
@@ -154,14 +122,13 @@ func _respawn_at_checkpoint(door_id: String, room_id: String):
 		await _respawn_at_default_spawn()
 		return
 	
-	# CORRECTION: Récupérer la position de spawn en sécurité
 	var spawn_position = target_door.get_spawn_position()
 	print("DeathState: Respawn à la position %v (door '%s')" % [spawn_position, door_id])
 	
 	_apply_respawn_position(spawn_position)
 
 func _respawn_at_default_spawn():
-	"""NOUVEAU: Respawn au SpawnPoint par défaut de la room actuelle"""
+	"""Respawn au SpawnPoint par défaut de la room actuelle"""
 	var spawn_manager = get_node_or_null("/root/SpawnManager")
 	if not spawn_manager:
 		print("DeathState: ERREUR - SpawnManager introuvable!")
@@ -212,10 +179,9 @@ func _find_door_recursive(node: Node, door_id: String) -> Door:
 	return null
 
 func _fallback_respawn():
-	"""Respawn de secours - SUPPRIME la position hardcodée"""
+	"""Respawn de secours"""
 	print("DeathState: Respawn de secours")
 	
-	# Essayer d'utiliser le SpawnManager même en fallback
 	var spawn_manager = get_node_or_null("/root/SpawnManager")
 	if spawn_manager:
 		var spawn_position = spawn_manager.get_default_spawn_position()
@@ -246,7 +212,7 @@ func _play_death_effects():
 	
 	AudioManager.play_sfx("player/death", 0.8)
 
-# === STATE MACHINE (simplifié) ===
+# === STATE MACHINE ===
 func process_physics(_delta: float) -> State:
 	parent.velocity = Vector2.ZERO
 	return null

@@ -62,28 +62,49 @@ func _show_settings():
 		settings_menu.visible = true
 
 func _start_game():
-	"""Lance le jeu - le joueur sera créé par le SceneManager"""
+	"""CORRECTION: Utilise le checkpoint sauvegardé au démarrage"""
 	print("Démarrage du jeu...")
 	game_started = true
 	
-	# Cache tous les menus
 	_hide_all_menus()
 	
-	# Changer l'état du GameManager
 	var game_manager = get_node_or_null("/root/GameManager")
 	if game_manager and game_manager.has_method("change_state"):
 		if "GameState" in game_manager:
 			game_manager.change_state(game_manager.GameState.PLAYING)
 	
-	# Vérifier les dépendances
 	if not starting_world:
 		push_error("Aucun monde de départ défini!")
 		return
 	
-	# NOUVEAU: Charger le monde qui créera automatiquement le joueur
-	await SceneManager.load_world_with_player(starting_world, starting_room)
+	# NOUVEAU: Vérifier s'il y a un checkpoint sauvegardé
+	if game_manager and game_manager.has_checkpoint():
+		var saved_room = game_manager.get_last_room_id()
+		var saved_door = game_manager.get_last_door_id()
+		
+		print("GameLevel: Checkpoint trouvé! Spawn sur door '%s' dans room '%s'" % [saved_door, saved_room])
+		await _start_at_checkpoint(saved_room, saved_door)
+	else:
+		print("GameLevel: Pas de checkpoint, spawn au starting_room '%s'" % starting_room)
+		await _start_at_beginning()
 	
 	print("=== Jeu initialisé et prêt ===")
+	
+func _start_at_checkpoint(room_id: String, door_id: String):
+	"""NOUVEAU: Démarre le jeu au checkpoint sauvegardé"""
+	await SceneManager.load_world_with_player(starting_world, room_id)
+	
+	# Attendre que le joueur soit créé et la room chargée
+	await get_tree().process_frame
+	
+	# Spawner sur la door spécifique
+	var scene_manager = get_node_or_null("/root/SceneManager")
+	if scene_manager:
+		await scene_manager._spawn_at_door(door_id)
+
+func _start_at_beginning():
+	"""Démarre le jeu normalement (nouveau jeu)"""
+	await SceneManager.load_world_with_player(starting_world, starting_room)
 
 func _hide_all_menus():
 	if menu_layer:
