@@ -22,7 +22,9 @@ var piston_direction: PistonDirection = PistonDirection.DOWN
 # === PHYSICS STATE ===
 var was_grounded: bool = false
 var wall_jump_timer: float = 0.0
-const WALL_JUMP_GRACE_TIME: float = 0.15
+var wall_jump_control_timer: float = 0.0  # Timer pour contrôle
+var last_wall_side: int = 0              # -1 = gauche, 1 = droite, 0 = aucun
+var last_wall_position: float = 0.0      # Position X du dernier wall jump
 
 # === DEATH SYSTEM ===
 var respawn_immunity_timer: float = 0.0
@@ -42,6 +44,15 @@ func _ready():
 func _process(delta: float):
 	if respawn_immunity_timer > 0:
 		respawn_immunity_timer -= delta
+		
+	# Décrémenter le wall jump timer
+	if wall_jump_timer > 0:
+		wall_jump_timer -= delta
+		if wall_jump_timer <= 0:
+			last_wall_side = 0  # Reset du côté quand timer fini
+			
+	if wall_jump_control_timer > 0:
+		wall_jump_control_timer -= delta
 
 func _setup_components():
 	detection_system = DetectionSystem.new(self)

@@ -1,3 +1,4 @@
+# scripts/player/states/StateTransitions.gd - AVEC WALL JUMP TIMER
 class_name StateTransitions
 
 static var _instance: StateTransitions
@@ -9,15 +10,12 @@ static func get_instance() -> StateTransitions:
 	return _instance
 
 func get_next_state(current_state: State, player: Player, delta: float) -> State:
-	# Cache des états au premier appel
 	if _state_cache.is_empty():
 		_cache_states(current_state)
 	
-	# IMPORTANT: Toujours vérifier la mort en premier
 	if _should_die(player):
 		return _get_state("DeathState")
 	
-	# Dispatch selon le type d'état
 	match current_state.get_script().get_global_name():
 		"IdleState", "RunState":
 			return _handle_ground_states(current_state, player, delta)
@@ -26,53 +24,38 @@ func get_next_state(current_state: State, player: Player, delta: float) -> State
 		"WallSlideState":
 			return _handle_wall_slide_state(current_state, player, delta)
 		"DashState":
-			return null  # DashState gère ses propres transitions
+			return null
 		"DeathState":
-			return null  # DeathState gère sa propre logique
+			return null
 	
 	return null
 
 func _should_die(player: Player) -> bool:
-	"""Vérifie si le joueur devrait mourir (chute dans le vide, etc.)"""
-	# Exemple : mort par chute (à adapter selon ton niveau)
-	if player.global_position.y > 1000:  # Limite du niveau
+	if player.global_position.y > 1000:
 		return true
-	
-	# Déjà mort ou en immunité
 	if player.is_player_dead() or player.has_death_immunity():
 		return false
-	
-	# Ajoute ici d'autres conditions de mort automatique si nécessaire
-	# Par exemple : contact avec des ennemis, pièges, etc.
-	
 	return false
 
 func _cache_states(reference_state: State):
-	"""Cache les références d'états une seule fois"""
 	var state_machine = reference_state.get_parent()
-	
 	for child in state_machine.get_children():
 		if child is State:
 			_state_cache[child.get_script().get_global_name()] = child
 
 func _get_state(state_name: String) -> State:
-	"""Récupère un état depuis le cache"""
 	return _state_cache.get(state_name)
 
 func _handle_ground_states(current_state: State, player: Player, _delta: float) -> State:
-	# Quitter le sol ?
 	if not player.is_on_floor():
 		return _get_state("JumpState") if player.velocity.y < 0 else _get_state("FallState")
 	
-	# Jump ?
 	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
 		return _get_state("JumpState")
 	
-	# Dash ?
 	if InputManager.was_dash_pressed() and player.actions_component.can_dash():
 		return _get_state("DashState")
 	
-	# Idle <-> Run
 	var movement = InputManager.get_movement()
 	var current_name = current_state.get_script().get_global_name()
 	
@@ -84,42 +67,54 @@ func _handle_ground_states(current_state: State, player: Player, _delta: float) 
 	return null
 
 func _handle_air_states(current_state: State, player: Player, _delta: float) -> State:
-	# Atterrir ?
 	if player.is_on_floor():
 		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
 	
-	# Jump depuis l'air ?
 	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
 		if InputManager.has_coyote_time():
 			return _get_state("JumpState")
 	
-	# Dash ?
 	if InputManager.was_dash_pressed() and player.actions_component.can_dash():
 		return _get_state("DashState")
 	
 	var current_name = current_state.get_script().get_global_name()
 	
-	# Jump -> Fall ?
 	if current_name == "JumpState" and player.velocity.y >= 0:
 		return _get_state("FallState")
 	
-	# Wall slide ?
-	if current_name == "FallState" and player.wall_detector.is_touching_wall() and player.velocity.y > 50:
+	# CORRECTION: Vérifier le wall jump timer avant d'autoriser wall slide
+	if current_name == "FallState" and _can_wall_slide(player):
 		return _get_state("WallSlideState")
 	
 	return null
 
 func _handle_wall_slide_state(_current_state: State, player: Player, _delta: float) -> State:
-	# Atterrir ?
 	if player.is_on_floor():
 		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
 	
-	# Wall jump ?
+	# CORRECTION: Wall jump depuis wall slide - PRIORITÉ ABSOLUE
 	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
+		print("Wall jump détecté depuis WallSlideState!")
 		return _get_state("JumpState")
 	
-	# Plus de mur ?
-	if not player.can_wall_slide():
+	# Sortir du wall slide si plus de mur OU timer actif
+	if not _can_wall_slide(player):
 		return _get_state("FallState")
 	
 	return null
+
+func _can_wall_slide(player: Player) -> bool:
+	"""Logique wall slide style Rite"""
+	var current_wall_side = player.wall_detector.get_wall_side()
+	
+	# Empêcher re-grab du même mur trop rapidement
+	if player.wall_jump_timer > 0 and current_wall_side == player.last_wall_side:
+		# MAIS autoriser si on s'est suffisamment éloigné (style Rite)
+		var distance_moved = abs(player.global_position.x - player.last_wall_position)
+		if distance_moved < PlayerConstants.WALL_JUMP_MIN_SEPARATION:
+			return false
+	
+	# Conditions normales de wall slide
+	return (player.wall_detector.is_touching_wall() and 
+			player.velocity.y > 30 and  # Seuil plus bas pour Rite
+			player.wall_detector.wall_detection_active)
