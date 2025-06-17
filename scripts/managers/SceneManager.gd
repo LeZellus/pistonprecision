@@ -1,4 +1,4 @@
-# scripts/managers/SceneManager.gd - Version avec SpawnManager
+# scripts/managers/SceneManager.gd - Version sans positions hardcodées
 extends Node
 
 # === REFERENCES ===
@@ -96,7 +96,7 @@ func _register_room_spawns():
 	if spawn_manager:
 		spawn_manager.find_spawns_in_scene()
 
-# === SPAWN SYSTEM ===
+# === SPAWN SYSTEM - SUPPRIME TOUTES LES POSITIONS HARDCODÉES ===
 func _spawn_player_at_default():
 	"""Spawn au point par défaut de la room"""
 	if not player or not is_instance_valid(player):
@@ -112,7 +112,7 @@ func _spawn_player_at_default():
 	player.global_position = spawn_manager.get_default_spawn_position()
 	
 	await _safe_spawn_player()
-	print("SceneManager: Joueur spawné à la position par défaut")
+	print("SceneManager: Joueur spawné à la position par défaut: %v" % player.global_position)
 
 func _safe_spawn_player():
 	"""Fix universel spawn"""

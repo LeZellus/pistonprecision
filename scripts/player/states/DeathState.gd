@@ -1,4 +1,4 @@
-# scripts/player/states/DeathState.gd - Version avec respawn door
+# scripts/player/states/DeathState.gd - Version avec SpawnPoint par défaut
 class_name DeathState
 extends State
 
@@ -86,66 +86,95 @@ func _perform_respawn():
 	
 	print("DeathState: Début du respawn...")
 	
-	# NOUVEAU : Récupérer les infos de checkpoint depuis GameManager
+	# NOUVEAU: Utiliser CheckpointManager en priorité
+	var checkpoint_manager = get_node_or_null("/root/CheckpointManager")
+	if checkpoint_manager and checkpoint_manager.has_door_checkpoint():
+		print("DeathState: Checkpoint door trouvé dans CheckpointManager")
+		await _respawn_at_checkpoint_manager()
+		return
+	
+	# Fallback GameManager (pour compatibilité sauvegarde)
 	var game_manager = get_node_or_null("/root/GameManager")
-	if not game_manager:
-		print("DeathState: ERREUR - GameManager introuvable!")
-		_fallback_respawn()
+	if game_manager:
+		var checkpoint_door_id = game_manager.get_last_door_id()
+		var checkpoint_room_id = game_manager.get_last_room_id()
+		
+		if not checkpoint_door_id.is_empty() and not checkpoint_room_id.is_empty():
+			print("DeathState: Checkpoint trouvé dans GameManager - door '%s' dans room '%s'" % [checkpoint_door_id, checkpoint_room_id])
+			await _respawn_at_checkpoint(checkpoint_door_id, checkpoint_room_id)
+			return
+	
+	# Aucun checkpoint door, utiliser SpawnPoint par défaut
+	print("DeathState: Pas de checkpoint door, utilisation du SpawnPoint par défaut")
+	await _respawn_at_default_spawn()
+
+func _respawn_at_checkpoint_manager():
+	"""NOUVEAU: Respawn utilisant CheckpointManager"""
+	var checkpoint_manager = get_node_or_null("/root/CheckpointManager")
+	if not checkpoint_manager:
+		await _respawn_at_default_spawn()
 		return
 	
-	var checkpoint_door_id = game_manager.get_last_door_id()
-	var checkpoint_room_id = game_manager.get_last_room_id()
+	var checkpoint_room_id = checkpoint_manager.get_checkpoint_room_id()
+	var checkpoint_door_id = checkpoint_manager.get_checkpoint_door_id()
 	
-	print("DeathState: Checkpoint trouvé - door '%s' dans room '%s'" % [checkpoint_door_id, checkpoint_room_id])
+	# Changer de room si nécessaire
+	var scene_manager = get_node_or_null("/root/SceneManager")
+	if scene_manager:
+		var current_room = scene_manager.get_current_room_id()
+		if current_room != checkpoint_room_id:
+			print("DeathState: Changement de room vers '%s'" % checkpoint_room_id)
+			await scene_manager.load_room_for_respawn(checkpoint_room_id)
 	
-	# Vérifier si on a un checkpoint valide
-	if checkpoint_door_id.is_empty() or checkpoint_room_id.is_empty():
-		print("DeathState: Pas de checkpoint, utilisation de la position par défaut")
-		_fallback_respawn()
-		return
+	# Utiliser la position sauvegardée
+	var spawn_position = checkpoint_manager.get_checkpoint_position()
+	print("DeathState: Respawn au checkpoint: %v (door '%s')" % [spawn_position, checkpoint_door_id])
 	
-	# Respawn au checkpoint
-	await _respawn_at_checkpoint(checkpoint_door_id, checkpoint_room_id)
+	_apply_respawn_position(spawn_position)
 
 func _respawn_at_checkpoint(door_id: String, room_id: String):
 	"""Respawn à la door checkpoint spécifiée"""
-	
-	# Vérifier si on doit changer de room
 	var scene_manager = get_node_or_null("/root/SceneManager")
 	if not scene_manager:
 		print("DeathState: ERREUR - SceneManager introuvable!")
-		_fallback_respawn()
+		await _respawn_at_default_spawn()
 		return
 	
 	var current_room = scene_manager.get_current_room_id()
-	print("DeathState: Room actuelle '%s', room checkpoint '%s'" % [current_room, room_id])
 	
 	# Changer de room si nécessaire
-	print("DEBUG: Position joueur AVANT changement room: %v" % parent.global_position)
-	
 	if current_room != room_id:
 		print("DeathState: Changement de room vers '%s'" % room_id)
 		await scene_manager.load_room_for_respawn(room_id)
-		
-		# APRÈS changement de room
-		print("DEBUG: Position joueur APRÈS changement room: %v" % parent.global_position)
 	
 	# Trouver la door dans la room actuelle
 	var target_door = _find_door_by_id(door_id)
-	if target_door:
-		var spawn_position = target_door.get_spawn_position()
-		print("DEBUG: Position SpawnPoint: %v" % spawn_position)
-		
-		parent.global_position = spawn_position
-		print("DEBUG: Position joueur APRÈS assignation: %v" % parent.global_position)
-		
-		parent.move_and_slide()
-		print("DEBUG: Position joueur APRÈS move_and_slide: %v" % parent.global_position)
+	if not target_door:
+		print("DeathState: Door '%s' introuvable, utilisation du SpawnPoint par défaut" % door_id)
+		await _respawn_at_default_spawn()
+		return
 	
-	# Positionner le joueur devant la door
+	# CORRECTION: Récupérer la position de spawn en sécurité
 	var spawn_position = target_door.get_spawn_position()
 	print("DeathState: Respawn à la position %v (door '%s')" % [spawn_position, door_id])
 	
+	_apply_respawn_position(spawn_position)
+
+func _respawn_at_default_spawn():
+	"""NOUVEAU: Respawn au SpawnPoint par défaut de la room actuelle"""
+	var spawn_manager = get_node_or_null("/root/SpawnManager")
+	if not spawn_manager:
+		print("DeathState: ERREUR - SpawnManager introuvable!")
+		_fallback_respawn()
+		return
+	
+	var spawn_position = spawn_manager.get_default_spawn_position()
+	print("DeathState: Respawn au SpawnPoint par défaut: %v" % spawn_position)
+	
+	_apply_respawn_position(spawn_position)
+
+func _apply_respawn_position(spawn_position: Vector2):
+	"""Applique la position de respawn et finalise le respawn"""
 	parent.global_position = spawn_position
 	parent.velocity = Vector2.ZERO
 	parent.move_and_slide()
@@ -183,10 +212,19 @@ func _find_door_recursive(node: Node, door_id: String) -> Door:
 	return null
 
 func _fallback_respawn():
-	"""Respawn de secours à la position par défaut"""
-	print("DeathState: Respawn de secours à la position par défaut")
+	"""Respawn de secours - SUPPRIME la position hardcodée"""
+	print("DeathState: Respawn de secours")
 	
-	parent.global_position = Vector2(-185, 30)
+	# Essayer d'utiliser le SpawnManager même en fallback
+	var spawn_manager = get_node_or_null("/root/SpawnManager")
+	if spawn_manager:
+		var spawn_position = spawn_manager.get_default_spawn_position()
+		if spawn_position != Vector2.ZERO:
+			_apply_respawn_position(spawn_position)
+			return
+	
+	# Si vraiment aucun spawn trouvé, utiliser la position actuelle
+	print("DeathState: ERREUR - Aucun spawn disponible, respawn sur place")
 	parent.velocity = Vector2.ZERO
 	parent.move_and_slide()
 	await get_tree().process_frame

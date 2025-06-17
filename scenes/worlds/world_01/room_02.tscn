@@ -1,5 +1,6 @@
-[gd_scene load_steps=6 format=4 uid="uid://c38acy50fcdcs"]
+[gd_scene load_steps=7 format=4 uid="uid://c38acy50fcdcs"]
 
+[ext_resource type="PackedScene" uid="uid://b2amkaoiymjxq" path="res://scenes/worlds/SpawnPoint.tscn" id="1_a10dc"]
 [ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_abstl"]
 [ext_resource type="PackedScene" uid="uid://cvi6m0d0bogvt" path="res://scenes/objects/DeathZone.tscn" id="4_q6v2f"]
 [ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="4_rpvke"]
@@ -8,6 +9,10 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sn25p"]
 
 [node name="Room02" type="Node2D"]
+
+[node name="SpawnPoint" parent="." instance=ExtResource("1_a10dc")]
+position = Vector2(129, 27)
+is_default_spawn = true
 
 [node name="TileMapLayer" type="Node" parent="."]
 
