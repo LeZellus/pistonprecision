@@ -1,4 +1,4 @@
-# scripts/ui/menus/PauseMenu.gd - PAUSE APRÈS ANIMATION
+# scripts/ui/menus/PauseMenu.gd - PAUSE INSTANTANÉE
 extends Control
 
 signal resume_requested
@@ -24,9 +24,8 @@ func _ready():
 	if settings_button: settings_button.pressed.connect(_on_settings_pressed)
 	if menu_button: menu_button.pressed.connect(_on_menu_pressed)
 	
-	# Connecter les signaux de transition
+	# Connecter SEULEMENT le signal de resume (pas le pause)
 	if transition_manager:
-		transition_manager.pause_animation_complete.connect(_on_pause_transition_complete)
 		transition_manager.resume_animation_complete.connect(_on_resume_transition_complete)
 	
 	# Commencer caché
@@ -57,21 +56,23 @@ func _on_menu_pressed():
 
 # === MÉTHODES PUBLIQUES ===
 func show_pause():
-	"""Affiche le menu pause avec transition - PAUSE APRÈS"""
+	"""🔧 NOUVELLE LOGIQUE: Pause INSTANTANÉE + animation en parallèle"""
 	if is_transitioning:
 		return
 	
 	visible = true
 	_disable_buttons()
 	
+	# 🔧 PAUSE IMMÉDIATE - PAS D'ATTENTE !
+	get_tree().paused = true
+	print("⏸️ Pause INSTANTANÉE activée")
+	
+	# Animation EN PARALLÈLE (fonctionne grâce à PROCESS_MODE_WHEN_PAUSED)
 	if transition_manager:
-		is_transitioning = true
-		# 🔧 PAS DE PAUSE ICI - Elle se fera après l'animation
 		transition_manager.start_pause_transition()
-	else:
-		# Si pas de transition, pause immédiate
-		get_tree().paused = true
-		_complete_pause_show()
+	
+	# Activation immédiate des boutons (pas d'attente d'animation)
+	_complete_pause_show()
 
 func hide_pause():
 	"""Cache le menu pause sans signal"""
@@ -88,22 +89,14 @@ func _start_resume_transition():
 	is_transitioning = true
 	transition_manager.start_resume_transition()
 
-func _on_pause_transition_complete():
-	"""Appelé APRÈS que le piston soit en place"""
-	print("✅ Animation pause terminée - PAUSE MAINTENANT")
-	is_transitioning = false
-	
-	# 🔧 PAUSE ICI, après l'animation
-	get_tree().paused = true
-	_complete_pause_show()
-
 func _on_resume_transition_complete():
+	"""Appelé APRÈS l'animation de resume"""
 	print("✅ Animation reprise terminée")
 	is_transitioning = false
 	_resume_game()
 
 func _complete_pause_show():
-	"""Active les boutons"""
+	"""Active les boutons IMMÉDIATEMENT"""
 	_enable_buttons()
 	# Focus automatique sur le premier bouton
 	if resume_button:
