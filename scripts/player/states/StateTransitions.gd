@@ -22,7 +22,8 @@ func get_next_state(current_state: State, player: Player, delta: float) -> State
 		"JumpState", "FallState":
 			return _handle_air_states(current_state, player, delta)
 		"WallSlideState":
-			return _handle_wall_slide_state(current_state, player, delta)
+			# WallSlide géré par WallSlideComponent maintenant
+			return _handle_wall_slide_fallback(current_state, player, delta)
 		# "DashState": DÉSACTIVÉ - géré par DashComponent
 		"DeathState":
 			return null
@@ -83,23 +84,23 @@ func _handle_air_states(current_state: State, player: Player, _delta: float) -> 
 	if current_name == "JumpState" and player.velocity.y >= 0:
 		return _get_state("FallState")
 	
-	if current_name == "FallState" and _can_wall_slide(player):
-		return _get_state("WallSlideState")
+	if current_name == "FallState":
+		# WallSlide géré par WallSlideComponent maintenant
+		# if _can_wall_slide(player):
+		#     return _get_state("WallSlideState")
+		pass
 	
 	return null
 
-func _handle_wall_slide_state(_current_state: State, player: Player, _delta: float) -> State:
+func _handle_wall_slide_fallback(_current_state: State, player: Player, _delta: float) -> State:
+	"""Fallback pour l'ancien WallSlideState - devrait rapidement sortir vers FallState"""
+	print("⚠️ Ancien WallSlideState détecté - transition vers FallState")
+	
 	if player.is_on_floor():
 		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
 	
-	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
-		print("Wall jump détecté depuis WallSlideState!")
-		return _get_state("JumpState")
-	
-	if not _can_wall_slide(player):
-		return _get_state("FallState")
-	
-	return null
+	# Force la sortie vers FallState (le component gère maintenant)
+	return _get_state("FallState")
 
 func _can_wall_slide(player: Player) -> bool:
 	var current_wall_side = player.wall_detector.get_wall_side()
