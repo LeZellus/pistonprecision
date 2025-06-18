@@ -26,10 +26,6 @@ var wall_jump_timer: float = 0.0
 var last_wall_side: int = 0
 var last_wall_position: float = 0.0
 
-# === DEATH SYSTEM ===
-var respawn_immunity_timer: float = 0.0
-const RESPAWN_IMMUNITY_TIME: float = 0.0
-
 # === COLLECTIBLES ===
 var collectibles_count: int = 0
 
@@ -40,20 +36,6 @@ func _ready():
 	_connect_signals()
 	state_machine.init(self)
 	add_to_group("player")
-	
-func _input(event):
-	if Input.is_key_pressed(KEY_F6):
-		print("🔥 MORT FORCÉE PAR F6")
-		trigger_death()
-	
-	# TEST 2: Respawn manuel (R)
-	if Input.is_key_pressed(KEY_F7): # Entrée
-		print("🔄 RESPAWN MANUEL FORCÉ")
-		sprite.visible = true
-		sprite.modulate.a = 1.0
-		global_position = Vector2(0, 100)
-		velocity = Vector2.ZERO
-		print("Sprite visible: %s, Position: %v" % [sprite.visible, global_position])
 
 func _setup_components():
 	# COMPOSANTS CORE
@@ -70,9 +52,6 @@ func _setup_components():
 	add_child(movement_system)
 
 func _process(delta: float):
-	if respawn_immunity_timer > 0:
-		respawn_immunity_timer -= delta
-	
 	if wall_jump_timer > 0:
 		wall_jump_timer -= delta
 		if wall_jump_timer <= 0:
@@ -160,22 +139,24 @@ func _on_push_finished():
 
 # === DEATH SYSTEM ===
 func trigger_death():
-	if is_player_dead() or has_death_immunity():
+	"""Méthode principale pour déclencher la mort"""
+	if is_player_dead():
+		print("🚫 Mort bloquée - déjà mort")
 		return
 	
+	print("💀 DÉCLENCHEMENT MORT - Position: %v" % global_position)
+	
+	# Transition immédiate vers DeathState
 	var death_state = state_machine.get_node("DeathState")
 	if death_state:
 		state_machine.change_state(death_state)
-
+	else:
+		push_error("DeathState introuvable!")
+		
 func is_player_dead() -> bool:
+	"""Vérifie si le joueur est actuellement mort"""
 	var current_state = state_machine.current_state
 	return current_state and current_state.get_script().get_global_name() == "DeathState"
-
-func has_death_immunity() -> bool:
-	return respawn_immunity_timer > 0
-
-func start_respawn_immunity():
-	respawn_immunity_timer = RESPAWN_IMMUNITY_TIME
 
 func start_room_transition():
 	pass
