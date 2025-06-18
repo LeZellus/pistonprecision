@@ -4,10 +4,6 @@ extends State
 func _ready() -> void:
 	animation_name = "Jump"
 
-func enter() -> void:
-	super.enter()
-	_perform_jump()
-
 func process_physics(delta: float) -> State:
 	parent.physics_component.apply_gravity(delta)
 	
@@ -17,45 +13,9 @@ func process_physics(delta: float) -> State:
 	else:
 		parent.physics_component.apply_precise_air_movement(delta)
 	
-	if parent.velocity.y < 0 and InputManager.was_jump_released():
-		parent.velocity.y *= PlayerConstants.JUMP_CUT_MULTIPLIER
-	
 	parent.move_and_slide()
 	
 	return StateTransitions.get_instance().get_next_state(self, parent, delta)
-
-func _perform_jump():
-	var wall_side = parent.detection_system.get_wall_side()
-	
-	# WALL JUMP DÉTECTÉ
-	if wall_side != 0:
-		_perform_wall_jump(wall_side)
-	else:
-		_perform_normal_jump()
-
-func _perform_wall_jump(wall_side: int):
-	"""Wall jump avec momentum forcé"""
-	parent.velocity.y = PlayerConstants.JUMP_VELOCITY * 0.95
-	
-	# MOMENTUM HORIZONTAL FORCÉ (opposé au mur)
-	var horizontal_force = -wall_side * PlayerConstants.SPEED * 1.2
-	parent.velocity.x = horizontal_force
-	
-	# TIMER pour empêcher le re-grab du MÊME mur uniquement
-	parent.wall_jump_timer = PlayerConstants.WALL_JUMP_GRACE_TIME
-	parent.last_wall_side = wall_side
-	parent.last_wall_position = parent.global_position.x  # NOUVEAU
-	
-	print("Wall jump! Côté mur: %d, Direction forcée: %d" % [wall_side, -wall_side])
-	
-	AudioManager.play_sfx("player/wall_jump", 0.8)
-	ParticleManager.emit_jump(parent.global_position)
-
-func _perform_normal_jump():
-	"""Saut normal"""
-	parent.velocity.y = PlayerConstants.JUMP_VELOCITY
-	AudioManager.play_sfx_with_cooldown("player/jump", 150, 1.0)
-	ParticleManager.emit_jump(parent.global_position)
 
 func _apply_wall_jump_movement(delta: float):
 	"""Mouvement contraint pendant le wall jump timer"""

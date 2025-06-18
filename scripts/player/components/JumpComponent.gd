@@ -85,7 +85,7 @@ func _perform_wall_jump(wall_side: int):
 	player.velocity.y = PlayerConstants.JUMP_VELOCITY * 0.95
 	
 	# MOMENTUM HORIZONTAL FORCÉ (opposé au mur)
-	var horizontal_force = -wall_side * PlayerConstants.SPEED * 1.2
+	var horizontal_force = -wall_side * PlayerConstants.SPEED * PlayerConstants.WALL_JUMP_HORIZONTAL_FORCE
 	player.velocity.x = horizontal_force
 	
 	# TIMER pour empêcher le re-grab du MÊME mur

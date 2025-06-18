@@ -1,3 +1,4 @@
+# scripts/player/states/StateTransitions.gd - JUMP MIGRÉ VERS COMPONENT
 class_name StateTransitions
 
 static var _instance: StateTransitions
@@ -42,12 +43,11 @@ func _get_state(state_name: String) -> State:
 	return _state_cache.get(state_name)
 
 func _handle_ground_states(current_state: State, player: Player, _delta: float) -> State:
+	# Transition vers l'air
 	if not player.is_on_floor():
 		return _get_state("JumpState") if player.velocity.y < 0 else _get_state("FallState")
 	
-	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
-		return _get_state("JumpState")
-	
+	# Transitions Idle ↔ Run
 	var movement = InputManager.get_movement()
 	var current_name = current_state.get_script().get_global_name()
 	
@@ -59,19 +59,17 @@ func _handle_ground_states(current_state: State, player: Player, _delta: float) 
 	return null
 
 func _handle_air_states(current_state: State, player: Player, _delta: float) -> State:
+	# Retour au sol
 	if player.is_on_floor():
 		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
 	
-	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
-		if InputManager.has_coyote_time():
-			return _get_state("JumpState")
-	
 	var current_name = current_state.get_script().get_global_name()
 	
+	# Transition Jump → Fall
 	if current_name == "JumpState" and player.velocity.y >= 0:
 		return _get_state("FallState")
 	
-	# NOUVEAU: Activer wall slide component au lieu de changer d'état
+	# Activer wall slide component depuis Fall
 	if current_name == "FallState" and player.wall_slide_component:
 		if player.wall_slide_component.has_method("try_activate"):
 			player.wall_slide_component.try_activate()

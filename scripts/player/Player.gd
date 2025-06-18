@@ -1,4 +1,4 @@
-# scripts/player/Player.gd - VERSION NETTOYÉE
+# scripts/player/Player.gd - AVEC JUMPCOMPONENT
 extends CharacterBody2D
 class_name Player
 
@@ -14,6 +14,7 @@ var controller: PlayerController
 var movement_system: MovementSystem
 var dash_component: DashComponent
 var wall_slide_component: WallSlideComponent
+var jump_component: JumpComponent  # NOUVEAU
 
 # === CACHED REFERENCES ===
 var camera: Camera2D
@@ -52,15 +53,19 @@ func _setup_components():
 	actions_component = PlayerActions.new(self)
 	controller = PlayerController.new(self)
 	
-	# NOUVEAU: Système hybride
+	# SYSTÈME HYBRIDE
 	movement_system = MovementSystem.new(self)
 	add_child(movement_system)
 	
+	# CRÉATION DES COMPONENTS
 	dash_component = DashComponent.new(self)
 	wall_slide_component = WallSlideComponent.new(self)
+	jump_component = JumpComponent.new(self)  # NOUVEAU
 	
+	# AJOUT AU SYSTÈME
 	movement_system.add_component(dash_component)
 	movement_system.add_component(wall_slide_component)
+	movement_system.add_component(jump_component)  # NOUVEAU
 	
 	# Ajouter les anciens composants
 	for component in [detection_system, physics_component, actions_component, controller]:
