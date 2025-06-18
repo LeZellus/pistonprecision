@@ -1,4 +1,4 @@
-# scripts/player/states/StateTransitions.gd - JUMP MIGRÉ VERS COMPONENT
+# scripts/player/states/StateTransitions.gd - AVEC AIRSTATE
 class_name StateTransitions
 
 static var _instance: StateTransitions
@@ -19,8 +19,8 @@ func get_next_state(current_state: State, player: Player, delta: float) -> State
 	match current_state.get_script().get_global_name():
 		"IdleState", "RunState":
 			return _handle_ground_states(current_state, player, delta)
-		"JumpState", "FallState":
-			return _handle_air_states(current_state, player, delta)
+		"AirState":  # NOUVEAU - remplace JumpState + FallState
+			return _handle_air_state(current_state, player, delta)
 		"DeathState":
 			return null
 	
@@ -43,9 +43,9 @@ func _get_state(state_name: String) -> State:
 	return _state_cache.get(state_name)
 
 func _handle_ground_states(current_state: State, player: Player, _delta: float) -> State:
-	# Transition vers l'air
+	# Transition vers l'air - SIMPLIFIÉ
 	if not player.is_on_floor():
-		return _get_state("JumpState") if player.velocity.y < 0 else _get_state("FallState")
+		return _get_state("AirState")  # UN SEUL STATE AÉRIEN
 	
 	# Transitions Idle ↔ Run
 	var movement = InputManager.get_movement()
@@ -58,20 +58,13 @@ func _handle_ground_states(current_state: State, player: Player, _delta: float) 
 	
 	return null
 
-func _handle_air_states(current_state: State, player: Player, _delta: float) -> State:
-	# Retour au sol
+func _handle_air_state(_current_state: State, player: Player, _delta: float) -> State:
+	# Retour au sol - SIMPLIFIÉ
 	if player.is_on_floor():
 		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
 	
-	var current_name = current_state.get_script().get_global_name()
-	
-	# Transition Jump → Fall
-	if current_name == "JumpState" and player.velocity.y >= 0:
-		return _get_state("FallState")
-	
-	# Activer wall slide component depuis Fall
-	if current_name == "FallState" and player.wall_slide_component:
-		if player.wall_slide_component.has_method("try_activate"):
-			player.wall_slide_component.try_activate()
+	# Activer wall slide component si nécessaire
+	if player.wall_slide_component and player.wall_slide_component.has_method("try_activate"):
+		player.wall_slide_component.try_activate()
 	
 	return null
