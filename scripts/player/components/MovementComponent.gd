@@ -1,4 +1,3 @@
-# scripts/player/components/MovementComponent.gd
 class_name MovementComponent
 extends Node
 
@@ -12,7 +11,7 @@ func is_active() -> bool:
 	return is_enabled
 
 func update(delta: float):
-	# À override dans les sous-classes
+	# Override dans les sous-classes
 	pass
 
 func enable():
@@ -20,8 +19,3 @@ func enable():
 
 func disable():
 	is_enabled = false
-
-func try_activate() -> bool:
-	"""Tente d'activer le composant. À override dans les sous-classes si nécessaire."""
-	enable()
-	return true

@@ -1,4 +1,4 @@
-# scripts/player/Player.gd - AVEC JUMPCOMPONENT
+# scripts/player/Player.gd - VERSION OPTIMISÉE
 extends CharacterBody2D
 class_name Player
 
@@ -7,14 +7,10 @@ class_name Player
 @onready var state_machine: StateMachine = $StateMachine
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
+# SYSTÈMES UNIFIÉS
 var detection_system: DetectionSystem
 var physics_component: PlayerPhysics
-var actions_component: PlayerActions
-var controller: PlayerController
 var movement_system: MovementSystem
-var dash_component: DashComponent
-var wall_slide_component: WallSlideComponent
-var jump_component: JumpComponent  # NOUVEAU
 
 # === CACHED REFERENCES ===
 var camera: Camera2D
@@ -46,78 +42,120 @@ func _ready():
 	add_to_group("player")
 
 func _setup_components():
-	# Système classique (garde les mêmes)
+	# COMPOSANTS CORE
 	detection_system = DetectionSystem.new(self)
 	physics_component = PlayerPhysics.new(self)
-	actions_component = PlayerActions.new(self)
-	controller = PlayerController.new(self)
+	add_child(detection_system)
+	add_child(physics_component)
 	
-	# SYSTÈME HYBRIDE
+	# SYSTÈME DE MOUVEMENT UNIFIÉ
 	movement_system = MovementSystem.new(self)
+	movement_system.add_component(JumpComponent.new(self))
+	movement_system.add_component(WallSlideComponent.new(self))
+	movement_system.add_component(DashComponent.new(self))
 	add_child(movement_system)
-	
-	# CRÉATION DES COMPONENTS
-	dash_component = DashComponent.new(self)
-	wall_slide_component = WallSlideComponent.new(self)
-	jump_component = JumpComponent.new(self)  # NOUVEAU
-	
-	# AJOUT AU SYSTÈME
-	movement_system.add_component(dash_component)
-	movement_system.add_component(wall_slide_component)
-	movement_system.add_component(jump_component)  # NOUVEAU
-	
-	# Ajouter les anciens composants
-	for component in [detection_system, physics_component, actions_component, controller]:
-		add_child(component)
-	
-	print("✅ Tous les composants créés (hybride + classique)")
 
 func _process(delta: float):
 	if respawn_immunity_timer > 0:
 		respawn_immunity_timer -= delta
-		
-	# Wall jump timers
+	
 	if wall_jump_timer > 0:
 		wall_jump_timer -= delta
 		if wall_jump_timer <= 0:
 			last_wall_side = 0
-		
-	# SYSTÈME HYBRIDE
-	if movement_system:
-		movement_system.update_all(delta)
+	
+	# UPDATE UNIFIÉ
+	movement_system.update_all(delta)
+
+func _physics_process(delta: float):
+	if is_player_dead():
+		state_machine.process_physics(delta)
+		return
+	
+	delta = min(delta, 1.0/30.0)
+	_handle_grounding()
+	state_machine.process_physics(delta)
+
+func _handle_grounding():
+	var grounded = self.is_on_floor()
+	detection_system.set_active(not grounded)
+	
+	if grounded and not was_grounded:
+		AudioManager.play_sfx("player/land", 1)
+		ParticleManager.emit_dust(global_position, 0.0, self)
+		wall_jump_timer = 0.0
+	
+	if grounded != was_grounded:
+		InputManager.set_grounded(grounded)
+		was_grounded = grounded
 
 func _connect_signals():
-	InputManager.rotate_left_requested.connect(_on_rotate_left)
-	InputManager.rotate_right_requested.connect(_on_rotate_right)
-	InputManager.push_requested.connect(_on_push_requested)
+	InputManager.rotate_left_requested.connect(rotate_piston.bind(-1))
+	InputManager.rotate_right_requested.connect(rotate_piston.bind(1))
+	InputManager.push_requested.connect(execute_push)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if is_player_dead():
+	if not is_player_dead():
+		state_machine.process_input(event)
+
+# === ACTIONS INTÉGRÉES ===
+func rotate_piston(direction: int):
+	var new_direction = (piston_direction + direction + 4) % 4
+	piston_direction = new_direction as PistonDirection
+	sprite.rotation_degrees = piston_direction * 90
+
+func execute_push():
+	if piston_direction == PistonDirection.DOWN:
 		return
-	state_machine.process_input(event)
+	
+	var push_vector = _get_push_vector()
+	var pushable_object = detection_system.detect_pushable_object(push_vector)
+	
+	if pushable_object and _can_push(push_vector):
+		var success = pushable_object.push(push_vector, pushable_object.push_force)
+		_play_push_effects(success)
 
-# === ROTATION & PUSH ===
-func _on_rotate_left():
-	actions_component.rotate_piston(-1)
+func _get_push_vector() -> Vector2:
+	match piston_direction:
+		PistonDirection.LEFT: return Vector2.LEFT
+		PistonDirection.UP: return Vector2.UP
+		PistonDirection.RIGHT: return Vector2.RIGHT
+		_: return Vector2.DOWN
 
-func _on_rotate_right():
-	actions_component.rotate_piston(1)
+func _can_push(direction: Vector2) -> bool:
+	var query = PhysicsRayQueryParameters2D.create(
+		global_position,
+		global_position + direction * 8.0,
+		0b00000010
+	)
+	query.exclude = [self]
+	return not world_space_state.intersect_ray(query)
 
-func _on_push_requested():
-	actions_component.execute_push()
+func _play_push_effects(success: bool):
+	sprite.play("Push")
+	AudioManager.play_sfx("player/push", 0.5)
+	
+	if success and camera and camera.has_method("shake"):
+		camera.shake(8.0, 0.15)
+	
+	sprite.animation_finished.connect(_on_push_finished, CONNECT_ONE_SHOT)
+
+func _on_push_finished():
+	if is_on_floor():
+		sprite.play("Run" if InputManager.get_movement() != 0 else "Idle")
 
 # === DEATH SYSTEM ===
 func trigger_death():
 	if is_player_dead() or has_death_immunity():
 		return
 	
-	var death_state: Node = state_machine.get_node_or_null("DeathState")
+	var death_state = state_machine.get_node("DeathState")
 	if death_state:
 		state_machine.change_state(death_state)
 
 func is_player_dead() -> bool:
-	var current_state: State = state_machine.current_state
-	return current_state != null and current_state.get_script().get_global_name() == "DeathState"
+	var current_state = state_machine.current_state
+	return current_state and current_state.get_script().get_global_name() == "DeathState"
 
 func has_death_immunity() -> bool:
 	return respawn_immunity_timer > 0
@@ -127,7 +165,7 @@ func start_respawn_immunity():
 
 func start_room_transition():
 	pass
-	
+
 # === COLLECTIBLES ===
 func add_collectible():
 	collectibles_count += 1
