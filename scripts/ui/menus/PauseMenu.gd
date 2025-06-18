@@ -1,4 +1,4 @@
-# scripts/ui/menus/PauseMenu.gd - PAUSE INSTANTANÉE
+# scripts/ui/menus/PauseMenu.gd - AJOUT RESET
 extends Control
 
 signal resume_requested
@@ -16,7 +16,6 @@ signal menu_requested
 var is_transitioning: bool = false
 
 func _ready():
-	# IMPORTANT: Permettre le traitement pendant la pause
 	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 	
 	# Connecter les boutons avec vérification
@@ -56,28 +55,43 @@ func _on_menu_pressed():
 
 # === MÉTHODES PUBLIQUES ===
 func show_pause():
-	"""🔧 NOUVELLE LOGIQUE: Pause INSTANTANÉE + animation en parallèle"""
+	"""Pause INSTANTANÉE + animation en parallèle"""
 	if is_transitioning:
 		return
 	
 	visible = true
 	_disable_buttons()
 	
-	# 🔧 PAUSE IMMÉDIATE - PAS D'ATTENTE !
+	# Pause immédiate
 	get_tree().paused = true
 	print("⏸️ Pause INSTANTANÉE activée")
 	
-	# Animation EN PARALLÈLE (fonctionne grâce à PROCESS_MODE_WHEN_PAUSED)
+	# Animation en parallèle
 	if transition_manager:
 		transition_manager.start_pause_transition()
 	
-	# Activation immédiate des boutons (pas d'attente d'animation)
+	# Activation immédiate des boutons
 	_complete_pause_show()
 
 func hide_pause():
 	"""Cache le menu pause sans signal"""
 	visible = false
 	get_tree().paused = false
+	is_transitioning = false  # ✅ Reset le flag
+
+# 🔧 NOUVELLE MÉTHODE POUR RESET COMPLET
+func force_reset():
+	"""Reset complet de l'état du pause menu"""
+	visible = false
+	is_transitioning = false
+	get_tree().paused = false
+	_enable_buttons()
+	
+	# Reset du transition manager si nécessaire
+	if transition_manager and transition_manager.has_method("force_reset"):
+		transition_manager.force_reset()
+	
+	print("🔄 PauseMenu: Reset forcé effectué")
 
 # === TRANSITIONS ===
 func _start_resume_transition():

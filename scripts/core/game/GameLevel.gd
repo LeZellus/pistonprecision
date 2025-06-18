@@ -1,4 +1,4 @@
-# scripts/core/game/GameLevel.gd - CORRECTION INPUT PAUSE
+# scripts/core/game/GameLevel.gd - CORRECTION DÉFINITIVE
 extends Node2D
 
 @export var starting_world: WorldData
@@ -13,43 +13,33 @@ extends Node2D
 var game_started: bool = false
 
 func _ready():
-	# CRITIQUE: Process toujours pour gérer les inputs même en pause
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	
 	# Connecter les signaux des menus
 	if main_menu:
 		main_menu.play_requested.connect(_start_game)
-		main_menu.settings_requested.connect(_show_settings)
+		main_menu.settings_requested.connect(_show_settings_from_main)
 	
 	if settings_menu:
-		settings_menu.back_requested.connect(_show_main_menu)
+		settings_menu.back_requested.connect(_on_settings_back)
 	
 	if pause_menu:
 		pause_menu.resume_requested.connect(_on_pause_resume_requested)
 		pause_menu.settings_requested.connect(_show_settings_from_pause)
-		pause_menu.menu_requested.connect(_return_to_main_menu)
+		pause_menu.menu_requested.connect(_quit_to_main_menu)
 	
 	_show_main_menu()
 
 func _unhandled_input(event):
-	# GESTION PAUSE/UNPAUSE avec Escape
 	if event.is_action_pressed("ui_cancel") and game_started:
-		
 		if get_tree().paused:
-			# Déjà en pause -> unpause
-			print("🔄 Unpause via Escape")
 			if pause_menu:
 				pause_menu.hide_pause()
 		else:
-			# Pas en pause -> pause
-			print("🔄 Pause via Escape")
 			_pause_game()
-		
-		# Marquer l'input comme traité
 		get_viewport().set_input_as_handled()
 
 func _pause_game():
-	"""Met le jeu en pause et affiche le menu"""
 	if not game_started:
 		return
 		
@@ -62,25 +52,93 @@ func _pause_game():
 		pause_menu.show_pause()
 
 func _on_pause_resume_requested():
-	"""Appelé quand le menu pause demande de reprendre"""
 	print("🔄 GameLevel: Resume demandé par PauseMenu")
-	
-	# Cacher le menu layer
 	if menu_layer:
 		menu_layer.visible = false
 
-# === RESTE DU CODE INCHANGÉ ===
+# ===== CORRECTION PRINCIPALE =====
+func _quit_to_main_menu():
+	"""🔧 CORRIGÉ: Quitte complètement le jeu vers le main menu"""
+	print("🏠 Retour au main menu - nettoyage complet...")
+	
+	# 1. 🔧 FORCER la fermeture complète du pause menu
+	if pause_menu:
+		pause_menu.visible = false  # ✅ Cache immédiatement
+		pause_menu.hide_pause()     # ✅ Reset l'état interne
+	
+	# 2. Forcer l'arrêt de la pause
+	get_tree().paused = false
+	
+	# 3. Nettoyer complètement le monde de jeu
+	SceneManager.cleanup_world()
+	
+	# 4. Marquer le jeu comme arrêté
+	game_started = false
+	
+	# 5. Changer l'état du GameManager
+	var game_manager = get_node_or_null("/root/GameManager")
+	if game_manager and game_manager.has_method("change_state"):
+		if "GameState" in game_manager:
+			game_manager.change_state(game_manager.GameState.MENU)
+	
+	# 6. 🔧 RESET complet de tous les menus
+	_force_reset_all_menus()
+	
+	# 7. Afficher seulement le main menu
+	_show_main_menu()
+	
+	print("✅ Retour au main menu terminé")
+
+func _force_reset_all_menus():
+	"""🔧 NOUVEAU: Reset forcé de l'état de tous les menus"""
+	if pause_menu:
+		pause_menu.visible = false
+		# Reset l'état interne du pause menu si il a des flags
+		if pause_menu.has_method("force_reset"):
+			pause_menu.force_reset()
+	
+	if settings_menu:
+		settings_menu.visible = false
+		# 🔧 NETTOYER les métadonnées
+		settings_menu.remove_meta("came_from_pause")
+	
+	if main_menu:
+		main_menu.visible = false  # On va le réactiver après
+
+# ===== GESTION SETTINGS CORRIGÉE =====
+func _show_settings_from_main():
+	"""Paramètres depuis le main menu"""
+	if main_menu:
+		main_menu.visible = false
+	if settings_menu:
+		settings_menu.visible = true
+		settings_menu.set_meta("came_from_pause", false)
+
 func _show_settings_from_pause():
+	"""Paramètres depuis le pause menu"""
 	if pause_menu:
 		pause_menu.visible = false
 	if settings_menu:
 		settings_menu.visible = true
+		settings_menu.set_meta("came_from_pause", true)
 
-func _return_to_main_menu():
-	if pause_menu:
-		pause_menu.hide_pause()
-	return_to_menu()
+func _on_settings_back():
+	"""🔧 NOUVEAU: Gestion centralisée du retour settings"""
+	var came_from_pause = settings_menu.get_meta("came_from_pause", false)
+	
+	settings_menu.visible = false
+	settings_menu.remove_meta("came_from_pause")  # ✅ Nettoyer
+	
+	if came_from_pause and game_started:
+		# Retour au pause menu (seulement si le jeu est encore actif)
+		if pause_menu:
+			pause_menu.visible = true
+	else:
+		# Retour au main menu
+		if main_menu:
+			main_menu.visible = true
 
+# === MÉTHODES EXISTANTES ===
 func _start_game():
 	print("Démarrage du jeu...")
 	game_started = true
@@ -117,11 +175,14 @@ func _start_at_beginning():
 	await SceneManager.load_world_with_player(starting_world, starting_room)
 
 func _show_main_menu():
+	"""🔧 CORRIGÉ: Affichage propre du main menu uniquement"""
 	game_started = false
 	get_tree().paused = false
 	
 	if menu_layer:
 		menu_layer.visible = true
+	
+	# 🔧 S'assurer qu'SEUL le main menu est visible
 	if main_menu:
 		main_menu.visible = true
 	if settings_menu:
@@ -134,12 +195,6 @@ func _show_main_menu():
 		if "GameState" in game_manager:
 			game_manager.change_state(game_manager.GameState.MENU)
 
-func _show_settings():
-	if main_menu:
-		main_menu.visible = false
-	if settings_menu:
-		settings_menu.visible = true
-
 func _hide_all_menus():
 	if menu_layer:
 		menu_layer.visible = false
@@ -149,17 +204,3 @@ func _hide_all_menus():
 		settings_menu.visible = false
 	if pause_menu:
 		pause_menu.visible = false
-
-func return_to_menu():
-	print("Retour au menu...")
-	game_started = false
-	get_tree().paused = false
-	
-	SceneManager.cleanup_world()
-	
-	var game_manager = get_node_or_null("/root/GameManager")
-	if game_manager and game_manager.has_method("change_state"):
-		if "GameState" in game_manager:
-			game_manager.change_state(game_manager.GameState.MENU)
-	
-	_show_main_menu()

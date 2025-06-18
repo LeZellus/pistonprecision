@@ -1,3 +1,4 @@
+# scripts/ui/menus/SettingsMenu.gd - RETOUR SIMPLIFIÉ
 extends Control
 
 signal back_requested
@@ -18,7 +19,9 @@ func _on_volume_changed(value: float):
 	AudioManager.set_master_volume(value)
 	
 func _on_back_pressed():
-	print("Retour au menu principal")
+	# 🔧 SIMPLIFIÉ: Toujours émettre le signal
+	# GameLevel gère la logique de retour
+	print("Retour demandé depuis settings")
 	back_requested.emit()
 
 func show_settings():
