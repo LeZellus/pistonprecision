@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://cus8ukj2p1vbb"]
+
+[ext_resource type="Texture2D" uid="uid://dinlvrewn057d" path="res://assets/sprites/transition/rock.png" id="1_phil5"]
+[ext_resource type="Texture2D" uid="uid://3qi11v6ifgy0" path="res://assets/sprites/transition/piston.png" id="2_iimoa"]
+
+[node name="CanvasLayer" type="CanvasLayer"]
+
+[node name="RockSprite" type="Sprite2D" parent="."]
+texture = ExtResource("1_phil5")
+
+[node name="PistonSprite" type="Sprite2D" parent="."]
+texture = ExtResource("2_iimoa")
+flip_h = true
