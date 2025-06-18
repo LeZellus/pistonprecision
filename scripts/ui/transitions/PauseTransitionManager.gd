@@ -1,4 +1,4 @@
-# scripts/ui/transitions/PauseTransitionManager.gd - ANIMATION INDÉPENDANTE
+# scripts/ui/transitions/PauseTransitionManager.gd - AJOUT FORCE STOP
 extends CanvasLayer
 
 # === RÉFÉRENCES AUX SPRITES (directes) ===
@@ -11,7 +11,6 @@ var is_paused: bool = false
 var is_animating: bool = false
 
 # === SIGNALS ===
-# 🔧 PLUS BESOIN du signal pause_animation_complete !
 signal resume_animation_complete
 
 # === CONSTANTS ===
@@ -24,13 +23,12 @@ const ROCK_SIZE = Vector2(1536, 1080)
 const PISTON_SIZE = Vector2(1080, 1080)
 
 # === TIMING ===
-const ROCK_FALL_TIME = 0.3  # 🔧 ACCÉLÉRÉ: était 0.8
+const ROCK_FALL_TIME = 0.3
 const PISTON_DELAY = 0.3
 const PISTON_SLIDE_TIME = 0.6
 const CRUSH_DELAY = 0.2
 
 func _ready():
-	# IMPORTANT: Process pendant la pause pour les animations
 	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 	_init_sprites()
 
@@ -46,9 +44,24 @@ func _init_sprites():
 	piston_sprite.position = Vector2(-PISTON_TOTAL_WIDTH, SCREEN_HEIGHT / 2)
 	piston_sprite.visible = false
 
+# 🔧 NOUVELLE MÉTHODE CRITIQUE
+func force_stop():
+	"""ARRÊT IMMÉDIAT de toute animation pour retour main menu"""
+	print("🛑 FORCE STOP: Arrêt immédiat des animations pause")
+	
+	# 1. Tuer les tweens
+	_cleanup_previous_transition()
+	
+	# 2. Reset des états
+	is_animating = false
+	is_paused = false
+	
+	# 3. Masquer immédiatement tous les sprites
+	_hide_all_sprites()
+
 # === ANIMATION PAUSE ===
 func start_pause_transition():
-	"""🔧 CORRECTION: Animation complète qui marche vraiment"""
+	"""Animation complète qui marche vraiment"""
 	if is_animating:
 		return
 	
@@ -66,10 +79,10 @@ func _setup_sprites_for_pause():
 	"""Reset complet des positions"""
 	rock_sprite.visible = true
 	rock_sprite.position.x = SCREEN_WIDTH - (ROCK_SIZE.x / 2)
-	rock_sprite.position.y = -ROCK_SIZE.y / 2  # Haut de l'écran
+	rock_sprite.position.y = -ROCK_SIZE.y / 2
 	
 	piston_sprite.visible = true
-	piston_sprite.position.x = -PISTON_TOTAL_WIDTH  # Hors écran à gauche
+	piston_sprite.position.x = -PISTON_TOTAL_WIDTH
 	piston_sprite.position.y = SCREEN_HEIGHT / 2
 
 func _animate_pause_fall():
@@ -79,12 +92,10 @@ func _animate_pause_fall():
 	var final_rock_y = SCREEN_HEIGHT / 2
 	var final_piston_x = _calculate_piston_position_left()
 	
-	# 🔧 ANIMATIONS EN PARALLÈLE - même timing !
-	# Rocher tombe
+	# Animations en parallèle
 	current_tween.tween_property(rock_sprite, "position:y", final_rock_y, ROCK_FALL_TIME)\
 		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUART)
 	
-	# Piston arrive EN MÊME TEMPS (parallel)
 	current_tween.parallel().tween_property(piston_sprite, "position:x", final_piston_x, ROCK_FALL_TIME)\
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUART)
 	
@@ -93,14 +104,6 @@ func _animate_pause_fall():
 	
 	# Fin de l'animation
 	current_tween.tween_callback(_on_pause_animation_finished)
-
-func _animate_piston_arrival():
-	var final_piston_x = _calculate_piston_position_left()
-	
-	var piston_tween = create_tween()
-	piston_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	piston_tween.tween_property(piston_sprite, "position:x", final_piston_x, PISTON_SLIDE_TIME)\
-		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUART)
 
 func _calculate_piston_position_left() -> float:
 	var rock_x = SCREEN_WIDTH - (ROCK_SIZE.x / 2)
@@ -117,24 +120,23 @@ func _on_pause_animation_finished():
 
 # === ANIMATION RESUME ===
 func start_resume_transition():
-	"""🔧 CORRECTION: Vérification et reset proper"""
+	"""Vérification et reset proper"""
 	if is_animating:
 		print("❌ Animation déjà en cours")
 		return
 		
 	if not is_paused:
 		print("❌ Pas en état pause - reset forcé")
-		# Reset d'urgence si état incohérent
 		_setup_sprites_for_pause()
 		is_paused = true
 	
-	print("🎬 Démarrage transition reprise - état pause: %s" % is_paused)
+	print("🎬 Démarrage transition reprise")
 	is_animating = true
 	_cleanup_previous_transition()
 	_animate_crush_sequence()
 
 func _animate_crush_sequence():
-	"""🔧 CORRECTION: Animation complète dans un seul tween"""
+	"""Animation complète dans un seul tween"""
 	var crush_tween = create_tween()
 	crush_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	
@@ -142,8 +144,6 @@ func _animate_crush_sequence():
 	var recoil_position = current_piston_x - 100
 	var final_exit_piston = -PISTON_SIZE.x
 	var final_exit_rock = SCREEN_WIDTH + ROCK_SIZE.x
-	
-	print("🎬 Positions - Current piston: %f, Recoil: %f" % [current_piston_x, recoil_position])
 	
 	# PHASE 1: Recul de préparation
 	crush_tween.tween_property(piston_sprite, "position:x", recoil_position, 0.2)\
@@ -175,7 +175,7 @@ func _on_resume_sequence_complete():
 
 # === UTILITAIRES ===
 func _cleanup_previous_transition():
-	"""🔧 AMÉLIORATION: Cleanup plus propre"""
+	"""Cleanup plus propre"""
 	if current_tween and current_tween.is_valid():
 		current_tween.kill()
 	current_tween = null
@@ -195,14 +195,3 @@ func is_pause_active() -> bool:
 
 func is_transition_active() -> bool:
 	return is_animating
-
-# === DEBUG ===
-func get_debug_info() -> Dictionary:
-	return {
-		"is_paused": is_paused,
-		"is_animating": is_animating,
-		"rock_pos": rock_sprite.position if rock_sprite else Vector2.ZERO,
-		"piston_pos": piston_sprite.position if piston_sprite else Vector2.ZERO,
-		"rock_visible": rock_sprite.visible if rock_sprite else false,
-		"piston_visible": piston_sprite.visible if piston_sprite else false
-	}

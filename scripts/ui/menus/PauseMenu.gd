@@ -1,4 +1,4 @@
-# scripts/ui/menus/PauseMenu.gd - AJOUT RESET
+# scripts/ui/menus/PauseMenu.gd - CORRECTION MAIN MENU
 extends Control
 
 signal resume_requested
@@ -48,9 +48,16 @@ func _on_settings_pressed():
 	settings_requested.emit()
 
 func _on_menu_pressed():
+	# 🔧 CORRECTION CRITIQUE: Retour main menu IMMÉDIAT
 	if is_transitioning:
 		return
-	print("Retour au menu principal")
+	
+	print("🏠 Retour main menu demandé - fermeture immédiate")
+	
+	# 1. Fermer IMMÉDIATEMENT le pause menu
+	_force_close_pause_menu()
+	
+	# 2. Émettre le signal APRÈS fermeture
 	menu_requested.emit()
 
 # === MÉTHODES PUBLIQUES ===
@@ -75,25 +82,38 @@ func show_pause():
 
 func hide_pause():
 	"""Cache le menu pause sans signal"""
-	visible = false
-	get_tree().paused = false
-	is_transitioning = false  # ✅ Reset le flag
+	_force_close_pause_menu()
 
-# 🔧 NOUVELLE MÉTHODE POUR RESET COMPLET
+# 🔧 NOUVELLE MÉTHODE POUR FERMETURE FORCÉE
+func _force_close_pause_menu():
+	"""Fermeture IMMÉDIATE et complète du pause menu"""
+	print("🔧 Fermeture forcée du pause menu")
+	
+	# 1. Masquer immédiatement
+	visible = false
+	
+	# 2. Arrêter toute transition
+	is_transitioning = false
+	if transition_manager and transition_manager.has_method("force_stop"):
+		transition_manager.force_stop()
+	
+	# 3. Forcer l'arrêt de la pause
+	get_tree().paused = false
+	
+	# 4. Réactiver les boutons
+	_enable_buttons()
+
+# 🔧 MÉTHODE DE RESET AMÉLIORÉE
 func force_reset():
 	"""Reset complet de l'état du pause menu"""
-	visible = false
-	is_transitioning = false
-	get_tree().paused = false
-	_enable_buttons()
+	print("🔄 PauseMenu: Reset forcé effectué")
+	_force_close_pause_menu()
 	
 	# Reset du transition manager si nécessaire
-	if transition_manager and transition_manager.has_method("force_reset"):
-		transition_manager.force_reset()
-	
-	print("🔄 PauseMenu: Reset forcé effectué")
+	if transition_manager and transition_manager.has_method("_hide_all_sprites"):
+		transition_manager._hide_all_sprites()
 
-# === TRANSITIONS ===
+# === TRANSITIONS (pour resume seulement) ===
 func _start_resume_transition():
 	if not transition_manager:
 		_resume_game()

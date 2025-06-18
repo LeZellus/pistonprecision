@@ -1,4 +1,4 @@
-# scripts/core/game/GameLevel.gd - CORRECTION DÉFINITIVE
+# scripts/core/game/GameLevel.gd - ORDRE CRITIQUE CORRIGÉ
 extends Node2D
 
 @export var starting_world: WorldData
@@ -58,54 +58,49 @@ func _on_pause_resume_requested():
 
 # ===== CORRECTION PRINCIPALE =====
 func _quit_to_main_menu():
-	"""🔧 CORRIGÉ: Quitte complètement le jeu vers le main menu"""
-	print("🏠 Retour au main menu - nettoyage complet...")
+	"""🔧 ORDRE CRITIQUE: Fermer pause menu AVANT tout le reste"""
+	print("🏠 Retour au main menu - ordre critique...")
 	
-	# 1. 🔧 FORCER la fermeture complète du pause menu
+	# 🔧 ÉTAPE 1: Fermer IMMÉDIATEMENT le pause menu
 	if pause_menu:
-		pause_menu.visible = false  # ✅ Cache immédiatement
-		pause_menu.hide_pause()     # ✅ Reset l'état interne
+		pause_menu.force_reset()  # ✅ Reset complet IMMÉDIAT
 	
-	# 2. Forcer l'arrêt de la pause
+	# 🔧 ÉTAPE 2: Forcer l'arrêt de la pause
 	get_tree().paused = false
 	
-	# 3. Nettoyer complètement le monde de jeu
+	# 🔧 ÉTAPE 3: Attendre 1 frame pour la propagation
+	await get_tree().process_frame
+	
+	# ÉTAPE 4: Nettoyer le monde de jeu
 	SceneManager.cleanup_world()
 	
-	# 4. Marquer le jeu comme arrêté
+	# ÉTAPE 5: Marquer le jeu comme arrêté
 	game_started = false
 	
-	# 5. Changer l'état du GameManager
+	# ÉTAPE 6: Changer l'état du GameManager
 	var game_manager = get_node_or_null("/root/GameManager")
 	if game_manager and game_manager.has_method("change_state"):
 		if "GameState" in game_manager:
 			game_manager.change_state(game_manager.GameState.MENU)
 	
-	# 6. 🔧 RESET complet de tous les menus
+	# ÉTAPE 7: Reset et affichage des menus
 	_force_reset_all_menus()
-	
-	# 7. Afficher seulement le main menu
 	_show_main_menu()
 	
-	print("✅ Retour au main menu terminé")
+	print("✅ Retour au main menu terminé - PauseMenu complètement fermé")
 
 func _force_reset_all_menus():
-	"""🔧 NOUVEAU: Reset forcé de l'état de tous les menus"""
-	if pause_menu:
-		pause_menu.visible = false
-		# Reset l'état interne du pause menu si il a des flags
-		if pause_menu.has_method("force_reset"):
-			pause_menu.force_reset()
+	"""Reset forcé de l'état de tous les menus"""
+	# 🔧 Le pause menu est DÉJÀ reseté par force_reset() plus haut
 	
 	if settings_menu:
 		settings_menu.visible = false
-		# 🔧 NETTOYER les métadonnées
 		settings_menu.remove_meta("came_from_pause")
 	
 	if main_menu:
 		main_menu.visible = false  # On va le réactiver après
 
-# ===== GESTION SETTINGS CORRIGÉE =====
+# ===== GESTION SETTINGS =====
 func _show_settings_from_main():
 	"""Paramètres depuis le main menu"""
 	if main_menu:
@@ -123,11 +118,11 @@ func _show_settings_from_pause():
 		settings_menu.set_meta("came_from_pause", true)
 
 func _on_settings_back():
-	"""🔧 NOUVEAU: Gestion centralisée du retour settings"""
+	"""Gestion centralisée du retour settings"""
 	var came_from_pause = settings_menu.get_meta("came_from_pause", false)
 	
 	settings_menu.visible = false
-	settings_menu.remove_meta("came_from_pause")  # ✅ Nettoyer
+	settings_menu.remove_meta("came_from_pause")
 	
 	if came_from_pause and game_started:
 		# Retour au pause menu (seulement si le jeu est encore actif)
@@ -175,14 +170,14 @@ func _start_at_beginning():
 	await SceneManager.load_world_with_player(starting_world, starting_room)
 
 func _show_main_menu():
-	"""🔧 CORRIGÉ: Affichage propre du main menu uniquement"""
+	"""Affichage propre du main menu uniquement"""
 	game_started = false
 	get_tree().paused = false
 	
 	if menu_layer:
 		menu_layer.visible = true
 	
-	# 🔧 S'assurer qu'SEUL le main menu est visible
+	# S'assurer qu'SEUL le main menu est visible
 	if main_menu:
 		main_menu.visible = true
 	if settings_menu:
