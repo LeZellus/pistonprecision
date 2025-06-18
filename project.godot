@@ -18,8 +18,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-GameManager="*res://scripts/managers/GameManager.gd"
-InputManager="*res://scripts/managers/InputManager.gd"
+GameManager="*res://scripts/core/game/GameManager.gd"
+InputManager="*res://scripts/core/input/InputManager.gd"
 AudioManager="*res://scripts/managers/AudioManager.gd"
 ParticleManager="*res://scripts/managers/ParticleManager.gd"
 DebugManager="*res://scripts/managers/DebugManager.gd"
