@@ -63,7 +63,7 @@ func _start_automatic_transition():
 	await get_tree().create_timer(0.6).timeout  # Court délai pour voir les effets
 	
 	if death_transition_manager:
-		death_transition_manager.start_fast_death_transition()
+		death_transition_manager.start_fast_death_transition(4)
 		transition_started = true
 		print("🎬 Transition automatique démarrée")
 
