@@ -1,4 +1,4 @@
-# scripts/player/states/StateTransitions.gd - AVEC AIRSTATE
+# scripts/player/states/StateTransitions.gd - SIMPLIFIÉ avec 2 états principaux
 class_name StateTransitions
 
 static var _instance: StateTransitions
@@ -13,17 +13,31 @@ func get_next_state(current_state: State, player: Player, delta: float) -> State
 	if _state_cache.is_empty():
 		_cache_states(current_state)
 	
+	# Mort = priorité absolue
 	if _should_die(player):
 		return _get_state("DeathState")
 	
+	# LOGIQUE SIMPLIFIÉE : 2 états principaux + mort
 	match current_state.get_script().get_global_name():
-		"IdleState", "RunState":
-			return _handle_ground_states(current_state, player, delta)
-		"AirState":  # NOUVEAU - remplace JumpState + FallState
-			return _handle_air_state(current_state, player, delta)
+		"GroundState":
+			return _handle_ground_state(player)
+		"AirState":
+			return _handle_air_state(player)
 		"DeathState":
-			return null
+			return null  # Géré en interne
 	
+	return null
+
+func _handle_ground_state(player: Player) -> State:
+	"""GroundState → AirState quand on quitte le sol"""
+	if not player.is_on_floor():
+		return _get_state("AirState")
+	return null
+
+func _handle_air_state(player: Player) -> State:
+	"""AirState → GroundState quand on touche le sol"""
+	if player.is_on_floor():
+		return _get_state("GroundState")
 	return null
 
 func _should_die(player: Player) -> bool:
@@ -41,30 +55,3 @@ func _cache_states(reference_state: State):
 
 func _get_state(state_name: String) -> State:
 	return _state_cache.get(state_name)
-
-func _handle_ground_states(current_state: State, player: Player, _delta: float) -> State:
-	# Transition vers l'air - SIMPLIFIÉ
-	if not player.is_on_floor():
-		return _get_state("AirState")  # UN SEUL STATE AÉRIEN
-	
-	# Transitions Idle ↔ Run
-	var movement = InputManager.get_movement()
-	var current_name = current_state.get_script().get_global_name()
-	
-	if current_name == "IdleState" and movement != 0:
-		return _get_state("RunState")
-	elif current_name == "RunState" and movement == 0:
-		return _get_state("IdleState")
-	
-	return null
-
-func _handle_air_state(_current_state: State, player: Player, _delta: float) -> State:
-	# Retour au sol - SIMPLIFIÉ
-	if player.is_on_floor():
-		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
-	
-	# Activer wall slide component si nécessaire
-	if player.wall_slide_component and player.wall_slide_component.has_method("try_activate"):
-		player.wall_slide_component.try_activate()
-	
-	return null

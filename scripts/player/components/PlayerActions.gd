@@ -78,11 +78,9 @@ func _on_push_animation_finished():
 	if player.sprite.animation_finished.is_connected(_on_push_animation_finished):
 		player.sprite.animation_finished.disconnect(_on_push_animation_finished)
 	
-	# Retour à l'animation appropriée
 	if player.is_on_floor():
 		player.sprite.play("Run" if InputManager.get_movement() != 0 else "Idle")
-	else:
-		player.sprite.play("Jump" if player.velocity.y < 0 else "Fall")
+	# Si en l'air, AirState._update_animation() s'en occupe déjà
 
 func _trigger_push_shake():
 	if not player.camera or not player.camera.has_method("shake"):
