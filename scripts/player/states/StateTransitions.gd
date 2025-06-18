@@ -53,8 +53,8 @@ func _handle_ground_states(current_state: State, player: Player, _delta: float) 
 	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
 		return _get_state("JumpState")
 	
-	if InputManager.was_dash_pressed() and player.actions_component.can_dash():
-		return _get_state("DashState")
+	# if InputManager.was_dash_pressed() and player.actions_component.can_dash():
+		# return _get_state("DashState")
 	
 	var movement = InputManager.get_movement()
 	var current_name = current_state.get_script().get_global_name()
@@ -74,8 +74,8 @@ func _handle_air_states(current_state: State, player: Player, _delta: float) -> 
 		if InputManager.has_coyote_time():
 			return _get_state("JumpState")
 	
-	if InputManager.was_dash_pressed() and player.actions_component.can_dash():
-		return _get_state("DashState")
+	# if InputManager.was_dash_pressed() and player.actions_component.can_dash():
+		# return _get_state("DashState")
 	
 	var current_name = current_state.get_script().get_global_name()
 	

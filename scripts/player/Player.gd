@@ -10,6 +10,8 @@ var detection_system: DetectionSystem
 var physics_component: PlayerPhysics
 var actions_component: PlayerActions
 var controller: PlayerController
+var movement_system: MovementSystem
+var dash_component: DashComponent
 
 # === CACHED REFERENCES ===
 var camera: Camera2D
@@ -40,6 +42,18 @@ func _ready():
 	_connect_signals()
 	state_machine.init(self)
 	add_to_group("player")
+	
+	call_deferred("_setup_hybrid_system")
+	
+func _setup_hybrid_system():
+	print("🔧 Setup système hybride APRÈS stabilisation")
+	movement_system = MovementSystem.new(self)
+	add_child(movement_system)
+	print("✅ MovementSystem créé en deferred")
+	
+	dash_component = DashComponent.new(self)
+	movement_system.add_component(dash_component)
+	print("✅ DashComponent ajouté en deferred")
 
 func _process(delta: float):
 	if respawn_immunity_timer > 0:
@@ -53,12 +67,24 @@ func _process(delta: float):
 			
 	if wall_jump_control_timer > 0:
 		wall_jump_control_timer -= delta
+		
+	if movement_system:
+		movement_system.update_all(delta)
+		print("🔄 MovementSystem update appelé")
 
 func _setup_components():
 	detection_system = DetectionSystem.new(self)
 	physics_component = PlayerPhysics.new(self)
 	actions_component = PlayerActions.new(self)
 	controller = PlayerController.new(self)
+	
+	movement_system = MovementSystem.new(self)
+	add_child(movement_system)
+	print("✅ MovementSystem créé")
+	
+	dash_component = DashComponent.new(self)
+	movement_system.add_component(dash_component)
+	print("✅ DashComponent ajouté")
 	
 	for component in [detection_system, physics_component, actions_component, controller]:
 		add_child(component)
