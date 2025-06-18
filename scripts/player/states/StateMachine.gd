@@ -8,11 +8,12 @@ func init(parent: Player) -> void:
 	for child in get_children():
 		child.parent = parent
 	
-	# Récupérer le nœud depuis le NodePath
 	if starting_state:
 		var state_node = get_node(starting_state)
-		if state_node:
+		if state_node:  # ✅ Vérification ajoutée
 			change_state(state_node)
+		else:
+			push_error("StateMachine: starting_state invalide!")
 
 func change_state(new_state: State) -> void:
 	if current_state:
