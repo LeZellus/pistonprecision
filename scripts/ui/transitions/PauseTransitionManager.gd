@@ -1,4 +1,4 @@
-# scripts/ui/transitions/PauseTransitionManager.gd - VERSION CORRIGÉE
+# scripts/ui/transitions/PauseTransitionManager.gd - FIX TWEENS PENDANT PAUSE
 extends CanvasLayer
 
 # === RÉFÉRENCES AUX SPRITES (directes) ===
@@ -31,7 +31,7 @@ const CRUSH_DELAY = 0.2
 
 func _ready():
 	# IMPORTANT: Process pendant la pause
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 	_init_sprites()
 
 func _init_sprites():
@@ -68,6 +68,8 @@ func _setup_sprites_for_pause():
 
 func _animate_pause_fall():
 	current_tween = create_tween()
+	# 🔧 CRITIQUE: Permettre au tween de fonctionner pendant la pause
+	current_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	
 	# Rocher tombe
 	var final_rock_y = SCREEN_HEIGHT / 2
@@ -75,17 +77,19 @@ func _animate_pause_fall():
 		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUART)
 	current_tween.tween_callback(func(): AudioManager.play_sfx("ui/transition/impact", 0.8))
 	
-	# Piston arrive
-	get_tree().create_timer(PISTON_DELAY).timeout.connect(_animate_piston_arrival)
+	# Piston arrive - 🔧 TIMER QUI FONCTIONNE PENDANT LA PAUSE
+	get_tree().create_timer(PISTON_DELAY, false).timeout.connect(_animate_piston_arrival)
 	
 	# Fin
 	var total_time = ROCK_FALL_TIME + PISTON_SLIDE_TIME + PISTON_DELAY
-	get_tree().create_timer(total_time).timeout.connect(_on_pause_sequence_complete)
+	get_tree().create_timer(total_time, false).timeout.connect(_on_pause_sequence_complete)
 
 func _animate_piston_arrival():
 	var final_piston_x = _calculate_piston_position_left()
 	
 	var piston_tween = create_tween()
+	# 🔧 CRITIQUE: Ce tween aussi doit fonctionner pendant la pause
+	piston_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	piston_tween.tween_property(piston_sprite, "position:x", final_piston_x, PISTON_SLIDE_TIME)\
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUART)
 
@@ -114,6 +118,9 @@ func start_resume_transition():
 
 func _animate_crush_sequence():
 	var crush_tween = create_tween()
+	# 🔧 CRITIQUE: Ce tween aussi doit fonctionner pendant la pause
+	crush_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	
 	var current_piston_x = piston_sprite.position.x
 	var recoil_position = current_piston_x - 100
 	var final_exit_piston = -PISTON_SIZE.x

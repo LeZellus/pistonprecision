@@ -1,4 +1,4 @@
-# scripts/player/Player.gd - VERSION CORRIGÉE
+# scripts/player/Player.gd - FIX PROCESS_MODE POUR PAUSE
 extends CharacterBody2D
 class_name Player
 
@@ -33,6 +33,9 @@ var last_wall_position: float = 0.0
 var collectibles_count: int = 0
 
 func _ready():
+	# 🔧 CRITIQUE: Le joueur doit s'arrêter pendant la pause
+	process_mode = Node.PROCESS_MODE_PAUSABLE
+	
 	camera = get_viewport().get_camera_2d()
 	_setup_handlers()
 	_setup_core_systems()
@@ -47,6 +50,10 @@ func _setup_handlers():
 	add_child(action_handler)
 	add_child(death_handler)
 	
+	# 🔧 S'assurer que les handlers s'arrêtent aussi pendant la pause
+	action_handler.process_mode = Node.PROCESS_MODE_PAUSABLE
+	death_handler.process_mode = Node.PROCESS_MODE_PAUSABLE
+	
 	# Les configurer
 	action_handler.setup(self)
 	death_handler.setup(self)
@@ -59,12 +66,19 @@ func _setup_core_systems():
 	add_child(detection_system)
 	add_child(physics_component)
 	
+	# 🔧 S'assurer que ces systèmes s'arrêtent aussi pendant la pause
+	detection_system.process_mode = Node.PROCESS_MODE_PAUSABLE
+	physics_component.process_mode = Node.PROCESS_MODE_PAUSABLE
+	
 	# Système de mouvement unifié
 	movement_system = MovementSystem.new(self)
 	movement_system.add_component(JumpComponent.new(self))
 	movement_system.add_component(WallSlideComponent.new(self))
 	movement_system.add_component(DashComponent.new(self))
 	add_child(movement_system)
+	
+	# 🔧 Le système de mouvement aussi doit s'arrêter
+	movement_system.process_mode = Node.PROCESS_MODE_PAUSABLE
 
 # === GAME LOOP ALLÉGÉ ===
 func _process(delta: float):

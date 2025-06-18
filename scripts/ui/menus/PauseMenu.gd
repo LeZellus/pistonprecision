@@ -1,4 +1,4 @@
-# scripts/ui/menus/PauseMenu.gd - VERSION CORRIGÉE
+# scripts/ui/menus/PauseMenu.gd - PAUSE APRÈS ANIMATION
 extends Control
 
 signal resume_requested
@@ -17,7 +17,7 @@ var is_transitioning: bool = false
 
 func _ready():
 	# IMPORTANT: Permettre le traitement pendant la pause
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 	
 	# Connecter les boutons avec vérification
 	if resume_button: resume_button.pressed.connect(_on_resume_pressed)
@@ -57,7 +57,7 @@ func _on_menu_pressed():
 
 # === MÉTHODES PUBLIQUES ===
 func show_pause():
-	"""Affiche le menu pause avec transition"""
+	"""Affiche le menu pause avec transition - PAUSE APRÈS"""
 	if is_transitioning:
 		return
 	
@@ -66,20 +66,22 @@ func show_pause():
 	
 	if transition_manager:
 		is_transitioning = true
+		# 🔧 PAS DE PAUSE ICI - Elle se fera après l'animation
 		transition_manager.start_pause_transition()
 	else:
+		# Si pas de transition, pause immédiate
+		get_tree().paused = true
 		_complete_pause_show()
 
 func hide_pause():
-	"""Cache le menu pause"""
+	"""Cache le menu pause sans signal"""
 	visible = false
 	get_tree().paused = false
-	resume_requested.emit()
 
 # === TRANSITIONS ===
 func _start_resume_transition():
 	if not transition_manager:
-		hide_pause()
+		_resume_game()
 		return
 	
 	_disable_buttons()
@@ -87,19 +89,31 @@ func _start_resume_transition():
 	transition_manager.start_resume_transition()
 
 func _on_pause_transition_complete():
-	print("✅ Animation pause terminée - menu actif")
+	"""Appelé APRÈS que le piston soit en place"""
+	print("✅ Animation pause terminée - PAUSE MAINTENANT")
 	is_transitioning = false
+	
+	# 🔧 PAUSE ICI, après l'animation
+	get_tree().paused = true
 	_complete_pause_show()
 
 func _on_resume_transition_complete():
 	print("✅ Animation reprise terminée")
 	is_transitioning = false
-	hide_pause()
+	_resume_game()
 
 func _complete_pause_show():
-	"""Active les boutons et pause le jeu"""
+	"""Active les boutons"""
 	_enable_buttons()
-	get_tree().paused = true
+	# Focus automatique sur le premier bouton
+	if resume_button:
+		resume_button.grab_focus()
+
+func _resume_game():
+	"""Reprend le jeu et émet le signal"""
+	visible = false
+	get_tree().paused = false
+	resume_requested.emit()
 
 # === UTILITAIRES ===
 func _disable_buttons():
