@@ -24,9 +24,9 @@ func _handle_grounding():
 	var grounded = player.is_on_floor()
 	
 	if grounded and player.was_grounded:
-		player.wall_detector.set_active(false)
+		player.detection_system.set_active(false)  # ← CHANGÉ
 	elif not grounded:
-		player.wall_detector.set_active(true)
+		player.detection_system.set_active(true)   # ← CHANGÉ
 	
 	if grounded and not player.was_grounded:
 		AudioManager.play_sfx("player/land", 1)

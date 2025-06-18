@@ -100,16 +100,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	state_machine.process_input(event)
 
-# === COMPATIBILITY PROPERTIES ===
-var wall_detector: DetectionSystem:
-	get: return detection_system
-
-var ground_detector: DetectionSystem:
-	get: return detection_system
-	
-var push_detector: DetectionSystem:
-	get: return detection_system
-
 # === ROTATION & PUSH ===
 func _on_rotate_left():
 	actions_component.rotate_piston(-1)

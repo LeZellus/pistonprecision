@@ -33,7 +33,7 @@ func execute_push():
 	if not _can_perform_push_action(push_vector):
 		return
 	
-	var pushable_object = player.push_detector.detect_pushable_object(push_vector)
+	var pushable_object = player.detection_system.detect_pushable_object(push_vector)
 	var success = false
 	
 	if pushable_object:
@@ -58,7 +58,7 @@ func _can_perform_push_action(direction: Vector2) -> bool:
 	return not space_state.intersect_ray(query)
 
 func _attempt_push(direction: Vector2) -> bool:
-	var pushable_object = player.push_detector.detect_pushable_object(direction)
+	var pushable_object = player.detection_system.detect_pushable_object(direction)
 	if not pushable_object:
 		return false
 	

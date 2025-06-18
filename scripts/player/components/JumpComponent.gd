@@ -21,32 +21,12 @@ func update(delta: float):
 		jump_cut_applied = false
 
 func _should_jump() -> bool:
-	"""Vérifie toutes les conditions pour déclencher un saut"""
-	# Pas de saut si déjà en train de sauter ou piston pas DOWN
-	if just_jumped or player.piston_direction != Player.PistonDirection.DOWN:
-		return false
-	
-	# Vérifier le buffer d'input
-	if not InputManager.wants_to_jump():
-		return false
-	
-	# Saut normal (au sol)
-	if player.is_on_floor():
-		return true
-	
-	# Coyote time (vient de quitter le sol)
-	if InputManager.has_coyote_time():
-		return true
-	
-	# Wall jump
-	if _can_wall_jump():
-		return true
-	
-	return false
+	return (InputManager.wants_to_jump() and 
+		player.piston_direction == Player.PistonDirection.DOWN and 
+		not just_jumped)
 
 func _can_wall_jump() -> bool:
-	"""Vérifie les conditions spécifiques au wall jump"""
-	var wall_side = player.wall_detector.get_wall_side()
+	var wall_side = player.detection_system.get_wall_side()
 	if wall_side == 0:
 		return false
 	
@@ -59,15 +39,13 @@ func _can_wall_jump() -> bool:
 	return true
 
 func _perform_jump():
-	"""Exécute le saut selon le contexte"""
-	var wall_side = player.wall_detector.get_wall_side()
+	var wall_side = player.detection_system.get_wall_side()
 	
 	if wall_side != 0:
 		_perform_wall_jump(wall_side)
 	else:
 		_perform_normal_jump()
 	
-	# Consommer l'input et marquer le saut
 	InputManager.consume_jump()
 	just_jumped = true
 	jump_cut_applied = false

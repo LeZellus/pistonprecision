@@ -1,4 +1,4 @@
-# MovementSystem.gd - VERSION CORRIGÉE
+# MovementSystem.gd - Version optimisée
 class_name MovementSystem
 extends Node
 
@@ -11,10 +11,14 @@ func _init(player_ref: Player):
 func add_component(component: MovementComponent):
 	components.append(component)
 	add_child(component)
-	print("🔧 Composant ajouté: ", component.get_script().get_global_name())  # DEBUG
 
 func update_all(delta: float):
-	print("🔧 MovementSystem.update_all() - ", components.size(), " composants")
+	# Optimisation : update seuls les composants actifs en premier
 	for component in components:
-		print("🔧 Updating component: ", component.get_script().get_global_name())
-		component.update(delta)  # ← CETTE LIGNE DOIT EXISTER !
+		if component.is_active():
+			component.update(delta)
+	
+	# Puis les composants inactifs (pour vérifier s'ils doivent s'activer)
+	for component in components:
+		if not component.is_active():
+			component.update(delta)
