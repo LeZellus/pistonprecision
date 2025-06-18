@@ -1,4 +1,4 @@
-# scripts/player/components/PlayerPhysics.gd - Version optimisée
+# scripts/player/components/PlayerPhysics.gd - Version optimisée avec class_name
 class_name PlayerPhysics
 extends Node
 

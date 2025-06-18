@@ -54,12 +54,14 @@ script = ExtResource("5_twowj")
 
 [node name="JumpState" type="Node" parent="StateMachine"]
 script = ExtResource("6_35r08")
+animation_name = null
 
 [node name="FallState" type="Node" parent="StateMachine"]
 script = ExtResource("7_lwr6x")
 
 [node name="WallSlideState" type="Node" parent="StateMachine"]
 script = ExtResource("8_6g2hb")
+animation_name = null
 
 [node name="DashState" type="Node" parent="StateMachine"]
 script = ExtResource("9_ek2xh")
