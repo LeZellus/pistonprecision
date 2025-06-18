@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://baocy14u3yxvg" path="res://scenes/objects/LayerTraps.tscn" id="7_3dmaq"]
 [ext_resource type="PackedScene" uid="uid://cvi6m0d0bogvt" path="res://scenes/objects/DeathZone.tscn" id="7_pnsws"]
 [ext_resource type="Texture2D" uid="uid://bbc242ff2wr5p" path="res://assets/sprites/backgrounds/Factorybackground.png" id="9_hlefq"]
-[ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="9_st4ct"]
+[ext_resource type="Script" path="res://scripts/world/environment/CameraController.gd" id="9_st4ct"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_b4ryo"]
 

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/core/game/GameLevel.gd" id="1_5infr"]
 [ext_resource type="Resource" uid="uid://cuvhoalkb2p7v" path="res://data/worlds/world_01.tres" id="2_gbm5w"]
-[ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="3_tl3xi"]
+[ext_resource type="Script" path="res://scripts/world/environment/CameraController.gd" id="3_tl3xi"]
 [ext_resource type="PackedScene" uid="uid://b5olalvxo1hqu" path="res://scenes/ui/MainMenu.tscn" id="4_klvcu"]
 [ext_resource type="PackedScene" uid="uid://cdbdjqxcvwd6i" path="res://scenes/ui/PauseMenu.tscn" id="4_lwgr4"]
 [ext_resource type="PackedScene" uid="uid://s03hqqykrtu7" path="res://scenes/ui/SettingsMenu.tscn" id="5_6qyc0"]

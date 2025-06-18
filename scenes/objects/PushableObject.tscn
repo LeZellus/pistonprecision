@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://dg646574o66h8"]
 
-[ext_resource type="Script" path="res://scripts/objects/PushableObject.gd" id="1_53puw"]
+[ext_resource type="Script" path="res://scripts/world/objects/PushableObject.gd" id="1_53puw"]
 [ext_resource type="Texture2D" uid="uid://52qci1kdnwmc" path="res://assets/sprites/tiles/tileset_iron_16x16.png" id="2_hsgv8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_70vbl"]

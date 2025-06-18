@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b2amkaoiymjxq"]
 
-[ext_resource type="Script" path="res://scripts/objects/SpawnPoint.gd" id="1_eqvol"]
+[ext_resource type="Script" path="res://scripts/world/objects/SpawnPoint.gd" id="1_eqvol"]
 
 [node name="SpawnPoint" type="Marker2D"]
 z_index = 51

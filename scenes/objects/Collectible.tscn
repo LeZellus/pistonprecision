@@ -1,7 +1,7 @@
 [gd_scene load_steps=15 format=3 uid="uid://47cqcbhg1xqr"]
 
 [ext_resource type="Texture2D" uid="uid://ko6kxiilqmes" path="res://assets/sprites/objects/screw_16x16.png" id="1_1bt3i"]
-[ext_resource type="Script" path="res://scripts/objects/Collectible.gd" id="2_j2glr"]
+[ext_resource type="Script" path="res://scripts/world/objects/Collectible.gd" id="2_j2glr"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_dota5"]
 atlas = ExtResource("1_1bt3i")

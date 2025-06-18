@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://b2amkaoiymjxq" path="res://scenes/worlds/SpawnPoint.tscn" id="1_a10dc"]
 [ext_resource type="PackedScene" uid="uid://bt8bvgcp2hvdk" path="res://scenes/objects/LayerGround.tscn" id="2_abstl"]
 [ext_resource type="PackedScene" uid="uid://cvi6m0d0bogvt" path="res://scenes/objects/DeathZone.tscn" id="4_q6v2f"]
-[ext_resource type="Script" path="res://scripts/utilities/CameraController.gd" id="4_rpvke"]
+[ext_resource type="Script" path="res://scripts/world/environment/CameraController.gd" id="4_rpvke"]
 [ext_resource type="PackedScene" uid="uid://pu42l8l3bunb" path="res://scenes/objects/Door.tscn" id="5_jwnet"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sn25p"]
