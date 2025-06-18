@@ -45,6 +45,15 @@ func _input(event):
 	if Input.is_key_pressed(KEY_F6):
 		print("🔥 MORT FORCÉE PAR F6")
 		trigger_death()
+	
+	# TEST 2: Respawn manuel (R)
+	if Input.is_key_pressed(KEY_F7): # Entrée
+		print("🔄 RESPAWN MANUEL FORCÉ")
+		sprite.visible = true
+		sprite.modulate.a = 1.0
+		global_position = Vector2(0, 100)
+		velocity = Vector2.ZERO
+		print("Sprite visible: %s, Position: %v" % [sprite.visible, global_position])
 
 func _setup_components():
 	# COMPOSANTS CORE

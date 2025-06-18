@@ -16,10 +16,18 @@ func init(parent: Player) -> void:
 			push_error("StateMachine: starting_state invalide!")
 
 func change_state(new_state: State) -> void:
+	print("🔄 StateMachine: Changement d'état")
+	print("  Ancien état: %s" % (current_state.get_script().get_global_name() if current_state else "Aucun"))
+	print("  Nouvel état: %s" % (new_state.get_script().get_global_name() if new_state else "Aucun"))
+	
 	if current_state:
+		print("  Sortie de l'ancien état...")
 		current_state.exit()
+	
 	current_state = new_state
+	print("  Entrée dans le nouvel état...")
 	current_state.enter()
+	print("✅ Changement d'état terminé")
 
 func process_physics(delta: float) -> void:
 	var new_state = current_state.process_physics(delta)
