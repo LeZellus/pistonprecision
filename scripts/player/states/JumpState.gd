@@ -1,4 +1,3 @@
-# scripts/player/states/JumpState.gd - VERSION AVEC WALL JUMP FORCÉ
 class_name JumpState
 extends State
 
@@ -26,7 +25,7 @@ func process_physics(delta: float) -> State:
 	return StateTransitions.get_instance().get_next_state(self, parent, delta)
 
 func _perform_jump():
-	var wall_side = parent.wall_detector.get_wall_side()
+	var wall_side = parent.detection_system.get_wall_side()
 	
 	# WALL JUMP DÉTECTÉ
 	if wall_side != 0:
@@ -36,7 +35,7 @@ func _perform_jump():
 
 func _perform_wall_jump(wall_side: int):
 	"""Wall jump avec momentum forcé"""
-	parent.velocity.y = PlayerConstants.JUMP_VELOCITY * 0.95  # Légèrement plus faible
+	parent.velocity.y = PlayerConstants.JUMP_VELOCITY * 0.95
 	
 	# MOMENTUM HORIZONTAL FORCÉ (opposé au mur)
 	var horizontal_force = -wall_side * PlayerConstants.SPEED * 1.2
@@ -44,7 +43,8 @@ func _perform_wall_jump(wall_side: int):
 	
 	# TIMER pour empêcher le re-grab du MÊME mur uniquement
 	parent.wall_jump_timer = PlayerConstants.WALL_JUMP_GRACE_TIME
-	parent.last_wall_side = wall_side  # Mémoriser le côté du mur
+	parent.last_wall_side = wall_side
+	parent.last_wall_position = parent.global_position.x  # NOUVEAU
 	
 	print("Wall jump! Côté mur: %d, Direction forcée: %d" % [wall_side, -wall_side])
 	
@@ -70,11 +70,14 @@ func _apply_wall_jump_movement(delta: float):
 		if current_sign != 0 and input_sign != current_sign:
 			# Autoriser seulement 20% de contrôle contre le momentum
 			var target_speed = input_dir * PlayerConstants.SPEED * 0.2
-			parent.velocity.x = move_toward(parent.velocity.x, target_speed, PlayerConstants.AIR_ACCELERATION * 0.3 * delta)
+			parent.velocity.x = move_toward(parent.velocity.x, target_speed, 
+				PlayerConstants.AIR_ACCELERATION * 0.3 * delta)
 		else:
 			# Mouvement normal dans la même direction
 			var target_speed = input_dir * PlayerConstants.SPEED * PlayerConstants.AIR_SPEED_MULTIPLIER
-			parent.velocity.x = move_toward(parent.velocity.x, target_speed, PlayerConstants.AIR_ACCELERATION * delta)
+			parent.velocity.x = move_toward(parent.velocity.x, target_speed, 
+				PlayerConstants.AIR_ACCELERATION * delta)
 	else:
 		# Friction très réduite pour conserver le momentum
-		parent.velocity.x = move_toward(parent.velocity.x, 0, PlayerConstants.AIR_FRICTION * 0.3 * delta)
+		parent.velocity.x = move_toward(parent.velocity.x, 0, 
+			PlayerConstants.AIR_FRICTION * 0.3 * delta)

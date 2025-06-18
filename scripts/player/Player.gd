@@ -13,7 +13,7 @@ var actions_component: PlayerActions
 var controller: PlayerController
 var movement_system: MovementSystem
 var dash_component: DashComponent
-var wallslide_component: WallSlideComponent
+var wall_slide_component: WallSlideComponent
 
 # === CACHED REFERENCES ===
 var camera: Camera2D
@@ -57,9 +57,10 @@ func _setup_components():
 	add_child(movement_system)
 	
 	dash_component = DashComponent.new(self)
-	wallslide_component = WallSlideComponent.new(self)
+	wall_slide_component = WallSlideComponent.new(self)
+	
 	movement_system.add_component(dash_component)
-	movement_system.add_component(wallslide_component)
+	movement_system.add_component(wall_slide_component)
 	
 	# Ajouter les anciens composants
 	for component in [detection_system, physics_component, actions_component, controller]:

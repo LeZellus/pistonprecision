@@ -20,3 +20,8 @@ func enable():
 
 func disable():
 	is_enabled = false
+
+func try_activate() -> bool:
+	"""Tente d'activer le composant. À override dans les sous-classes si nécessaire."""
+	enable()
+	return true

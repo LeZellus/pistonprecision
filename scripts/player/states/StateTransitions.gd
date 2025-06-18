@@ -21,10 +21,7 @@ func get_next_state(current_state: State, player: Player, delta: float) -> State
 			return _handle_ground_states(current_state, player, delta)
 		"JumpState", "FallState":
 			return _handle_air_states(current_state, player, delta)
-		"WallSlideState":
-			# WallSlide géré par WallSlideComponent maintenant
-			return _handle_wall_slide_fallback(current_state, player, delta)
-		# "DashState": DÉSACTIVÉ - géré par DashComponent
+		# "WallSlideState": SUPPRIMÉ - géré par WallSlideComponent
 		"DeathState":
 			return null
 	
@@ -75,20 +72,13 @@ func _handle_air_states(current_state: State, player: Player, _delta: float) -> 
 		if InputManager.has_coyote_time():
 			return _get_state("JumpState")
 	
-	# DASH RETIRÉ - géré par DashComponent
-	# if InputManager.was_dash_pressed() and player.actions_component.can_dash():
-	#     return _get_state("DashState")
-	
 	var current_name = current_state.get_script().get_global_name()
 	
 	if current_name == "JumpState" and player.velocity.y >= 0:
 		return _get_state("FallState")
 	
 	if current_name == "FallState":
-		# WallSlide géré par WallSlideComponent maintenant
-		# if _can_wall_slide(player):
-		#     return _get_state("WallSlideState")
-		pass
+		player.wall_slide_component.try_activate()
 	
 	return null
 
