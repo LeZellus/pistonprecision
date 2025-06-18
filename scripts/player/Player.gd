@@ -40,6 +40,11 @@ func _ready():
 	_connect_signals()
 	state_machine.init(self)
 	add_to_group("player")
+	
+func _input(event):
+	if Input.is_key_pressed(KEY_F6):
+		print("🔥 MORT FORCÉE PAR F6")
+		trigger_death()
 
 func _setup_components():
 	# COMPOSANTS CORE
