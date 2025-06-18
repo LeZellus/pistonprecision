@@ -5,9 +5,9 @@ signal resume_requested
 signal settings_requested
 signal menu_requested
 
-@onready var resume_button: Button = $CenterContainer/VBoxContainer/ResumeButton
-@onready var settings_button: Button = $CenterContainer/VBoxContainer/SettingsButton
-@onready var menu_button: Button = $CenterContainer/VBoxContainer/MenuButton
+@onready var resume_button: Button = %ResumeButton
+@onready var settings_button: Button = %SettingsButton
+@onready var menu_button: Button = %MenuButton
 
 # === RÉFÉRENCE DIRECTE À LA TRANSITION (plus d'autoload!) ===
 @onready var transition_manager: Node = $CanvasLayer  # Ou le nom que tu as donné à ton instance

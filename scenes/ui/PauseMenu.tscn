@@ -45,15 +45,18 @@ text = "Pause Menu"
 layout_mode = 2
 
 [node name="ResumeButton" type="Button" parent="CanvasLayer/RockSprite/CenterContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Resume"
 
 [node name="SettingsButton" type="Button" parent="CanvasLayer/RockSprite/CenterContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Settings
 "
 
 [node name="MenuButton" type="Button" parent="CanvasLayer/RockSprite/CenterContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Main Menu"
 
