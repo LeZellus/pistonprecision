@@ -20,12 +20,12 @@ config/icon="res://icon.svg"
 
 GameManager="*res://scripts/core/game/GameManager.gd"
 InputManager="*res://scripts/core/input/InputManager.gd"
-AudioManager="*res://scripts/managers/AudioManager.gd"
-ParticleManager="*res://scripts/managers/ParticleManager.gd"
-DebugManager="*res://scripts/managers/DebugManager.gd"
-SceneManager="*res://scripts/managers/SceneManager.gd"
-DeathTransitionManager="*res://scripts/managers/DeathTransitionManager.gd"
-SpawnManager="*res://scripts/managers/SpawnManager.gd"
+AudioManager="*res://scripts/managers/audio/AudioManager.gd"
+ParticleManager="*res://scripts/managers/game/ParticleManager.gd"
+DebugManager="*res://scripts/managers/game/DebugManager.gd"
+SceneManager="*res://scripts/managers/scene/SceneManager.gd"
+DeathTransitionManager="*res://scripts/ui/transitions/DeathTransitionManager.gd"
+SpawnManager="*res://scripts/managers/scene/SpawnManager.gd"
 
 [display]
 
