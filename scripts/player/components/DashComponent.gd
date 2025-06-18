@@ -8,18 +8,16 @@ var cooldown_timer: float = 0.0
 var afterimage_counter: int = 0
 
 func update(delta: float):
-	print("🔧 DashComponent.update() appelé")  # NOUVEAU
 	cooldown_timer = maxf(0.0, cooldown_timer - delta)
 	
-	# TEST AVEC SHIFT
-	if Input.is_key_pressed(KEY_SHIFT):
-		print("🚀 SHIFT détecté dans DashComponent!")
+	# Input pour démarrer le dash
+	if Input.is_action_just_pressed("dash"):
+		print("🎮 Input dash détecté!")
 		if can_dash():
 			print("✅ Can dash = true")
 			start_dash()
 		else:
-			print("❌ Can dash = false")
-		return
+			print("❌ Can dash = false, raison:", cooldown_timer, player.piston_direction)
 	
 	if is_active():
 		_process_dash(delta)

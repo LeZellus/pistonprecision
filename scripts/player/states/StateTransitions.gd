@@ -1,4 +1,4 @@
-# scripts/player/states/StateTransitions.gd - AVEC WALL JUMP TIMER
+# scripts/player/states/StateTransitions.gd - SANS DASH STATE
 class_name StateTransitions
 
 static var _instance: StateTransitions
@@ -23,8 +23,7 @@ func get_next_state(current_state: State, player: Player, delta: float) -> State
 			return _handle_air_states(current_state, player, delta)
 		"WallSlideState":
 			return _handle_wall_slide_state(current_state, player, delta)
-		"DashState":
-			return null
+		# "DashState": DÉSACTIVÉ - géré par DashComponent
 		"DeathState":
 			return null
 	
@@ -53,8 +52,9 @@ func _handle_ground_states(current_state: State, player: Player, _delta: float) 
 	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
 		return _get_state("JumpState")
 	
+	# DASH RETIRÉ - géré par DashComponent
 	# if InputManager.was_dash_pressed() and player.actions_component.can_dash():
-		# return _get_state("DashState")
+	#     return _get_state("DashState")
 	
 	var movement = InputManager.get_movement()
 	var current_name = current_state.get_script().get_global_name()
@@ -74,15 +74,15 @@ func _handle_air_states(current_state: State, player: Player, _delta: float) -> 
 		if InputManager.has_coyote_time():
 			return _get_state("JumpState")
 	
+	# DASH RETIRÉ - géré par DashComponent
 	# if InputManager.was_dash_pressed() and player.actions_component.can_dash():
-		# return _get_state("DashState")
+	#     return _get_state("DashState")
 	
 	var current_name = current_state.get_script().get_global_name()
 	
 	if current_name == "JumpState" and player.velocity.y >= 0:
 		return _get_state("FallState")
 	
-	# CORRECTION: Vérifier le wall jump timer avant d'autoriser wall slide
 	if current_name == "FallState" and _can_wall_slide(player):
 		return _get_state("WallSlideState")
 	
@@ -92,29 +92,23 @@ func _handle_wall_slide_state(_current_state: State, player: Player, _delta: flo
 	if player.is_on_floor():
 		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
 	
-	# CORRECTION: Wall jump depuis wall slide - PRIORITÉ ABSOLUE
 	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
 		print("Wall jump détecté depuis WallSlideState!")
 		return _get_state("JumpState")
 	
-	# Sortir du wall slide si plus de mur OU timer actif
 	if not _can_wall_slide(player):
 		return _get_state("FallState")
 	
 	return null
 
 func _can_wall_slide(player: Player) -> bool:
-	"""Logique wall slide style Rite"""
 	var current_wall_side = player.wall_detector.get_wall_side()
 	
-	# Empêcher re-grab du même mur trop rapidement
 	if player.wall_jump_timer > 0 and current_wall_side == player.last_wall_side:
-		# MAIS autoriser si on s'est suffisamment éloigné (style Rite)
 		var distance_moved = abs(player.global_position.x - player.last_wall_position)
 		if distance_moved < PlayerConstants.WALL_JUMP_MIN_SEPARATION:
 			return false
 	
-	# Conditions normales de wall slide
 	return (player.wall_detector.is_touching_wall() and 
-			player.velocity.y > 30 and  # Seuil plus bas pour Rite
+			player.velocity.y > 30 and
 			player.wall_detector.wall_detection_active)
