@@ -1,4 +1,3 @@
-# scripts/player/states/StateTransitions.gd - SANS DASH STATE
 class_name StateTransitions
 
 static var _instance: StateTransitions
@@ -21,7 +20,6 @@ func get_next_state(current_state: State, player: Player, delta: float) -> State
 			return _handle_ground_states(current_state, player, delta)
 		"JumpState", "FallState":
 			return _handle_air_states(current_state, player, delta)
-		# "WallSlideState": SUPPRIMÉ - géré par WallSlideComponent
 		"DeathState":
 			return null
 	
@@ -50,10 +48,6 @@ func _handle_ground_states(current_state: State, player: Player, _delta: float) 
 	if InputManager.consume_jump() and player.piston_direction == Player.PistonDirection.DOWN:
 		return _get_state("JumpState")
 	
-	# DASH RETIRÉ - géré par DashComponent
-	# if InputManager.was_dash_pressed() and player.actions_component.can_dash():
-	#     return _get_state("DashState")
-	
 	var movement = InputManager.get_movement()
 	var current_name = current_state.get_script().get_global_name()
 	
@@ -77,29 +71,9 @@ func _handle_air_states(current_state: State, player: Player, _delta: float) -> 
 	if current_name == "JumpState" and player.velocity.y >= 0:
 		return _get_state("FallState")
 	
-	if current_name == "FallState":
-		player.wall_slide_component.try_activate()
+	# NOUVEAU: Activer wall slide component au lieu de changer d'état
+	if current_name == "FallState" and player.wall_slide_component:
+		if player.wall_slide_component.has_method("try_activate"):
+			player.wall_slide_component.try_activate()
 	
 	return null
-
-func _handle_wall_slide_fallback(_current_state: State, player: Player, _delta: float) -> State:
-	"""Fallback pour l'ancien WallSlideState - devrait rapidement sortir vers FallState"""
-	print("⚠️ Ancien WallSlideState détecté - transition vers FallState")
-	
-	if player.is_on_floor():
-		return _get_state("RunState") if InputManager.get_movement() != 0 else _get_state("IdleState")
-	
-	# Force la sortie vers FallState (le component gère maintenant)
-	return _get_state("FallState")
-
-func _can_wall_slide(player: Player) -> bool:
-	var current_wall_side = player.wall_detector.get_wall_side()
-	
-	if player.wall_jump_timer > 0 and current_wall_side == player.last_wall_side:
-		var distance_moved = abs(player.global_position.x - player.last_wall_position)
-		if distance_moved < PlayerConstants.WALL_JUMP_MIN_SEPARATION:
-			return false
-	
-	return (player.wall_detector.is_touching_wall() and 
-			player.velocity.y > 30 and
-			player.wall_detector.wall_detection_active)

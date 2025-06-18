@@ -10,7 +10,6 @@ var is_grounded: bool = false
 signal rotate_left_requested
 signal rotate_right_requested  
 signal push_requested
-signal dash_requested
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -31,8 +30,6 @@ func _read_action_inputs():
 		rotate_right_requested.emit()
 	if Input.is_action_just_pressed("push"):
 		push_requested.emit()
-	if Input.is_action_just_pressed("dash"):
-		dash_requested.emit()
 	
 	# Auto-buffer du jump
 	if Input.is_action_just_pressed("jump"):
@@ -59,9 +56,6 @@ func is_jump_held() -> bool:
 
 func was_jump_released() -> bool:
 	return Input.is_action_just_released("jump")
-
-func was_dash_pressed() -> bool:
-	return Input.is_action_just_pressed("dash")
 
 func set_grounded(grounded: bool):
 	var was_grounded = is_grounded

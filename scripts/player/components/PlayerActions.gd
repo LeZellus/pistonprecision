@@ -2,24 +2,12 @@ class_name PlayerActions
 extends Node
 
 var player: CharacterBody2D
-var dash_cooldown_timer: float = 0.0
 
 func _init(player_ref: CharacterBody2D):
 	player = player_ref
 
 func _process(delta: float):
-	_update_dash_cooldown(delta)
-
-func _update_dash_cooldown(delta: float):
-	if dash_cooldown_timer > 0:
-		dash_cooldown_timer -= delta
-
-# === DASH ===
-func use_dash():
-	dash_cooldown_timer = PlayerConstants.DASH_COOLDOWN
-
-func can_dash() -> bool:
-	return dash_cooldown_timer <= 0.0 and player.piston_direction != Player.PistonDirection.DOWN
+	pass
 
 # === ROTATION ===
 func rotate_piston(direction: int):
