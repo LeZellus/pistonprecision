@@ -25,7 +25,6 @@ ParticleManager="*res://scripts/managers/game/ParticleManager.gd"
 DebugManager="*res://scripts/managers/game/DebugManager.gd"
 SceneManager="*res://scripts/managers/scene/SceneManager.gd"
 DeathTransitionManager="*res://scripts/ui/transitions/DeathTransitionManager.gd"
-PauseTransitionManager="*res://scripts/ui/transitions/PauseTransitionManager.gd"
 SpawnManager="*res://scripts/managers/scene/SpawnManager.gd"
 
 [display]

@@ -1,4 +1,4 @@
-# scripts/ui/menus/PauseMenu.gd - VERSION AVEC TRANSITION
+# scripts/ui/menus/PauseMenu.gd - VERSION AVEC RÉFÉRENCES DIRECTES
 extends Control
 
 signal resume_requested
@@ -9,8 +9,9 @@ signal menu_requested
 @onready var settings_button: Button = $CenterContainer/VBoxContainer/SettingsButton
 @onready var menu_button: Button = $CenterContainer/VBoxContainer/MenuButton
 
-# === TRANSITION SYSTEM ===
-var pause_transition_manager: Node
+# === RÉFÉRENCE DIRECTE À LA TRANSITION (plus d'autoload!) ===
+@onready var transition_manager: Node = $CanvasLayer  # Ou le nom que tu as donné à ton instance
+
 var is_transitioning: bool = false
 
 func _ready():
@@ -19,13 +20,10 @@ func _ready():
 	settings_button.pressed.connect(_on_settings_pressed)
 	menu_button.pressed.connect(_on_menu_pressed)
 	
-	# Récupérer le transition manager
-	pause_transition_manager = get_node_or_null("/root/PauseTransitionManager")
-	if pause_transition_manager:
-		pause_transition_manager.pause_animation_complete.connect(_on_pause_transition_complete)
-		pause_transition_manager.resume_animation_complete.connect(_on_resume_transition_complete)
-	else:
-		print("⚠️ PauseTransitionManager introuvable")
+	# Connecter les signaux de transition directement
+	if transition_manager:
+		transition_manager.pause_animation_complete.connect(_on_pause_transition_complete)
+		transition_manager.resume_animation_complete.connect(_on_resume_transition_complete)
 
 func _input(event):
 	# Échap pour fermer la pause SEULEMENT si pas en transition
@@ -53,32 +51,31 @@ func _on_menu_pressed():
 	print("Retour au menu principal")
 	menu_requested.emit()
 
-# === NOUVELLES MÉTHODES AVEC TRANSITION ===
+# === MÉTHODES AVEC TRANSITION (références directes) ===
 func show_pause():
 	"""Affiche le menu pause avec transition"""
 	if is_transitioning:
 		return
 	
 	visible = true
-	_disable_buttons()  # Désactiver pendant la transition
+	_disable_buttons()
 	
-	# Démarrer la transition
-	if pause_transition_manager:
+	# Démarrer la transition via référence directe
+	if transition_manager:
 		is_transitioning = true
-		pause_transition_manager.start_pause_transition()
+		transition_manager.start_pause_transition()
 	else:
-		# Fallback sans transition
 		_complete_pause_show()
 
 func _start_resume_transition():
 	"""Démarre l'animation de reprise"""
-	if not pause_transition_manager:
+	if not transition_manager:
 		hide_pause()
 		return
 	
 	_disable_buttons()
 	is_transitioning = true
-	pause_transition_manager.start_resume_transition()
+	transition_manager.start_resume_transition()
 
 func _on_pause_transition_complete():
 	"""Appelé quand l'animation de pause est terminée"""
@@ -105,21 +102,11 @@ func hide_pause():
 
 # === GESTION DES BOUTONS ===
 func _disable_buttons():
-	"""Désactive tous les boutons pendant les transitions"""
 	resume_button.disabled = true
 	settings_button.disabled = true
 	menu_button.disabled = true
 
 func _enable_buttons():
-	"""Réactive tous les boutons"""
 	resume_button.disabled = false
 	settings_button.disabled = false
 	menu_button.disabled = false
-
-# === DEBUG ===
-func get_transition_state() -> Dictionary:
-	return {
-		"is_transitioning": is_transitioning,
-		"menu_visible": visible,
-		"manager_exists": pause_transition_manager != null
-	}

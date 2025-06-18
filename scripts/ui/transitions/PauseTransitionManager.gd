@@ -31,19 +31,13 @@ const PISTON_SLIDE_TIME = 1.0
 const CRUSH_DELAY = 0.5
 
 func _ready():
-	name = "PauseTransitionManager"
-	process_mode = Node.PROCESS_MODE_ALWAYS
-	
-	var ui_scene = preload("res://scenes/ui/PauseTransitionManager.tscn")
-	canvas_layer = ui_scene.instantiate()
-	add_child(canvas_layer)
-	
+	# Plus de setup d'autoload, juste références aux sprites
 	_setup_sprite_references()
 	call_deferred("_init_sprites")
 
 func _setup_sprite_references():
-	rock_sprite = canvas_layer.get_node("RockSprite")
-	piston_sprite = canvas_layer.get_node("PistonSprite")
+	rock_sprite = $RockSprite
+	piston_sprite = $PistonSprite
 
 func _init_sprites():
 	if not rock_sprite or not piston_sprite:
