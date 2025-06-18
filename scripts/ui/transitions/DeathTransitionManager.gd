@@ -45,7 +45,7 @@ func _ready():
 	
 	# Cache des références importantes
 	game_manager = get_node_or_null("/root/GameManager")
-	death_counter_script = preload("res://scripts/ui/DeathCounterAnimation.gd")
+	death_counter_script = preload("res://scripts/ui/transitions/DeathCounterAnimation.gd")
 	
 	var ui_scene = preload("res://scenes/ui/DeathTransitionManager.tscn")
 	canvas_layer = ui_scene.instantiate()

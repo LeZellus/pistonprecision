@@ -1,4 +1,4 @@
-# scripts/player/Player.gd - VERSION REFACTORISÉE AVEC HANDLERS
+# scripts/player/Player.gd - VERSION CORRIGÉE
 extends CharacterBody2D
 class_name Player
 
@@ -7,9 +7,9 @@ class_name Player
 @onready var state_machine: StateMachine = $StateMachine
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
-# === HANDLERS (nouveaux) ===
-var action_handler: PlayerActionHandler
-var death_handler: PlayerDeathHandler
+# === HANDLERS (initialisés directement) ===
+var action_handler: PlayerActionHandler = PlayerActionHandler.new()
+var death_handler: PlayerDeathHandler = PlayerDeathHandler.new()
 
 # === SYSTÈMES CORE ===
 var detection_system: DetectionSystem
@@ -43,10 +43,6 @@ func _ready():
 # === SETUP AVEC HANDLERS ===
 func _setup_handlers():
 	"""Initialise les handlers qui gèrent les actions complexes"""
-	# Créer les handlers
-	action_handler = PlayerActionHandler.new()
-	death_handler = PlayerDeathHandler.new()
-	
 	# Les ajouter comme enfants
 	add_child(action_handler)
 	add_child(death_handler)
@@ -81,11 +77,15 @@ func _process(delta: float):
 	# Update des systèmes
 	movement_system.update_all(delta)
 	
-	# Vérification automatique de mort (optionnel)
-	if death_handler.check_death_conditions():
+	# Vérification automatique de mort (avec garde)
+	if death_handler and death_handler.check_death_conditions():
 		death_handler.trigger_death()
 
 func _physics_process(delta: float):
+	# Garde pour éviter l'erreur
+	if not death_handler:
+		return
+		
 	if is_player_dead():
 		state_machine.process_physics(delta)
 		return
@@ -112,21 +112,31 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not is_player_dead():
 		state_machine.process_input(event)
 
-# === DÉLÉGATION AUX HANDLERS ===
+# === DÉLÉGATION AUX HANDLERS (avec gardes) ===
 
 # Actions déléguées à ActionHandler
 func rotate_piston(direction: int):
-	action_handler._rotate_piston(direction)
+	if action_handler:
+		action_handler._rotate_piston(direction)
 
 func execute_push():
-	action_handler.execute_push()
+	if action_handler:
+		action_handler.execute_push()
 
 # Mort déléguée à DeathHandler
 func trigger_death():
-	death_handler.trigger_death()
+	if death_handler:
+		death_handler.trigger_death()
 
 func is_player_dead() -> bool:
+	if not death_handler:
+		return false
 	return death_handler.is_player_dead()
+
+# === MÉTHODES POUR LA COMPATIBILITÉ ===
+func has_death_immunity() -> bool:
+	"""Méthode pour StateTransitions"""
+	return false  # Pas d'immunité dans ce système simple
 
 # === MÉTHODES HÉRITÉES (compatibility) ===
 func start_room_transition():
