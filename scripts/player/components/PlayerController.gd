@@ -23,11 +23,10 @@ func _physics_process(delta: float):
 func _handle_grounding():
 	var grounded = player.is_on_floor()
 	
-	if grounded and player.was_grounded:
-		player.detection_system.set_active(false)  # ← CHANGÉ
-	elif not grounded:
-		player.detection_system.set_active(true)   # ← CHANGÉ
+	# Activer détection seulement en l'air
+	player.detection_system.set_active(not grounded)
 	
+	# Landing effects
 	if grounded and not player.was_grounded:
 		AudioManager.play_sfx("player/land", 1)
 		ParticleManager.emit_dust(player.global_position, 0.0, player)

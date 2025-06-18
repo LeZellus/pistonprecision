@@ -27,7 +27,6 @@ var piston_direction: PistonDirection = PistonDirection.DOWN
 # === PHYSICS STATE ===
 var was_grounded: bool = false
 var wall_jump_timer: float = 0.0
-var wall_jump_control_timer: float = 0.0
 var last_wall_side: int = 0
 var last_wall_position: float = 0.0
 
@@ -82,9 +81,6 @@ func _process(delta: float):
 		wall_jump_timer -= delta
 		if wall_jump_timer <= 0:
 			last_wall_side = 0
-			
-	if wall_jump_control_timer > 0:
-		wall_jump_control_timer -= delta
 		
 	# SYSTÈME HYBRIDE
 	if movement_system:

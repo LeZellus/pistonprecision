@@ -58,11 +58,8 @@ func get_wall_side() -> int:
 	return 0
 
 # === MÉTHODES DE COMPATIBILITÉ ===
-func set_wall_detection_active(active: bool):
-	wall_detection_active = active
-
 func set_active(active: bool):
-	set_wall_detection_active(active)
+	wall_detection_active = active
 
 func is_grounded() -> bool:
 	return player.is_on_floor()

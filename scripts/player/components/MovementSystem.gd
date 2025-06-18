@@ -13,12 +13,15 @@ func add_component(component: MovementComponent):
 	add_child(component)
 
 func update_all(delta: float):
-	# Optimisation : update seuls les composants actifs en premier
+	# Une seule boucle, actifs en premier pour performance
+	var inactive_components: Array[MovementComponent] = []
+	
 	for component in components:
 		if component.is_active():
 			component.update(delta)
+		else:
+			inactive_components.append(component)
 	
-	# Puis les composants inactifs (pour vérifier s'ils doivent s'activer)
-	for component in components:
-		if not component.is_active():
-			component.update(delta)
+	# Update inactifs après
+	for component in inactive_components:
+		component.update(delta)

@@ -21,20 +21,24 @@ func update(delta: float):
 		jump_cut_applied = false
 
 func _should_jump() -> bool:
-	return (InputManager.wants_to_jump() and 
-		player.piston_direction == Player.PistonDirection.DOWN and 
-		not just_jumped)
+	if not InputManager.wants_to_jump() or just_jumped:
+		return false
+	
+	# Saut normal seulement si piston DOWN
+	if player.piston_direction == Player.PistonDirection.DOWN:
+		return true
+	
+	# Wall jump possible si contre un mur
+	return _can_wall_jump()
 
 func _can_wall_jump() -> bool:
 	var wall_side = player.detection_system.get_wall_side()
 	if wall_side == 0:
 		return false
 	
-	# Éviter de re-grab le même mur
+	# Éviter re-grab du même mur
 	if player.wall_jump_timer > 0 and wall_side == player.last_wall_side:
-		var distance_moved = abs(player.global_position.x - player.last_wall_position)
-		if distance_moved < PlayerConstants.WALL_JUMP_MIN_SEPARATION:
-			return false
+		return abs(player.global_position.x - player.last_wall_position) >= PlayerConstants.WALL_JUMP_MIN_SEPARATION
 	
 	return true
 
