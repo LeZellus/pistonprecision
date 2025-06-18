@@ -4,13 +4,19 @@ extends Node
 @export var starting_state: NodePath
 var current_state: State
 
+func _ready():
+	# 🔧 CRITIQUE: StateMachine doit s'arrêter pendant la pause
+	process_mode = Node.PROCESS_MODE_PAUSABLE
+
 func init(parent: Player) -> void:
 	for child in get_children():
 		child.parent = parent
+		# 🔧 CRITIQUE: Tous les états doivent s'arrêter pendant la pause
+		child.process_mode = Node.PROCESS_MODE_PAUSABLE
 	
 	if starting_state:
 		var state_node = get_node(starting_state)
-		if state_node:  # ✅ Vérification ajoutée
+		if state_node:
 			change_state(state_node)
 		else:
 			push_error("StateMachine: starting_state invalide!")

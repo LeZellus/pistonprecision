@@ -1,4 +1,4 @@
-# scripts/player/Player.gd - FIX PROCESS_MODE POUR PAUSE
+# scripts/player/Player.gd - FIX PAUSE COMPLET
 extends CharacterBody2D
 class_name Player
 
@@ -33,7 +33,7 @@ var last_wall_position: float = 0.0
 var collectibles_count: int = 0
 
 func _ready():
-	# 🔧 CRITIQUE: Le joueur doit s'arrêter pendant la pause
+	# 🔧 CRITIQUE: Le joueur doit TOTALEMENT s'arrêter pendant la pause
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	
 	camera = get_viewport().get_camera_2d()
@@ -50,7 +50,7 @@ func _setup_handlers():
 	add_child(action_handler)
 	add_child(death_handler)
 	
-	# 🔧 S'assurer que les handlers s'arrêtent aussi pendant la pause
+	# 🔧 CRITIQUE: Tous les handlers doivent s'arrêter pendant la pause
 	action_handler.process_mode = Node.PROCESS_MODE_PAUSABLE
 	death_handler.process_mode = Node.PROCESS_MODE_PAUSABLE
 	
@@ -60,13 +60,13 @@ func _setup_handlers():
 
 func _setup_core_systems():
 	"""Initialise les systèmes core (physique, détection, mouvement)"""
-	# Systèmes existants - pas de changement
+	# Systèmes existants
 	detection_system = DetectionSystem.new(self)
 	physics_component = PlayerPhysics.new(self)
 	add_child(detection_system)
 	add_child(physics_component)
 	
-	# 🔧 S'assurer que ces systèmes s'arrêtent aussi pendant la pause
+	# 🔧 CRITIQUE: Tous les systèmes doivent s'arrêter pendant la pause
 	detection_system.process_mode = Node.PROCESS_MODE_PAUSABLE
 	physics_component.process_mode = Node.PROCESS_MODE_PAUSABLE
 	
@@ -77,7 +77,7 @@ func _setup_core_systems():
 	movement_system.add_component(DashComponent.new(self))
 	add_child(movement_system)
 	
-	# 🔧 Le système de mouvement aussi doit s'arrêter
+	# 🔧 CRITIQUE: Le système de mouvement aussi doit s'arrêter
 	movement_system.process_mode = Node.PROCESS_MODE_PAUSABLE
 
 # === GAME LOOP ALLÉGÉ ===
@@ -123,6 +123,10 @@ func _handle_grounding():
 		was_grounded = grounded
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 🔧 NOUVELLE GARDE: Pas d'input si en pause
+	if get_tree().paused:
+		return
+		
 	if not is_player_dead():
 		state_machine.process_input(event)
 

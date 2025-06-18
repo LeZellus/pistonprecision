@@ -1,9 +1,13 @@
-# scripts/player/components/PlayerActionHandler.gd
+# scripts/player/components/PlayerActionHandler.gd - FIX PAUSE
 class_name PlayerActionHandler
 extends Node
 
 var player: Player
 var world_space_state: PhysicsDirectSpaceState2D
+
+func _ready():
+	# 🔧 CRITIQUE: Handler doit s'arrêter pendant la pause
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 
 func setup(player_ref: Player):
 	player = player_ref
@@ -18,6 +22,10 @@ func _connect_input_signals():
 
 # === ROTATION DU PISTON ===
 func _rotate_piston(direction: int):
+	# 🔧 GARDE: Pas d'action si en pause
+	if get_tree().paused:
+		return
+		
 	var new_direction = (player.piston_direction + direction + 4) % 4
 	player.piston_direction = new_direction as Player.PistonDirection
 	player.sprite.rotation_degrees = player.piston_direction * 90
@@ -28,6 +36,10 @@ func _rotate_piston(direction: int):
 
 # === SYSTÈME DE PUSH ===
 func execute_push():
+	# 🔧 GARDE: Pas d'action si en pause
+	if get_tree().paused:
+		return
+		
 	if player.piston_direction == Player.PistonDirection.DOWN:
 		print("❌ Push impossible - piston vers le bas")
 		return
